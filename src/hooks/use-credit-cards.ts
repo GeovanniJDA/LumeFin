@@ -14,6 +14,8 @@ export function useCreditCards() {
   const getDueSoonCards = () => store.records.filter(c => c.status === 'open' && isDueSoon(c.due_day));
   const getOverdueCards = () => store.records.filter(c => c.status === 'open' && isOverdue(c.due_day));
 
+  const totalInvoiceAmount = store.records.reduce((acc, c) => acc + (c.invoice_amount || 0), 0);
+
   return {
     creditCards: store.records,
     loading: store.loading,
@@ -24,5 +26,6 @@ export function useCreditCards() {
     refreshCreditCards: store.fetch,
     getDueSoonCards,
     getOverdueCards,
+    totalInvoiceAmount,
   };
 }

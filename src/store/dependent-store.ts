@@ -1,14 +1,15 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
-import { Dependent } from '../types';
+import type { Dependent } from '../types';
+import type { DependentFormValues } from '../lib/schemas';
 
 interface DependentStore {
   records: Dependent[];
   loading: boolean;
   error: string | null;
   fetch: () => Promise<void>;
-  add: (data: Omit<Dependent, 'id' | 'created_at'>) => Promise<void>;
-  update: (id: string, data: Partial<Dependent>) => Promise<void>;
+  add: (data: DependentFormValues) => Promise<void>;
+  update: (id: string, data: Partial<DependentFormValues>) => Promise<void>;
   remove: (id: string) => Promise<void>;
 }
 
@@ -24,13 +25,24 @@ export const useDependentStoreRaw = create<DependentStore>((set, get) => ({
   },
   add: async (data) => {
     set({ loading: true, error: null });
-    const { error } = await supabase.from('dependents').insert([data]);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { set({ error: 'Unauthenticated', loading: false }); return; }
+    
+    // Convert to row format
+    const row = {
+      name: data.name,
+      relationship: data.relationship,
+      notes: data.notes || null,
+      user_id: user.id
+    };
+
+    const { error } = await supabase.from('dependents').insert([row as any]);
     if (error) set({ error: error.message, loading: false });
     else await get().fetch();
   },
   update: async (id, data) => {
     set({ loading: true, error: null });
-    const { error } = await supabase.from('dependents').update(data).eq('id', id);
+    const { error } = await supabase.from('dependents').update(data as any).eq('id', id);
     if (error) set({ error: error.message, loading: false });
     else await get().fetch();
   },

@@ -23,9 +23,9 @@ interface Props<T> {
 
 export function DataTable<T>({ data, columns, keyExtractor, onRowClick, emptyMessage = "No results." }: Props<T>) {
   return (
-    <div className="rounded-md border bg-white shadow-sm overflow-hidden">
+    <div className="rounded-md border bg-background shadow-sm overflow-hidden">
       <Table>
-        <TableHeader className="bg-slate-50/80">
+        <TableHeader className="bg-muted/80">
           <TableRow>
             {columns.map((col, i) => (
               <TableHead key={i} className={col.className}>
@@ -40,7 +40,7 @@ export function DataTable<T>({ data, columns, keyExtractor, onRowClick, emptyMes
               <TableRow
                 key={keyExtractor(row)}
                 onClick={() => onRowClick && onRowClick(row)}
-                className={onRowClick ? "cursor-pointer transition-colors duration-200 hover:bg-slate-50" : ""}
+                className={onRowClick ? "cursor-pointer transition-colors duration-200 hover:bg-muted" : ""}
               >
                 {columns.map((col, i) => (
                   <TableCell key={i} className={col.className}>
@@ -51,7 +51,7 @@ export function DataTable<T>({ data, columns, keyExtractor, onRowClick, emptyMes
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={columns.length} className="h-32 text-center text-slate-500 font-quicksand">
+              <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground font-quicksand">
                 {emptyMessage}
               </TableCell>
             </TableRow>

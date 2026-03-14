@@ -1,23 +1,25 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
-import { BillCategory } from '../types';
+import { useEffect } from 'react';
+import { useCategoryStoreRaw } from '../store/category-store';
 
 export function useCategories() {
-  const [categories, setCategories] = useState<BillCategory[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchCategories = async () => {
-    setLoading(true);
-    const { data, error } = await supabase.from('bill_categories').select('*').order('name');
-    if (error) setError(error.message);
-    else setCategories(data as BillCategory[]);
-    setLoading(false);
-  };
+  const store = useCategoryStoreRaw();
 
   useEffect(() => {
-    fetchCategories();
+    if (store.records.length === 0) store.fetch();
   }, []);
 
-  return { categories, loading, error, refetch: fetchCategories };
+  const systemCategories = store.records.filter(c => c.is_system);
+  const userCategories = store.records.filter(c => !c.is_system);
+
+  return {
+    categories: store.records,
+    systemCategories,
+    userCategories,
+    loading: store.loading,
+    error: store.error,
+    addCategory: store.add,
+    updateCategory: store.update,
+    removeCategory: store.remove,
+    refreshCategories: store.fetch,
+  };
 }

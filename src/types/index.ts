@@ -1,27 +1,90 @@
-import { z } from 'zod';
-import {
-  userSchema,
-  dependentSchema,
-  billCategorySchema,
-  billSchema,
-  billDependentSchema,
-  creditCardSchema,
-  dependentTransactionSchema,
-  statusSchema,
-  transactionTypeSchema,
-  paymentTypeSchema,
-  transactionStatusSchema,
-} from '../lib/schemas';
+export type Relationship = 
+  'mae'|'pai'|'avo'|'avoa'|'irmao'|'irma'|'tio'|'tia'|'outro'
 
-export type User = z.infer<typeof userSchema>;
-export type Dependent = z.infer<typeof dependentSchema>;
-export type BillCategory = z.infer<typeof billCategorySchema>;
-export type Bill = z.infer<typeof billSchema>;
-export type BillDependent = z.infer<typeof billDependentSchema>;
-export type CreditCard = z.infer<typeof creditCardSchema>;
-export type DependentTransaction = z.infer<typeof dependentTransactionSchema>;
+export type BillStatus = 'pending' | 'paid'
+export type CardStatus = 'open' | 'closed' | 'paid'
+export type TransactionType = 'to_pay' | 'to_receive'
+export type PaymentType = 'cash' | 'installment'
+export type TransactionStatus = 'pending' | 'paid'
 
-export type Status = z.infer<typeof statusSchema>;
-export type TransactionType = z.infer<typeof transactionTypeSchema>;
-export type PaymentType = z.infer<typeof paymentTypeSchema>;
-export type TransactionStatus = z.infer<typeof transactionStatusSchema>;
+export interface Dependent {
+  id: string
+  user_id: string
+  name: string
+  relationship: Relationship
+  notes: string | null
+  created_at: string
+}
+
+export interface BillCategory {
+  id: string
+  user_id: string | null
+  name: string
+  icon: string | null
+  is_system: boolean
+  created_at: string
+}
+
+export interface Bill {
+  id: string
+  user_id: string
+  category_id: string
+  amount: number
+  due_day: number
+  status: BillStatus
+  paid_date: string | null
+  reference_month: string
+  notes: string | null
+  created_at: string
+}
+
+export interface BillDependent {
+  bill_id: string
+  dependent_id: string
+}
+
+export interface CreditCard {
+  id: string
+  user_id: string
+  dependent_id: string | null
+  name: string
+  due_day: number
+  closing_day: number
+  invoice_amount: number
+  status: CardStatus
+  paid_date: string | null
+  reference_month: string
+  notes: string | null
+  created_at: string
+}
+
+export interface DependentTransaction {
+  id: string
+  user_id: string
+  dependent_id: string
+  transaction_date: string
+  description: string
+  amount: number
+  type: TransactionType
+  payment_type: PaymentType
+  installments: number
+  paid_installments: number
+  status: TransactionStatus
+  settled_date: string | null
+  notes: string | null
+  created_at: string
+}
+
+// Joined types for UI (fetched with relations)
+export interface BillWithRelations extends Bill {
+  bill_categories: BillCategory
+  dependents: Dependent[]
+}
+
+export interface CreditCardWithDependent extends CreditCard {
+  dependents: Dependent | null
+}
+
+export interface TransactionWithDependent extends DependentTransaction {
+  dependents: Dependent
+}

@@ -14,6 +14,8 @@ export function useTransactions(dependentId?: string) {
   const getTransactionsByDependent = (id: string) => store.records.filter(t => t.dependent_id === id);
   const getNetBalance = (id: string) => calculateNetBalance(getTransactionsByDependent(id));
 
+  const netBalanceByDependent = (id: string) => calculateNetBalance(getTransactionsByDependent(id));
+
   return {
     transactions: dependentId ? getTransactionsByDependent(dependentId) : store.records,
     allTransactions: store.records,
@@ -25,5 +27,6 @@ export function useTransactions(dependentId?: string) {
     refreshTransactions: store.fetch,
     getTransactionsByDependent,
     getNetBalance,
+    netBalanceByDependent,
   };
 }

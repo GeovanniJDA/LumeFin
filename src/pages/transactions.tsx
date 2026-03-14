@@ -18,23 +18,23 @@ export default function Transactions() {
   const columns = [
     {
       header: 'Date',
-      accessor: (row: DependentTransaction) => <span className="text-slate-600 text-sm font-quicksand">{new Date(row.transaction_date).toLocaleDateString()}</span>
+      accessor: (row: DependentTransaction) => <span className="text-muted-foreground text-sm font-quicksand">{new Date(row.transaction_date).toLocaleDateString()}</span>
     },
     {
       header: 'Description',
-      accessor: (row: DependentTransaction) => <span className="font-semibold text-slate-900 font-quicksand">{row.description}</span>
+      accessor: (row: DependentTransaction) => <span className="font-semibold text-foreground font-quicksand">{row.description}</span>
     },
     {
       header: 'Dependent',
       accessor: (row: DependentTransaction) => {
         const dep = dependents.find(d => d.id === row.dependent_id);
-        return <span className="text-slate-500">{dep?.name || 'Unknown'}</span>;
+        return <span className="text-muted-foreground">{dep?.name || 'Unknown'}</span>;
       }
     },
     {
       header: 'Amount',
       accessor: (row: DependentTransaction) => (
-        <span className={`font-semibold ${row.type === 'to_receive' ? 'text-green-600' : 'text-slate-700'}`}>
+        <span className={`font-semibold ${row.type === 'to_receive' ? 'text-green-600' : 'text-foreground'}`}>
           {row.type === 'to_receive' ? '+' : '-'}{formatCurrency(row.amount)}
         </span>
       )
@@ -50,7 +50,7 @@ export default function Transactions() {
     {
       header: 'Installments',
       accessor: (row: DependentTransaction) => (
-        <span className="text-slate-500 text-sm">
+        <span className="text-muted-foreground text-sm">
           {row.payment_type === 'installment' ? `${row.paid_installments || 0}/${row.installments || 1}` : 'N/A'}
         </span>
       )
@@ -59,8 +59,8 @@ export default function Transactions() {
       header: 'Actions',
       accessor: (row: DependentTransaction) => (
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={() => {}}><Edit className="w-4 h-4 text-slate-500 hover:text-blue-500" /></Button>
-          <Button variant="ghost" size="icon" onClick={() => removeTransaction(row.id)}><Trash2 className="w-4 h-4 text-slate-500 hover:text-red-500" /></Button>
+          <Button variant="ghost" size="icon" onClick={() => {}}><Edit className="w-4 h-4 text-muted-foreground hover:text-blue-500" /></Button>
+          <Button variant="ghost" size="icon" onClick={() => removeTransaction(row.id)}><Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-500" /></Button>
         </div>
       )
     }
@@ -80,7 +80,7 @@ export default function Transactions() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>Add Transaction</DialogTitle></DialogHeader>
-              <div className="flex items-center justify-center p-8 text-sm text-slate-500">
+              <div className="flex items-center justify-center p-8 text-sm text-muted-foreground">
                 Form implementation pending
               </div>
             </DialogContent>
@@ -88,7 +88,7 @@ export default function Transactions() {
         }
       />
       {loading ? (
-        <div className="flex justify-center p-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-300 border-t-blue-600"></div></div>
+        <div className="flex justify-center p-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-border border-t-blue-600"></div></div>
       ) : (
         <DataTable data={transactions} columns={columns} keyExtractor={(row) => row.id} emptyMessage="No transactions found." />
       )}

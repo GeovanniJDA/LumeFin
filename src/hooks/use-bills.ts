@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { useBillStoreRaw } from '../store/bill-store';
 import { isDueSoon, isOverdue } from '../lib/utils';
-import { Bill } from '../types';
 
 export function useBills() {
   const store = useBillStoreRaw();
@@ -15,6 +14,9 @@ export function useBills() {
   const getDueSoonBills = () => store.records.filter(b => b.status === 'pending' && isDueSoon(b.due_day));
   const getOverdueBills = () => store.records.filter(b => b.status === 'pending' && isOverdue(b.due_day));
 
+  const billsByMonth = (month: string) => store.records.filter(b => b.reference_month === month);
+  const overdueCount = store.records.filter(b => b.status === 'pending' && isOverdue(b.due_day)).length;
+
   return {
     bills: store.records,
     loading: store.loading,
@@ -25,5 +27,7 @@ export function useBills() {
     refreshBills: store.fetch,
     getDueSoonBills,
     getOverdueBills,
+    billsByMonth,
+    overdueCount,
   };
 }

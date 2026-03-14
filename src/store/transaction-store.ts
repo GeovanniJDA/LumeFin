@@ -1,14 +1,15 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
-import { DependentTransaction } from '../types';
+import type { TransactionWithDependent } from '../types';
+import type { TransactionFormValues } from '../lib/schemas';
 
 interface TransactionStore {
-  records: DependentTransaction[];
+  records: TransactionWithDependent[];
   loading: boolean;
   error: string | null;
   fetch: () => Promise<void>;
-  add: (data: Omit<DependentTransaction, 'id' | 'created_at'>) => Promise<void>;
-  update: (id: string, data: Partial<DependentTransaction>) => Promise<void>;
+  add: (data: TransactionFormValues) => Promise<void>;
+  update: (id: string, data: Partial<TransactionFormValues>) => Promise<void>;
   remove: (id: string) => Promise<void>;
 }
 
@@ -18,13 +19,16 @@ export const useTransactionStoreRaw = create<TransactionStore>((set, get) => ({
   error: null,
   fetch: async () => {
     set({ loading: true, error: null });
-    const { data, error } = await supabase.from('dependent_transactions').select('*').order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('dependent_transactions').select('*, dependents(*)').order('created_at', { ascending: false });
     if (error) set({ error: error.message, loading: false });
-    else set({ records: data as DependentTransaction[], loading: false });
+    else set({ records: data as any as TransactionWithDependent[], loading: false });
   },
   add: async (data) => {
     set({ loading: true, error: null });
-    const { error } = await supabase.from('dependent_transactions').insert([data]);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { set({ error: 'Unauthenticated', loading: false }); return; }
+
+    const { error } = await supabase.from('dependent_transactions').insert([{ ...data, user_id: user.id }]);
     if (error) set({ error: error.message, loading: false });
     else await get().fetch();
   },

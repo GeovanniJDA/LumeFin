@@ -41,7 +41,7 @@ export default function Dashboard() {
 
       {dependents.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-bold font-caveat text-slate-800 border-b pb-2">Dependent Balances</h2>
+          <h2 className="text-xl font-bold font-caveat text-foreground border-b pb-2">Dependent Balances</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {dependents.map(dep => {
               const balance = getNetBalance(dep.id);
@@ -62,7 +62,7 @@ export default function Dashboard() {
 
       {(overdueBills.length > 0 || overdueCards.length > 0 || dueSoonBills.length > 0 || dueSoonCards.length > 0) && (
         <div className="space-y-4">
-          <h2 className="text-xl font-bold font-caveat text-slate-800 flex items-center gap-2 border-b pb-2">
+          <h2 className="text-xl font-bold font-caveat text-foreground flex items-center gap-2 border-b pb-2">
             <AlertCircle className="w-5 h-5 text-red-500" />
             Alerts
           </h2>
@@ -84,13 +84,13 @@ export default function Dashboard() {
                   <ul className="text-sm space-y-2 font-quicksand">
                     {overdueBills.slice(0, 3).map(b => (
                       <li key={b.id} className="flex justify-between border-b border-red-100 pb-1">
-                        <span className="text-slate-700">Bill (Due day {b.due_day})</span>
+                        <span className="text-foreground">Bill (Due day {b.due_day})</span>
                         <span className="font-semibold text-red-700">{formatCurrency(b.amount)}</span>
                       </li>
                     ))}
                     {overdueCards.slice(0, 3).map(c => (
                       <li key={c.id} className="flex justify-between border-b border-red-100 pb-1">
-                        <span className="text-slate-700">Card: {c.name}</span>
+                        <span className="text-foreground">Card: {c.name}</span>
                         <span className="font-semibold text-red-700">{formatCurrency(c.invoice_amount)}</span>
                       </li>
                     ))}
@@ -109,13 +109,13 @@ export default function Dashboard() {
                   <ul className="text-sm space-y-2 font-quicksand">
                     {dueSoonBills.slice(0, 3).map(b => (
                       <li key={b.id} className="flex justify-between border-b border-yellow-100 pb-1">
-                        <span className="text-slate-700">Bill (Due day {b.due_day})</span>
+                        <span className="text-foreground">Bill (Due day {b.due_day})</span>
                         <span className="font-semibold text-yellow-700">{formatCurrency(b.amount)}</span>
                       </li>
                     ))}
                     {dueSoonCards.slice(0, 3).map(c => (
                       <li key={c.id} className="flex justify-between border-b border-yellow-100 pb-1">
-                        <span className="text-slate-700">Card: {c.name} (Due day {c.due_day})</span>
+                        <span className="text-foreground">Card: {c.name} (Due day {c.due_day})</span>
                         <span className="font-semibold text-yellow-700">{formatCurrency(c.invoice_amount)}</span>
                       </li>
                     ))}

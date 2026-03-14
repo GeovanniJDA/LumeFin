@@ -15,7 +15,7 @@ export default function Dependents() {
   const columns = [
     {
       header: 'Name',
-      accessor: (row: Dependent) => <span className="font-semibold text-slate-900 font-quicksand">{row.name}</span>
+      accessor: (row: Dependent) => <span className="font-semibold text-foreground font-quicksand">{row.name}</span>
     },
     {
       header: 'Relationship',
@@ -27,14 +27,14 @@ export default function Dependents() {
     },
     {
       header: 'Notes',
-      accessor: (row: Dependent) => <span className="text-slate-500 font-quicksand truncate max-w-xs block">{row.notes || '-'}</span>
+      accessor: (row: Dependent) => <span className="text-muted-foreground font-quicksand truncate max-w-xs block">{row.notes || '-'}</span>
     },
     {
       header: 'Actions',
       accessor: (row: Dependent) => (
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={() => {}}><Edit className="w-4 h-4 text-slate-500 hover:text-blue-500" /></Button>
-          <Button variant="ghost" size="icon" onClick={() => removeDependent(row.id)}><Trash2 className="w-4 h-4 text-slate-500 hover:text-red-500" /></Button>
+          <Button variant="ghost" size="icon" onClick={() => {}}><Edit className="w-4 h-4 text-muted-foreground hover:text-blue-500" /></Button>
+          <Button variant="ghost" size="icon" onClick={() => removeDependent(row.id)}><Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-500" /></Button>
         </div>
       )
     }
@@ -54,7 +54,7 @@ export default function Dependents() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>Add Dependent</DialogTitle></DialogHeader>
-              <div className="flex items-center justify-center p-8 text-sm text-slate-500">
+              <div className="flex items-center justify-center p-8 text-sm text-muted-foreground">
                 Form implementation pending (needs Shadcn elements)
               </div>
             </DialogContent>
@@ -62,7 +62,7 @@ export default function Dependents() {
         }
       />
       {loading ? (
-        <div className="flex justify-center p-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-300 border-t-blue-600"></div></div>
+        <div className="flex justify-center p-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-border border-t-blue-600"></div></div>
       ) : (
         <DataTable data={dependents} columns={columns} keyExtractor={(row) => row.id} emptyMessage="No dependents found." />
       )}
