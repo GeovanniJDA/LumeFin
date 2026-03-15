@@ -6,16 +6,20 @@ export function useBills() {
   const store = useBillStoreRaw();
 
   useEffect(() => {
-    if (store.records.length === 0) {
-      store.fetch();
-    }
+    store.fetch();
   }, []);
 
-  const getDueSoonBills = () => store.records.filter(b => b.status === 'pending' && isDueSoon(b.due_day));
-  const getOverdueBills = () => store.records.filter(b => b.status === 'pending' && isOverdue(b.due_day));
+  const getDueSoonBills = () => store.records.filter(b => b.status === 'pending' && isDueSoon(b.due_date));
+  const getOverdueBills = () => store.records.filter(b => b.status === 'pending' && isOverdue(b.due_date));
 
   const billsByMonth = (month: string) => store.records.filter(b => b.reference_month === month);
-  const overdueCount = store.records.filter(b => b.status === 'pending' && isOverdue(b.due_day)).length;
+  
+  const currentMonthStr = new Date().toISOString().slice(0, 7);
+  const overdueCount = store.records.filter(b => 
+    b.status === 'pending' && 
+    b.reference_month === currentMonthStr &&
+    isOverdue(b.due_date)
+  ).length;
 
   return {
     bills: store.records,

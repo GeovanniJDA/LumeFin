@@ -9,14 +9,16 @@ export function formatCurrency(value: number, locale = 'pt-BR', currency = 'BRL'
   return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(value)
 }
 
-export function isDueSoon(dueDay: number): boolean {
-  const today = new Date().getDate();
-  return dueDay >= today && dueDay <= today + 5;
+import { parseISO, differenceInDays, isPast } from 'date-fns';
+
+export function isDueSoon(dueDate: string, daysThreshold = 3): boolean {
+  const date = parseISO(dueDate);
+  const diff = differenceInDays(date, new Date());
+  return diff <= daysThreshold && diff >= 0;
 }
 
-export function isOverdue(dueDay: number): boolean {
-  const today = new Date().getDate();
-  return dueDay < today;
+export function isOverdue(dueDate: string): boolean {
+  return isPast(parseISO(dueDate));
 }
 
 export function calculateNetBalance(transactions: { type: 'to_pay' | 'to_receive', amount: number }[]): number {

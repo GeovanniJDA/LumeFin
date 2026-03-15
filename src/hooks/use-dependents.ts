@@ -5,9 +5,7 @@ export function useDependents() {
   const store = useDependentStoreRaw();
 
   useEffect(() => {
-    if (store.records.length === 0) {
-      store.fetch();
-    }
+    store.fetch();
   }, []);
 
   return {

@@ -19,7 +19,7 @@ export const useBillStoreRaw = create<BillStore>((set, get) => ({
   error: null,
   fetch: async () => {
     set({ loading: true, error: null });
-    const { data, error } = await supabase.from('bills').select('*, bill_categories(*), bill_dependents(dependent_id)').order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('bills').select('*, bill_categories(*), bill_dependents(dependent_id, dependents(*))').order('created_at', { ascending: false });
     if (error) set({ error: error.message, loading: false });
     else {
       const mapped = data?.map(b => ({

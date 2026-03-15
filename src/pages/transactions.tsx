@@ -73,11 +73,13 @@ export default function Transactions() {
         description="Track dependent expenses and incoming funds." 
         action={
           <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm font-quicksand font-bold">
-                <Plus className="w-4 h-4" /> Add Transaction
-              </Button>
-            </DialogTrigger>
+            <DialogTrigger
+              render={
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm font-quicksand font-bold">
+                  <Plus className="w-4 h-4" /> Add Transaction
+                </Button>
+              }
+            />
             <DialogContent>
               <DialogHeader><DialogTitle>Add Transaction</DialogTitle></DialogHeader>
               <div className="flex items-center justify-center p-8 text-sm text-muted-foreground">

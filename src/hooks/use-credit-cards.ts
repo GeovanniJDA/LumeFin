@@ -6,15 +6,15 @@ export function useCreditCards() {
   const store = useCreditCardStoreRaw();
 
   useEffect(() => {
-    if (store.records.length === 0) {
-      store.fetch();
-    }
+    store.fetch();
   }, []);
 
-  const getDueSoonCards = () => store.records.filter(c => c.status === 'open' && isDueSoon(c.due_day));
-  const getOverdueCards = () => store.records.filter(c => c.status === 'open' && isOverdue(c.due_day));
+  const getDueSoonCards = () => store.records.filter(c => c.status === 'open' && isDueSoon(c.due_date));
+  const getOverdueCards = () => store.records.filter(c => c.status === 'open' && isOverdue(c.due_date));
 
-  const totalInvoiceAmount = store.records.reduce((acc, c) => acc + (c.invoice_amount || 0), 0);
+  const totalInvoiceAmount = store.records
+    .filter(c => c.status === 'open' || c.status === 'closed')
+    .reduce((acc, c) => acc + (c.invoice_amount || 0), 0);
 
   return {
     creditCards: store.records,

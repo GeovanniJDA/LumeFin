@@ -8,7 +8,7 @@ export const paymentTypeSchema = z.enum(['cash', 'installment']);
 export const transactionStatusSchema = z.enum(['pending', 'paid']);
 
 export const dependentSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
+  name: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres'),
   relationship: relationshipSchema,
   notes: z.string().nullable().optional(),
 });
@@ -24,19 +24,19 @@ export type BillCategoryFormValues = z.infer<typeof billCategorySchema>;
 export const billSchema = z.object({
   category_id: z.string().uuid(),
   amount: z.number().nonnegative('Amount must be positive'),
-  due_day: z.number().min(1).max(31),
+  due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD format'),
   status: billStatusSchema,
   paid_date: z.string().nullable().optional(),
   reference_month: z.string().regex(/^\d{4}-\d{2}$/, 'Must be YYYY-MM format'),
   notes: z.string().nullable().optional(),
-  dependent_ids: z.array(z.string().uuid()).default([]),
+  dependent_ids: z.array(z.string().uuid()).optional(),
 });
 export type BillFormValues = z.infer<typeof billSchema>;
 
 export const creditCardSchema = z.object({
   dependent_id: z.string().uuid().nullable().optional(),
   name: z.string().min(1, 'Name is required'),
-  due_day: z.number().min(1).max(31),
+  due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD format'),
   closing_day: z.number().min(1).max(31),
   invoice_amount: z.number().nonnegative(),
   status: cardStatusSchema,

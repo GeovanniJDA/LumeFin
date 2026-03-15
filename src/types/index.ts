@@ -30,7 +30,7 @@ export interface Bill {
   user_id: string
   category_id: string
   amount: number
-  due_day: number
+  due_date: string
   status: BillStatus
   paid_date: string | null
   reference_month: string
@@ -48,7 +48,7 @@ export interface CreditCard {
   user_id: string
   dependent_id: string | null
   name: string
-  due_day: number
+  due_date: string
   closing_day: number
   invoice_amount: number
   status: CardStatus
