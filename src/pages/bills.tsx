@@ -12,7 +12,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
@@ -43,7 +45,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
-import { useForm, Controller, type ControllerRenderProps } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { billSchema, type BillFormValues } from '../lib/schemas';
 import { formatCurrency } from '../lib/utils';
@@ -90,13 +92,13 @@ const STATUS_LABELS: Record<BillStatus, string> = {
 };
 
 const STATUS_COLORS: Record<BillStatus, string> = {
-  pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-  paid: 'bg-green-100 text-green-700 border-green-200'
+  pending: 'bg-[rgba(245,158,11,0.15)] text-[#F59E0B] border-[rgba(245,158,11,0.3)]',
+  paid: 'bg-[rgba(16,185,129,0.15)] text-[#10B981] border-[rgba(16,185,129,0.3)]'
 };
 
 export default function Bills() {
   const { bills, loading, error, addBill, updateBill, removeBill } = useBills();
-  const { categories } = useCategories();
+  const { categories, systemCategories, userCategories, loading: categoriesLoading } = useCategories();
   const { dependents } = useDependents();
 
   // Dialog & Form State
@@ -147,9 +149,6 @@ export default function Bills() {
     setFilterCategory('all');
   };
 
-  const systemCategories = categories.filter(c => c.is_system);
-  const userCategories = categories.filter(c => !c.is_system);
-
   const handleOpenAdd = () => {
     setEditingId(null);
     setSubmitError(null);
@@ -167,6 +166,7 @@ export default function Bills() {
   };
 
   const handleOpenEdit = (bill: BillWithRelations) => {
+    if (categoriesLoading || categories.length === 0) return;
     setEditingId(bill.id);
     setSubmitError(null);
     form.reset({
@@ -218,17 +218,23 @@ export default function Bills() {
         description="Gerencie suas contas e despesas."
         action={
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger>
-              <Button onClick={handleOpenAdd} className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm font-quicksand font-bold">
-                <Plus className="w-4 h-4" /> Adicionar Conta
-              </Button>
-            </DialogTrigger>
+            <DialogTrigger
+              render={
+                <Button
+                  onClick={handleOpenAdd}
+                  disabled={categoriesLoading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm font-quicksand font-bold"
+                >
+                  <Plus className="w-4 h-4" /> Adicionar Conta
+                </Button>
+              }
+            />
             <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingId ? 'Editar Conta' : 'Adicionar Conta'}</DialogTitle>
               </DialogHeader>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+                <form onSubmit={form.handleSubmit(onSubmit as any)} className="space-y-4 pt-4">
                   {submitError && (
                     <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-md">
                       {submitError}
@@ -236,36 +242,40 @@ export default function Bills() {
                   )}
 
                   <FormField
-                    control={form.control}
+                    control={form.control as any}
                     name="category_id"
-                    render={() => (
+                    render={({ field }) => (
                       <FormItem>
                         <FormLabel>Categoria *</FormLabel>
-                        <Controller
-                          control={form.control}
-                          name="category_id"
-                          render={({ field }) => (
-                            <Select value={field.value} onValueChange={field.onChange}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione..." />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {systemCategories.length > 0 && (
-                                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground w-full">Sistema</div>
-                                )}
-                                {systemCategories.map(cat => (
-                                  <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                                ))}
-                                {userCategories.length > 0 && (
-                                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground w-full mt-2">Personalizadas</div>
-                                )}
+                        <Select
+                          key={`category-${categories.length}`}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione...">
+                              {field.value
+                                ? categories.find(c => c.id === field.value)?.name ?? 'Selecione...'
+                                : 'Selecione...'}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              <SelectLabel>Categorias do Sistema</SelectLabel>
+                              {systemCategories.map(cat => (
+                                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                              ))}
+                            </SelectGroup>
+                            {userCategories.length > 0 && (
+                              <SelectGroup>
+                                <SelectLabel>Minhas Categorias</SelectLabel>
                                 {userCategories.map(cat => (
                                   <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                                 ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-                        />
+                              </SelectGroup>
+                            )}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -273,9 +283,9 @@ export default function Bills() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
-                      control={form.control}
+                      control={form.control as any}
                       name="amount"
-                      render={({ field }: { field: ControllerRenderProps<BillFormValues, 'amount'> }) => (
+                      render={({ field }) => (
                         <FormItem>
                           <FormLabel>Valor *</FormLabel>
                           <FormControl>
@@ -295,9 +305,9 @@ export default function Bills() {
                     />
 
                     <FormField
-                      control={form.control}
+                      control={form.control as any}
                       name="due_date"
-                      render={({ field }: { field: ControllerRenderProps<BillFormValues, 'due_date'> }) => (
+                      render={({ field }) => (
                         <FormItem>
                           <FormLabel>Data de Vencimento *</FormLabel>
                           <FormControl>
@@ -315,9 +325,9 @@ export default function Bills() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
-                      control={form.control}
+                      control={form.control as any}
                       name="reference_month"
-                      render={({ field }: { field: ControllerRenderProps<BillFormValues, 'reference_month'> }) => (
+                      render={({ field }) => (
                         <FormItem>
                           <FormLabel>Mês Ref (YYYY-MM) *</FormLabel>
                           <FormControl>
@@ -329,26 +339,20 @@ export default function Bills() {
                     />
 
                     <FormField
-                      control={form.control}
+                      control={form.control as any}
                       name="status"
-                      render={() => (
+                      render={({ field }) => (
                         <FormItem>
                           <FormLabel>Status *</FormLabel>
-                          <Controller
-                            control={form.control}
-                            name="status"
-                            render={({ field }) => (
-                              <Select value={field.value} onValueChange={field.onChange}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione o status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="pending">Pendente</SelectItem>
-                                  <SelectItem value="paid">Paga</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            )}
-                          />
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">Pendente</SelectItem>
+                              <SelectItem value="paid">Paga</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -357,9 +361,9 @@ export default function Bills() {
 
                   {form.watch('status') === 'paid' && (
                     <FormField
-                      control={form.control}
+                      control={form.control as any}
                       name="paid_date"
-                      render={({ field }: { field: ControllerRenderProps<BillFormValues, 'paid_date'> }) => (
+                      render={({ field }) => (
                         <FormItem>
                           <FormLabel>Data de Pagamento</FormLabel>
                           <FormControl>
@@ -377,14 +381,14 @@ export default function Bills() {
                   )}
 
                   <FormField
-                    control={form.control}
+                    control={form.control as any}
                     name="dependent_ids"
                     render={() => (
                       <FormItem>
                         <FormLabel>Dependentes</FormLabel>
                         <div className="space-y-2 border rounded-md p-3 max-h-40 overflow-y-auto bg-card">
                           <Controller
-                            control={form.control}
+                            control={form.control as any}
                             name="dependent_ids"
                             render={({ field }) => (
                               <>
@@ -393,14 +397,14 @@ export default function Bills() {
                                     <Checkbox
                                       id={`dep-${dep.id}`}
                                       checked={(field.value || []).includes(dep.id)}
-                                      onCheckedChange={(checked) => {
-                                        const currentValue = field.value || [];
-                                        if (checked) {
-                                          field.onChange([...currentValue, dep.id]);
-                                        } else {
-                                          field.onChange(currentValue.filter(id => id !== dep.id));
-                                        }
-                                      }}
+                                          onCheckedChange={(checked) => {
+                                            const currentValue = (field.value || []) as string[];
+                                            if (checked) {
+                                              field.onChange([...currentValue, dep.id]);
+                                            } else {
+                                              field.onChange(currentValue.filter((id: string) => id !== dep.id));
+                                            }
+                                          }}
                                     />
                                     <label
                                       htmlFor={`dep-${dep.id}`}
@@ -423,9 +427,9 @@ export default function Bills() {
                   />
 
                   <FormField
-                    control={form.control}
+                    control={form.control as any}
                     name="notes"
-                    render={({ field }: { field: ControllerRenderProps<BillFormValues, 'notes'> }) => (
+                    render={({ field }) => (
                       <FormItem>
                         <FormLabel>Observações</FormLabel>
                         <FormControl>
@@ -458,13 +462,13 @@ export default function Bills() {
       />
 
       {error && !isDialogOpen && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
+        <div className="p-4 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)] text-red-400 rounded-lg">
           Falha ao carregar contas: {error}
         </div>
       )}
 
       {/* Filter Bar */}
-      <div className="flex flex-col md:flex-row gap-3 bg-card p-4 rounded-xl border border-border">
+      <div className="flex flex-col md:flex-row gap-3 glass rounded-2xl p-4">
         <div className="w-full md:w-48">
           <Select value={filterStatus} onValueChange={(val) => setFilterStatus(val || 'all')}>
             <SelectTrigger>
@@ -489,7 +493,11 @@ export default function Bills() {
         <div className="w-full md:w-48">
           <Select value={filterDependent} onValueChange={(val) => setFilterDependent(val || 'all')}>
             <SelectTrigger>
-              <SelectValue placeholder="Dependente" />
+              <SelectValue placeholder="Dependente">
+                {filterDependent === 'all'
+                  ? 'Todos (Dependentes)'
+                  : dependents.find(d => d.id === filterDependent)?.name ?? 'Dependente'}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos (Dependentes)</SelectItem>
@@ -503,7 +511,11 @@ export default function Bills() {
         <div className="w-full md:w-48">
           <Select value={filterCategory} onValueChange={(val) => setFilterCategory(val || 'all')}>
             <SelectTrigger>
-              <SelectValue placeholder="Categoria" />
+              <SelectValue placeholder="Categoria">
+                {filterCategory === 'all'
+                  ? 'Todas as Categorias'
+                  : categories.find(c => c.id === filterCategory)?.name ?? 'Categoria'}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas as Categorias</SelectItem>
@@ -532,10 +544,10 @@ export default function Bills() {
           description="Ajuste os filtros ou adicione uma nova conta clicando no botão acima."
         />
       ) : (
-        <div className="rounded-xl border border-border overflow-hidden bg-card shadow-sm">
+        <div className="rounded-2xl overflow-hidden glass">
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
-              <thead className="text-xs text-muted-foreground uppercase bg-secondary/50">
+              <thead className="text-xs uppercase" style={{ background: 'rgba(255,255,255,0.02)', color: 'rgba(255,255,255,0.4)' }}>
                 <tr>
                   <th scope="col" className="px-6 py-4 font-semibold">Categoria</th>
                   <th scope="col" className="px-6 py-4 font-semibold">Dependentes</th>
@@ -569,12 +581,12 @@ export default function Bills() {
                           ) : (
                             <>
                               {billDeps.slice(0, 2).map(d => (
-                                <Badge key={d.id} variant="secondary" className="text-[10px] font-medium py-0 h-5">
+                                <Badge key={d.id} variant="secondary" className="text-[13px] font-medium py-0 h-5">
                                   {d.name}
                                 </Badge>
                               ))}
                               {billDeps.length > 2 && (
-                                <Badge variant="outline" className="text-[10px] font-medium py-0 h-5 bg-background">
+                                <Badge variant="outline" className="text-[13px] font-medium py-0 h-5 bg-background">
                                   +{billDeps.length - 2} mais
                                 </Badge>
                               )}
@@ -613,11 +625,11 @@ export default function Bills() {
                             <Edit className="w-4 h-4 text-muted-foreground hover:text-blue-600" />
                           </Button>
                           <AlertDialog>
-                            <AlertDialogTrigger>
+                            <AlertDialogTrigger render={
                               <Button variant="ghost" size="icon" className="h-8 w-8">
                                 <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-600" />
                               </Button>
-                            </AlertDialogTrigger>
+                            } />
                             <AlertDialogContent>
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Tem certeza?</AlertDialogTitle>

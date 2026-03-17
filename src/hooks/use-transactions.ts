@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useTransactionStoreRaw } from '../store/transaction-store';
-import { calculateNetBalance } from '../lib/utils';
 
 export function useTransactions(dependentId?: string) {
   const store = useTransactionStoreRaw();
@@ -12,9 +11,17 @@ export function useTransactions(dependentId?: string) {
   }, []);
 
   const getTransactionsByDependent = (id: string) => store.records.filter(t => t.dependent_id === id);
-  const getNetBalance = (id: string) => calculateNetBalance(getTransactionsByDependent(id));
 
-  const netBalanceByDependent = (id: string) => calculateNetBalance(getTransactionsByDependent(id));
+  const netBalanceByDependent = (id: string) => {
+    const dep = store.records.filter(t => t.dependent_id === id);
+    const toReceive = dep
+      .filter(t => t.type === 'to_receive' && t.status === 'pending')
+      .reduce((sum, t) => sum + t.amount, 0);
+    const toPay = dep
+      .filter(t => t.type === 'to_pay' && t.status === 'pending')
+      .reduce((sum, t) => sum + t.amount, 0);
+    return toReceive - toPay;
+  };
 
   return {
     transactions: dependentId ? getTransactionsByDependent(dependentId) : store.records,
@@ -26,7 +33,6 @@ export function useTransactions(dependentId?: string) {
     removeTransaction: store.remove,
     refreshTransactions: store.fetch,
     getTransactionsByDependent,
-    getNetBalance,
     netBalanceByDependent,
   };
 }

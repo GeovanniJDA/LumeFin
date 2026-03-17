@@ -54,6 +54,7 @@ export interface CreditCard {
   status: CardStatus
   paid_date: string | null
   reference_month: string
+  color: string | null
   notes: string | null
   created_at: string
 }

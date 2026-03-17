@@ -42,19 +42,20 @@ export const creditCardSchema = z.object({
   status: cardStatusSchema,
   paid_date: z.string().nullable().optional(),
   reference_month: z.string().regex(/^\d{4}-\d{2}$/, 'Must be YYYY-MM format'),
+  color: z.string(),
   notes: z.string().nullable().optional(),
 });
 export type CreditCardFormValues = z.infer<typeof creditCardSchema>;
 
 export const transactionSchema = z.object({
   dependent_id: z.string().uuid(),
-  transaction_date: z.string(),
-  description: z.string().min(1, 'Description is required'),
-  amount: z.number().nonnegative(),
+  transaction_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD format'),
+  description: z.string().min(2, 'Descrição deve ter pelo menos 2 caracteres'),
+  amount: z.number().min(0.01, 'Valor deve ser maior que zero'),
   type: transactionTypeSchema,
   payment_type: paymentTypeSchema,
-  installments: z.number().int().min(1).nullable().optional(),
-  paid_installments: z.number().int().min(0).nullable().optional(),
+  installments: z.number().int().min(1),
+  paid_installments: z.number().int().min(0),
   status: transactionStatusSchema,
   settled_date: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),

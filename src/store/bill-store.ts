@@ -24,7 +24,7 @@ export const useBillStoreRaw = create<BillStore>((set, get) => ({
     else {
       const mapped = data?.map(b => ({
         ...b,
-        dependents: (b.bill_dependents || []).map((bd: any) => ({ id: bd.dependent_id }))
+        dependents: (b.bill_dependents || []).map((bd: any) => bd.dependents).filter(Boolean)
       }));
       set({ records: mapped as any as BillWithRelations[], loading: false });
     }

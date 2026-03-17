@@ -8,7 +8,7 @@ import { Plus, Trash2, Edit, Users, Loader2 } from 'lucide-react';
 import type { Dependent, Relationship } from '../types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { useForm, type ControllerRenderProps } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { dependentSchema, type DependentFormValues } from '../lib/schemas';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -29,15 +29,15 @@ const RELATIONSHIP_LABELS: Record<Relationship, string> = {
 };
 
 const RELATIONSHIP_COLORS: Record<Relationship, string> = {
-  mae: 'bg-pink-100 text-pink-700 border-pink-200',
-  pai: 'bg-blue-100 text-blue-700 border-blue-200',
-  avo: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-  avoa: 'bg-teal-100 text-teal-700 border-teal-200',
-  irmao: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-  irma: 'bg-purple-100 text-purple-700 border-purple-200',
-  tio: 'bg-amber-100 text-amber-700 border-amber-200',
-  tia: 'bg-orange-100 text-orange-700 border-orange-200',
-  outro: 'bg-gray-100 text-gray-700 border-gray-200'
+  mae: 'bg-[rgba(236,72,153,0.15)] text-pink-400 border-[rgba(236,72,153,0.3)]',
+  pai: 'bg-[rgba(59,130,246,0.15)] text-blue-400 border-[rgba(59,130,246,0.3)]',
+  avo: 'bg-[rgba(16,185,129,0.15)] text-emerald-400 border-[rgba(16,185,129,0.3)]',
+  avoa: 'bg-[rgba(20,184,166,0.15)] text-teal-400 border-[rgba(20,184,166,0.3)]',
+  irmao: 'bg-[rgba(99,102,241,0.15)] text-indigo-400 border-[rgba(99,102,241,0.3)]',
+  irma: 'bg-[rgba(168,85,247,0.15)] text-purple-400 border-[rgba(168,85,247,0.3)]',
+  tio: 'bg-[rgba(245,158,11,0.15)] text-amber-400 border-[rgba(245,158,11,0.3)]',
+  tia: 'bg-[rgba(249,115,22,0.15)] text-orange-400 border-[rgba(249,115,22,0.3)]',
+  outro: 'bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.6)] border-[rgba(255,255,255,0.15)]'
 };
 
 export default function Dependents() {
@@ -75,14 +75,15 @@ export default function Dependents() {
     setIsDialogOpen(true);
   };
 
-  const onSubmit = async (data: DependentFormValues) => {
+  const onSubmit = async (data: any) => {
+    const formData = data as DependentFormValues;
     setSubmitError(null);
     setIsSubmitting(true);
     try {
       if (editingId) {
-        await updateDependent(editingId, data);
+        await updateDependent(editingId, formData);
       } else {
-        await addDependent(data);
+        await addDependent(formData);
       }
       setIsDialogOpen(false);
     } catch (err: any) {
@@ -99,17 +100,17 @@ export default function Dependents() {
         description="Gerencie seus familiares e dependentes financeiros."
         action={
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger>
+            <DialogTrigger render={
               <Button onClick={handleOpenAdd} className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm font-quicksand font-bold">
                 <Plus className="w-4 h-4" /> Adicionar Dependente
               </Button>
-            </DialogTrigger>
+            } />
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>{editingId ? 'Editar Dependente' : 'Adicionar Dependente'}</DialogTitle>
               </DialogHeader>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+                <form onSubmit={form.handleSubmit(onSubmit as any)} className="space-y-4 pt-4">
                   {submitError && (
                     <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-md">
                       {submitError}
@@ -117,9 +118,9 @@ export default function Dependents() {
                   )}
 
                   <FormField
-                    control={form.control}
+                    control={form.control as any}
                     name="name"
-                    render={({ field }: { field: ControllerRenderProps<DependentFormValues, 'name'> }) => (
+                    render={({ field }) => (
                       <FormItem>
                         <FormLabel>Nome</FormLabel>
                         <FormControl>
@@ -131,9 +132,9 @@ export default function Dependents() {
                   />
 
                   <FormField
-                    control={form.control}
+                    control={form.control as any}
                     name="relationship"
-                    render={({ field }: { field: ControllerRenderProps<DependentFormValues, 'relationship'> }) => (
+                    render={({ field }) => (
                       <FormItem>
                         <FormLabel>Parentesco</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
@@ -154,9 +155,9 @@ export default function Dependents() {
                   />
 
                   <FormField
-                    control={form.control}
+                    control={form.control as any}
                     name="notes"
-                    render={({ field }: { field: ControllerRenderProps<DependentFormValues, 'notes'> }) => (
+                    render={({ field }) => (
                       <FormItem>
                         <FormLabel>Observações (Opcional)</FormLabel>
                         <FormControl>
@@ -189,7 +190,7 @@ export default function Dependents() {
       />
 
       {error && !isDialogOpen && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
+        <div className="p-4 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)] text-red-400 rounded-lg">
           Falha ao carregar dependentes: {error}
         </div>
       )}
@@ -209,7 +210,7 @@ export default function Dependents() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {dependents.map(dep => (
-            <div key={dep.id} className="bg-card border border-border p-5 rounded-xl flex justify-between items-start shadow-sm hover:shadow-md transition-shadow">
+            <div key={dep.id} className="glass rounded-2xl p-5 flex justify-between items-start hover:shadow-lg transition-all">
               <div className="space-y-3 flex-1 overflow-hidden">
                 <div className="flex items-center gap-3">
                   <h3 className="font-semibold text-lg text-foreground font-quicksand truncate">{dep.name}</h3>
@@ -228,11 +229,11 @@ export default function Dependents() {
                 </Button>
 
                 <AlertDialog>
-                  <AlertDialogTrigger>
+                  <AlertDialogTrigger render={
                     <Button variant="ghost" size="icon">
                       <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-600" />
                     </Button>
-                  </AlertDialogTrigger>
+                  } />
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Tem certeza?</AlertDialogTitle>

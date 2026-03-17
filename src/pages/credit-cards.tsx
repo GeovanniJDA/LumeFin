@@ -9,7 +9,7 @@ import { CreditCard, Plus, Trash2, Edit, Loader2 } from 'lucide-react';
 import type { CreditCardWithDependent, CardStatus } from '../types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { useForm, Controller, type ControllerRenderProps } from 'react-hook-form';
+import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { creditCardSchema, type CreditCardFormValues } from '../lib/schemas';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -27,10 +27,21 @@ const STATUS_LABELS: Record<CardStatus, string> = {
 };
 
 const STATUS_COLORS: Record<CardStatus, string> = {
-  open: 'bg-blue-100 text-blue-700 border-blue-200',
-  closed: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-  paid: 'bg-green-100 text-green-700 border-green-200'
+  open: 'bg-[rgba(59,130,246,0.15)] text-[#3B82F6] border-[rgba(59,130,246,0.3)]',
+  closed: 'bg-[rgba(245,158,11,0.15)] text-[#F59E0B] border-[rgba(245,158,11,0.3)]',
+  paid: 'bg-[rgba(16,185,129,0.15)] text-[#10B981] border-[rgba(16,185,129,0.3)]'
 };
+
+const CARD_COLORS = [
+  { label: 'Nubank', value: '#8B5CF6' },
+  { label: 'Inter', value: '#F97316' },
+  { label: 'Bradesco', value: '#EF4444' },
+  { label: 'Itaú', value: '#F59E0B' },
+  { label: 'Santander', value: '#DC2626' },
+  { label: 'C6 Bank', value: '#1C1C1E' },
+  { label: 'XP', value: '#000000' },
+  { label: 'Cinza', value: '#6B7280' },
+];
 
 export default function CreditCards() {
   const { creditCards, loading, error, addCreditCard, updateCreditCard, removeCreditCard } = useCreditCards();
@@ -51,6 +62,7 @@ export default function CreditCards() {
       invoice_amount: 0,
       status: 'open',
       reference_month: new Date().toISOString().slice(0, 7),
+      color: '#6B7280',
       notes: ''
     }
   });
@@ -66,6 +78,7 @@ export default function CreditCards() {
       invoice_amount: 0,
       status: 'open',
       reference_month: new Date().toISOString().slice(0, 7),
+      color: '#6B7280',
       notes: ''
     });
     setIsDialogOpen(true);
@@ -82,19 +95,20 @@ export default function CreditCards() {
       invoice_amount: card.invoice_amount,
       status: card.status,
       reference_month: card.reference_month,
+      color: card.color || '#6B7280',
       notes: card.notes || ''
     });
     setIsDialogOpen(true);
   };
 
-  const onSubmit = async (data: CreditCardFormValues) => {
+  const onSubmit: SubmitHandler<CreditCardFormValues> = async (formData) => {
     setSubmitError(null);
     setIsSubmitting(true);
     try {
       if (editingId) {
-        await updateCreditCard(editingId, data);
+        await updateCreditCard(editingId, formData);
       } else {
-        await addCreditCard(data);
+        await addCreditCard(formData);
       }
       setIsDialogOpen(false);
     } catch (err: any) {
@@ -132,27 +146,27 @@ export default function CreditCards() {
         description="Gerencie seus cartões, faturas e vencimentos."
         action={
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger>
+            <DialogTrigger render={
               <Button onClick={handleOpenAdd} className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm font-quicksand font-bold">
                 <Plus className="w-4 h-4" /> Adicionar Cartão
               </Button>
-            </DialogTrigger>
+            } />
             <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingId ? 'Editar Cartão' : 'Adicionar Cartão'}</DialogTitle>
               </DialogHeader>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+                <form onSubmit={form.handleSubmit(onSubmit as any)} className="space-y-4 pt-4">
                   {submitError && (
-                    <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-md">
+                    <div className="p-3 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)] text-red-400 text-sm rounded-md">
                       {submitError}
                     </div>
                   )}
 
                   <FormField
-                    control={form.control}
+                    control={form.control as any}
                     name="name"
-                    render={({ field }: { field: ControllerRenderProps<CreditCardFormValues, 'name'> }) => (
+                    render={({ field }) => (
                       <FormItem>
                         <FormLabel>Nome do Cartão *</FormLabel>
                         <FormControl>
@@ -163,38 +177,62 @@ export default function CreditCards() {
                     )}
                   />
 
+                  {/* Color Picker */}
                   <FormField
-                    control={form.control}
+                    control={form.control as any}
+                    name="color"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cor do Cartão</FormLabel>
+                        <div className="flex gap-2 flex-wrap">
+                          {CARD_COLORS.map(c => (
+                            <button
+                              key={c.value}
+                              type="button"
+                              title={c.label}
+                              onClick={() => field.onChange(c.value)}
+                              className={`w-8 h-8 rounded-full border-2 transition-all ${
+                                field.value === c.value
+                                  ? 'border-white scale-110'
+                                  : 'border-transparent opacity-70 hover:opacity-100'
+                              }`}
+                              style={{ backgroundColor: c.value }}
+                            />
+                          ))}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control as any}
                     name="dependent_id"
-                    render={() => (
+                    render={({ field }) => (
                       <FormItem>
                         <FormLabel>Dependente (Opcional)</FormLabel>
-                        <Controller
-                          control={form.control}
-                          name="dependent_id"
-                          render={({ field }) => (
-                            <Select
-                              value={field.value || "none"}
-                              onValueChange={(val) => field.onChange(val === "none" ? null : val)}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione...">
-                                  {field.value && field.value !== "none"
-                                    ? dependents.find(d => d.id === field.value)?.name
-                                    : field.value === "none"
-                                      ? "Nenhum — cartão próprio"
-                                      : undefined}
-                                </SelectValue>
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="none">Nenhum — cartão próprio</SelectItem>
-                                {dependents.map(dep => (
-                                  <SelectItem key={dep.id} value={dep.id}>{dep.name}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-                        />
+                        <Select
+                          value={field.value || "none"}
+                          onValueChange={(val) => field.onChange(val === "none" ? null : val)}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione...">
+                                {field.value && field.value !== "none"
+                                  ? dependents.find(d => d.id === field.value)?.name
+                                  : field.value === "none"
+                                    ? "Nenhum — cartão próprio"
+                                    : undefined}
+                              </SelectValue>
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="none">Nenhum — cartão próprio</SelectItem>
+                            {dependents.map(dep => (
+                              <SelectItem key={dep.id} value={dep.id}>{dep.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -202,9 +240,9 @@ export default function CreditCards() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
-                      control={form.control}
+                      control={form.control as any}
                       name="due_date"
-                      render={({ field }: { field: ControllerRenderProps<CreditCardFormValues, 'due_date'> }) => (
+                      render={({ field }) => (
                         <FormItem>
                           <FormLabel>Data de Vencimento *</FormLabel>
                           <FormControl>
@@ -220,9 +258,9 @@ export default function CreditCards() {
                     />
 
                     <FormField
-                      control={form.control}
+                      control={form.control as any}
                       name="closing_day"
-                      render={({ field }: { field: ControllerRenderProps<CreditCardFormValues, 'closing_day'> }) => (
+                      render={({ field }) => (
                         <FormItem>
                           <FormLabel>Dia Fechamento *</FormLabel>
                           <FormControl>
@@ -244,9 +282,9 @@ export default function CreditCards() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
-                      control={form.control}
+                      control={form.control as any}
                       name="invoice_amount"
-                      render={({ field }: { field: ControllerRenderProps<CreditCardFormValues, 'invoice_amount'> }) => (
+                      render={({ field }) => (
                         <FormItem>
                           <FormLabel>Valor Fatura *</FormLabel>
                           <FormControl>
@@ -266,9 +304,9 @@ export default function CreditCards() {
                     />
 
                     <FormField
-                      control={form.control}
+                      control={form.control as any}
                       name="reference_month"
-                      render={({ field }: { field: ControllerRenderProps<CreditCardFormValues, 'reference_month'> }) => (
+                      render={({ field }) => (
                         <FormItem>
                           <FormLabel>Mês Ref (YYYY-MM) *</FormLabel>
                           <FormControl>
@@ -281,36 +319,32 @@ export default function CreditCards() {
                   </div>
 
                   <FormField
-                    control={form.control}
+                    control={form.control as any}
                     name="status"
-                    render={() => (
+                    render={({ field }) => (
                       <FormItem>
                         <FormLabel>Status *</FormLabel>
-                        <Controller
-                          control={form.control}
-                          name="status"
-                          render={({ field }) => (
-                            <Select value={field.value} onValueChange={field.onChange}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione o status" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="open">Aberta</SelectItem>
-                                <SelectItem value="closed">Fechada</SelectItem>
-                                <SelectItem value="paid">Paga</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          )}
-                        />
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o status">
+                              {field.value === 'open' ? 'Aberta' : field.value === 'closed' ? 'Fechada' : 'Paga'}
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="open">Aberta</SelectItem>
+                            <SelectItem value="closed">Fechada</SelectItem>
+                            <SelectItem value="paid">Paga</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
                   <FormField
-                    control={form.control}
+                    control={form.control as any}
                     name="notes"
-                    render={({ field }: { field: ControllerRenderProps<CreditCardFormValues, 'notes'> }) => (
+                    render={({ field }) => (
                       <FormItem>
                         <FormLabel>Observações</FormLabel>
                         <FormControl>
@@ -343,7 +377,7 @@ export default function CreditCards() {
       />
 
       {error && !isDialogOpen && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
+        <div className="p-4 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)] text-red-400 rounded-lg">
           Falha ao carregar cartões: {error}
         </div>
       )}
@@ -351,7 +385,7 @@ export default function CreditCards() {
       {loading && creditCards.length === 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map(i => (
-            <Skeleton key={i} className="h-48 w-full rounded-xl" />
+            <Skeleton key={i} className="h-48 w-full rounded-2xl" />
           ))}
         </div>
       ) : creditCards.length === 0 ? (
@@ -363,26 +397,36 @@ export default function CreditCards() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {creditCards.map(card => (
-            <div key={card.id} className="bg-card border border-border p-5 rounded-xl flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow">
+            <div
+              key={card.id}
+              className="glass rounded-2xl p-5 flex flex-col justify-between hover:shadow-lg transition-all"
+              style={{ borderLeftWidth: 3, borderLeftColor: card.color ?? '#6B7280' }}
+            >
               <div className="flex justify-between items-start mb-4">
                 <div className="space-y-1">
-                  <h3 className="font-semibold text-lg text-foreground font-quicksand truncate">{card.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full shrink-0"
+                      style={{ backgroundColor: card.color ?? '#6B7280' }}
+                    />
+                    <h3 className="font-semibold text-lg text-white font-quicksand truncate">{card.name}</h3>
+                  </div>
                   {card.dependents && (
-                    <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-secondary text-secondary-foreground">
+                    <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.6)]">
                       Dependente: {card.dependents.name}
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(card)} className="h-8 w-8">
-                    <Edit className="w-4 h-4 text-muted-foreground hover:text-blue-600" />
+                    <Edit className="w-4 h-4 text-[rgba(255,255,255,0.4)] hover:text-blue-400" />
                   </Button>
                   <AlertDialog>
-                    <AlertDialogTrigger>
+                    <AlertDialogTrigger render={
                       <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-600" />
+                        <Trash2 className="w-4 h-4 text-[rgba(255,255,255,0.4)] hover:text-red-400" />
                       </Button>
-                    </AlertDialogTrigger>
+                    } />
                     <AlertDialogContent>
                       <AlertDialogHeader>
                         <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
@@ -403,8 +447,8 @@ export default function CreditCards() {
 
               <div className="space-y-4 flex-1">
                 <div className="flex flex-col">
-                  <span className="text-sm text-muted-foreground">Valor da Fatura</span>
-                  <span className="text-2xl font-bold text-foreground">
+                  <span className="text-sm text-[rgba(255,255,255,0.4)]">Valor da Fatura</span>
+                  <span className="text-2xl font-bold text-white">
                     {formatCurrency(card.invoice_amount)}
                   </span>
                 </div>
@@ -413,12 +457,12 @@ export default function CreditCards() {
                   <span className={`px-2 py-1 rounded-md border font-medium ${STATUS_COLORS[card.status]}`}>
                     {STATUS_LABELS[card.status]}
                   </span>
-                  <span className="px-2 py-1 rounded-md bg-secondary text-secondary-foreground text-xs flex items-center">
+                  <span className="px-2 py-1 rounded-md bg-[rgba(255,255,255,0.06)] text-[rgba(255,255,255,0.5)] text-xs flex items-center">
                     Ref: {card.reference_month}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground pt-2 border-t">
+                <div className="grid grid-cols-2 gap-2 text-sm text-[rgba(255,255,255,0.4)] pt-2 border-t border-[rgba(255,255,255,0.06)]">
                   <div>Vence em {format(parseISO(card.due_date), 'dd/MM/yyyy', { locale: ptBR })}</div>
                   <div>Fecha dia {card.closing_day}</div>
                 </div>
@@ -427,7 +471,8 @@ export default function CreditCards() {
               <div className="pt-4 mt-2">
                 {card.status === 'open' && (
                   <Button 
-                    className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-medium"
+                    className="w-full bg-[rgba(245,158,11,0.15)] hover:bg-[rgba(245,158,11,0.25)] text-[#F59E0B] border border-[rgba(245,158,11,0.3)] font-medium"
+                    variant="outline"
                     onClick={() => handleCloseInvoice(card.id, card.status)}
                     disabled={loading}
                   >
@@ -436,7 +481,8 @@ export default function CreditCards() {
                 )}
                 {card.status === 'closed' && (
                   <Button 
-                    className="w-full bg-green-500 hover:bg-green-600 text-white font-medium"
+                    className="w-full bg-[rgba(16,185,129,0.15)] hover:bg-[rgba(16,185,129,0.25)] text-[#10B981] border border-[rgba(16,185,129,0.3)] font-medium"
+                    variant="outline"
                     onClick={() => handleMarkAsPaid(card.id, card.status)}
                     disabled={loading}
                   >
@@ -444,7 +490,7 @@ export default function CreditCards() {
                   </Button>
                 )}
                 {card.status === 'paid' && (
-                  <div className="w-full text-center py-2 text-sm text-green-600 font-medium bg-green-50 rounded-md border border-green-100">
+                  <div className="w-full text-center py-2 text-sm text-[#10B981] font-medium bg-[rgba(16,185,129,0.1)] rounded-md border border-[rgba(16,185,129,0.2)]">
                     Fatura Paga
                   </div>
                 )}
