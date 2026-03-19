@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { LayoutDashboard, Receipt, CreditCard, ArrowRightLeft, Users, LogOut } from 'lucide-react';
+import { toast } from 'sonner';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -23,8 +24,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate('/auth');
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        toast.error('Erro ao encerrar sessão.');
+      } else {
+        toast.success('Sessão encerrada.');
+        navigate('/auth');
+      }
+    } catch (err: any) {
+      toast.error('Erro ao encerrar sessão.');
+    }
   };
 
   return (

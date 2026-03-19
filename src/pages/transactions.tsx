@@ -58,6 +58,7 @@ import {
   Wallet,
   FilterX,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const TYPE_LABELS: Record<TransactionType, string> = {
   to_pay: 'A Pagar',
@@ -95,7 +96,6 @@ export default function Transactions() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filters
@@ -153,7 +153,6 @@ export default function Transactions() {
 
   const handleOpenAdd = () => {
     setEditingId(null);
-    setSubmitError(null);
     form.reset({
       dependent_id: '',
       transaction_date: new Date().toISOString().split('T')[0],
@@ -172,7 +171,6 @@ export default function Transactions() {
 
   const handleOpenEdit = (tx: TransactionWithDependent) => {
     setEditingId(tx.id);
-    setSubmitError(null);
     form.reset({
       dependent_id: tx.dependent_id,
       transaction_date: tx.transaction_date,
@@ -190,17 +188,18 @@ export default function Transactions() {
   };
 
   const onSubmit: SubmitHandler<TransactionFormValues> = async (formData) => {
-    setSubmitError(null);
     setIsSubmitting(true);
     try {
       if (editingId) {
         await updateTransaction(editingId, formData);
+        toast.success('Transação actualizada.');
       } else {
         await addTransaction(formData);
+        toast.success('Transação adicionada.');
       }
       setIsDialogOpen(false);
     } catch (err: any) {
-      setSubmitError(err.message || 'Erro ao salvar transação.');
+      toast.error(err.message || 'Erro inesperado.');
     } finally {
       setIsSubmitting(false);
     }
@@ -212,8 +211,9 @@ export default function Transactions() {
         status: 'paid',
         settled_date: new Date().toISOString(),
       });
+      toast.success('Transação marcada como paga.');
     } catch (err: any) {
-      console.error('Failed to mark as paid:', err);
+      toast.error(err.message || 'Erro inesperado.');
     }
   };
 
@@ -238,11 +238,6 @@ export default function Transactions() {
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit as any)} className="space-y-4 pt-4">
-                  {submitError && (
-                    <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-md">
-                      {submitError}
-                    </div>
-                  )}
 
                   {/* Dependent */}
                   <FormField
@@ -699,7 +694,14 @@ export default function Transactions() {
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => removeTransaction(tx.id)} className="bg-red-600 hover:bg-red-700 text-white">
+                                <AlertDialogAction onClick={async () => {
+                                  try {
+                                    await removeTransaction(tx.id);
+                                    toast.success('Transação removida.');
+                                  } catch (err: any) {
+                                    toast.error(err.message || 'Erro inesperado.');
+                                  }
+                                }} className="bg-red-600 hover:bg-red-700 text-white">
                                   Remover
                                 </AlertDialogAction>
                               </AlertDialogFooter>

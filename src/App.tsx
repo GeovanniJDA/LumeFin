@@ -9,6 +9,7 @@ import Transactions from './pages/transactions';
 import Auth from './pages/auth';
 import { AuthGuard } from './components/shared/auth-guard';
 import { AppLayout } from './components/shared/app-layout';
+import { Toaster } from '@/components/ui/sonner';
 
 function AuthListener() {
   const navigate = useNavigate();
@@ -34,13 +35,14 @@ function App() {
       <AuthListener />
       <Routes>
         <Route path="/auth" element={<Auth />} />
-        
+
         <Route path="/" element={<AuthGuard><AppLayout><Dashboard /></AppLayout></AuthGuard>} />
         <Route path="/bills" element={<AuthGuard><AppLayout><Bills /></AppLayout></AuthGuard>} />
         <Route path="/dependents" element={<AuthGuard><AppLayout><Dependents /></AppLayout></AuthGuard>} />
         <Route path="/credit-cards" element={<AuthGuard><AppLayout><CreditCards /></AppLayout></AuthGuard>} />
         <Route path="/transactions" element={<AuthGuard><AppLayout><Transactions /></AppLayout></AuthGuard>} />
       </Routes>
+      <Toaster position="bottom-right" richColors theme="dark" />
     </BrowserRouter>
   );
 }

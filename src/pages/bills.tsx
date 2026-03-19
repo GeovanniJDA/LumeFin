@@ -69,6 +69,7 @@ import {
   FilterX
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { toast } from 'sonner';
 
 const ICON_MAP: Record<string, LucideIcon> = {
   'zap': Zap,
@@ -104,7 +105,6 @@ export default function Bills() {
   // Dialog & Form State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filters State
@@ -151,7 +151,6 @@ export default function Bills() {
 
   const handleOpenAdd = () => {
     setEditingId(null);
-    setSubmitError(null);
     form.reset({
       category_id: '',
       amount: 0,
@@ -168,7 +167,6 @@ export default function Bills() {
   const handleOpenEdit = (bill: BillWithRelations) => {
     if (categoriesLoading || categories.length === 0) return;
     setEditingId(bill.id);
-    setSubmitError(null);
     form.reset({
       category_id: bill.category_id,
       amount: bill.amount,
@@ -183,17 +181,18 @@ export default function Bills() {
   };
 
   const onSubmit = async (data: BillFormValues) => {
-    setSubmitError(null);
     setIsSubmitting(true);
     try {
       if (editingId) {
         await updateBill(editingId, data);
+        toast.success('Conta actualizada.');
       } else {
         await addBill(data);
+        toast.success('Conta adicionada.');
       }
       setIsDialogOpen(false);
     } catch (err: any) {
-      setSubmitError(err.message || 'Erro ao salvar conta.');
+      toast.error(err.message || 'Erro inesperado.');
     } finally {
       setIsSubmitting(false);
     }
@@ -206,8 +205,9 @@ export default function Bills() {
         status: 'paid',
         paid_date: new Date().toISOString()
       });
+      toast.success('Conta marcada como paga.');
     } catch (err: any) {
-      console.error('Failed to mark as paid:', err);
+      toast.error(err.message || 'Erro inesperado.');
     }
   };
 
@@ -235,11 +235,6 @@ export default function Bills() {
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit as any)} className="space-y-4 pt-4">
-                  {submitError && (
-                    <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-md">
-                      {submitError}
-                    </div>
-                  )}
 
                   <FormField
                     control={form.control as any}
@@ -639,7 +634,14 @@ export default function Bills() {
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => removeBill(bill.id)} className="bg-red-600 hover:bg-red-700 text-white">
+                                <AlertDialogAction onClick={async () => {
+                                  try {
+                                    await removeBill(bill.id);
+                                    toast.success('Conta removida.');
+                                  } catch (err: any) {
+                                    toast.error(err.message || 'Erro inesperado.');
+                                  }
+                                }} className="bg-red-600 hover:bg-red-700 text-white">
                                   Remover
                                 </AlertDialogAction>
                               </AlertDialogFooter>

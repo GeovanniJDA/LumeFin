@@ -19,6 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency } from '../lib/utils';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 const STATUS_LABELS: Record<CardStatus, string> = {
   open: 'Aberta',
@@ -49,7 +50,6 @@ export default function CreditCards() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<CreditCardFormValues>({
@@ -69,7 +69,6 @@ export default function CreditCards() {
 
   const handleOpenAdd = () => {
     setEditingId(null);
-    setSubmitError(null);
     form.reset({
       name: '',
       dependent_id: null,
@@ -86,7 +85,6 @@ export default function CreditCards() {
 
   const handleOpenEdit = (card: CreditCardWithDependent) => {
     setEditingId(card.id);
-    setSubmitError(null);
     form.reset({
       name: card.name,
       dependent_id: card.dependent_id || null,
@@ -102,17 +100,18 @@ export default function CreditCards() {
   };
 
   const onSubmit: SubmitHandler<CreditCardFormValues> = async (formData) => {
-    setSubmitError(null);
     setIsSubmitting(true);
     try {
       if (editingId) {
         await updateCreditCard(editingId, formData);
+        toast.success('Cartão actualizado.');
       } else {
         await addCreditCard(formData);
+        toast.success('Cartão adicionado.');
       }
       setIsDialogOpen(false);
     } catch (err: any) {
-      setSubmitError(err.message || 'Erro ao salvar cartão.');
+      toast.error(err.message || 'Erro inesperado.');
     } finally {
       setIsSubmitting(false);
     }
@@ -122,8 +121,9 @@ export default function CreditCards() {
     if (currentStatus !== 'open') return;
     try {
       await updateCreditCard(id, { status: 'closed' });
+      toast.success('Status actualizado.');
     } catch (err: any) {
-      console.error('Failed to close invoice:', err);
+      toast.error(err.message || 'Erro inesperado.');
     }
   };
 
@@ -134,8 +134,9 @@ export default function CreditCards() {
         status: 'paid',
         paid_date: new Date().toISOString()
       });
+      toast.success('Status actualizado.');
     } catch (err: any) {
-      console.error('Failed to mark as paid:', err);
+      toast.error(err.message || 'Erro inesperado.');
     }
   };
 
@@ -157,11 +158,6 @@ export default function CreditCards() {
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit as any)} className="space-y-4 pt-4">
-                  {submitError && (
-                    <div className="p-3 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)] text-red-400 text-sm rounded-md">
-                      {submitError}
-                    </div>
-                  )}
 
                   <FormField
                     control={form.control as any}
@@ -436,7 +432,14 @@ export default function CreditCards() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => removeCreditCard(card.id)} className="bg-red-600 hover:bg-red-700 text-white">
+                        <AlertDialogAction onClick={async () => {
+                          try {
+                            await removeCreditCard(card.id);
+                            toast.success('Cartão removido.');
+                          } catch (err: any) {
+                            toast.error(err.message || 'Erro inesperado.');
+                          }
+                        }} className="bg-red-600 hover:bg-red-700 text-white">
                           Remover
                         </AlertDialogAction>
                       </AlertDialogFooter>

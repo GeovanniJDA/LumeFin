@@ -15,6 +15,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 
 const RELATIONSHIP_LABELS: Record<Relationship, string> = {
   mae: 'Mãe',
@@ -45,7 +46,6 @@ export default function Dependents() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<DependentFormValues>({
@@ -59,14 +59,12 @@ export default function Dependents() {
 
   const handleOpenAdd = () => {
     setEditingId(null);
-    setSubmitError(null);
     form.reset({ name: '', relationship: 'outro', notes: '' });
     setIsDialogOpen(true);
   };
 
   const handleOpenEdit = (dependent: Dependent) => {
     setEditingId(dependent.id);
-    setSubmitError(null);
     form.reset({
       name: dependent.name,
       relationship: dependent.relationship,
@@ -77,17 +75,18 @@ export default function Dependents() {
 
   const onSubmit = async (data: any) => {
     const formData = data as DependentFormValues;
-    setSubmitError(null);
     setIsSubmitting(true);
     try {
       if (editingId) {
         await updateDependent(editingId, formData);
+        toast.success('Dependente actualizado.');
       } else {
         await addDependent(formData);
+        toast.success('Dependente adicionado.');
       }
       setIsDialogOpen(false);
     } catch (err: any) {
-      setSubmitError(err.message || 'Erro ao salvar dependente.');
+      toast.error(err.message || 'Erro inesperado.');
     } finally {
       setIsSubmitting(false);
     }
@@ -111,11 +110,6 @@ export default function Dependents() {
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit as any)} className="space-y-4 pt-4">
-                  {submitError && (
-                    <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-md">
-                      {submitError}
-                    </div>
-                  )}
 
                   <FormField
                     control={form.control as any}
@@ -243,7 +237,14 @@ export default function Dependents() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => removeDependent(dep.id)} className="bg-red-600 hover:bg-red-700 text-white">
+                      <AlertDialogAction onClick={async () => {
+                        try {
+                          await removeDependent(dep.id);
+                          toast.success('Dependente removido.');
+                        } catch (err: any) {
+                          toast.error(err.message || 'Erro inesperado.');
+                        }
+                      }} className="bg-red-600 hover:bg-red-700 text-white">
                         Remover
                       </AlertDialogAction>
                     </AlertDialogFooter>

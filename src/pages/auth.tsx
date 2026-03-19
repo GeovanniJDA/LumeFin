@@ -60,7 +60,7 @@ export default function Auth() {
               <Input
                 id="email"
                 type="email"
-                placeholder="m@example.com"
+                placeholder="email address"
                 {...register('email')}
                 className={`mt-1 ${errors.email ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
               />
