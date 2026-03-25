@@ -11,6 +11,7 @@ interface TransactionStore {
   add: (data: TransactionFormValues) => Promise<void>;
   update: (id: string, data: Partial<TransactionFormValues>) => Promise<void>;
   remove: (id: string) => Promise<void>;
+  reset: () => void;
 }
 
 export const useTransactionStoreRaw = create<TransactionStore>((set, get) => ({
@@ -29,19 +30,20 @@ export const useTransactionStoreRaw = create<TransactionStore>((set, get) => ({
     if (!user) { set({ error: 'Unauthenticated', loading: false }); return; }
 
     const { error } = await supabase.from('dependent_transactions').insert([{ ...data, user_id: user.id }]);
-    if (error) set({ error: error.message, loading: false });
+    if (error) { set({ error: error.message, loading: false }); throw new Error(error.message); }
     else await get().fetch();
   },
   update: async (id, data) => {
     set({ loading: true, error: null });
     const { error } = await supabase.from('dependent_transactions').update(data).eq('id', id);
-    if (error) set({ error: error.message, loading: false });
+    if (error) { set({ error: error.message, loading: false }); throw new Error(error.message); }
     else await get().fetch();
   },
   remove: async (id) => {
     set({ loading: true, error: null });
     const { error } = await supabase.from('dependent_transactions').delete().eq('id', id);
-    if (error) set({ error: error.message, loading: false });
+    if (error) { set({ error: error.message, loading: false }); throw new Error(error.message); }
     else await get().fetch();
-  }
+  },
+  reset: () => set({ records: [], loading: false, error: null })
 }));

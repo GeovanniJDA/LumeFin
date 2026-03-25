@@ -97,6 +97,7 @@ export default function Transactions() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
 
   // Filters
   const [filterDependent, setFilterDependent] = useState<string>('all');
@@ -206,6 +207,7 @@ export default function Transactions() {
   };
 
   const handleMarkAsPaid = async (id: string) => {
+    setLoadingId(id);
     try {
       await updateTransaction(id, {
         status: 'paid',
@@ -214,6 +216,20 @@ export default function Transactions() {
       toast.success('Transação marcada como paga.');
     } catch (err: any) {
       toast.error(err.message || 'Erro inesperado.');
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    setLoadingId(id);
+    try {
+      await removeTransaction(id);
+      toast.success('Transação removida.');
+    } catch (err: any) {
+      toast.error(err.message || 'Erro inesperado.');
+    } finally {
+      setLoadingId(null);
     }
   };
 
@@ -671,18 +687,19 @@ export default function Transactions() {
                               size="sm"
                               className="h-8 text-xs font-semibold text-green-600 border-green-200 hover:bg-green-50"
                               onClick={() => handleMarkAsPaid(tx.id)}
-                              disabled={loading}
+                              disabled={loadingId === tx.id || loading}
                             >
+                              {loadingId === tx.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                               Marcar como pago
                             </Button>
                           )}
-                          <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(tx)} className="h-8 w-8">
+                          <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(tx)} disabled={loadingId === tx.id} className="h-8 w-8">
                             <Edit className="w-4 h-4 text-muted-foreground hover:text-blue-600" />
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger render={
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-600" />
+                              <Button variant="ghost" size="icon" disabled={loadingId === tx.id} className="h-8 w-8">
+                                {loadingId === tx.id ? <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" /> : <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-600" />}
                               </Button>
                             } />
                             <AlertDialogContent>
@@ -694,14 +711,7 @@ export default function Transactions() {
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={async () => {
-                                  try {
-                                    await removeTransaction(tx.id);
-                                    toast.success('Transação removida.');
-                                  } catch (err: any) {
-                                    toast.error(err.message || 'Erro inesperado.');
-                                  }
-                                }} className="bg-red-600 hover:bg-red-700 text-white">
+                                <AlertDialogAction onClick={() => handleDelete(tx.id)} className="bg-red-600 hover:bg-red-700 text-white">
                                   Remover
                                 </AlertDialogAction>
                               </AlertDialogFooter>

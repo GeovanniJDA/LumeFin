@@ -3,6 +3,7 @@ import { useCreditCards } from '../hooks/use-credit-cards';
 import { useDependents } from '../hooks/use-dependents';
 import { PageHeader } from '../components/shared/page-header';
 import { EmptyState } from '../components/shared/empty-state';
+import { MonthPicker } from '../components/shared/month-picker';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { CreditCard, Plus, Trash2, Edit, Loader2 } from 'lucide-react';
@@ -51,6 +52,7 @@ export default function CreditCards() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const form = useForm<CreditCardFormValues>({
     resolver: zodResolver(creditCardSchema),
@@ -61,7 +63,7 @@ export default function CreditCards() {
       closing_day: 1,
       invoice_amount: 0,
       status: 'open',
-      reference_month: new Date().toISOString().slice(0, 7),
+      reference_month: format(new Date(), 'yyyy-MM'),
       color: '#6B7280',
       notes: ''
     }
@@ -76,7 +78,7 @@ export default function CreditCards() {
       closing_day: 1,
       invoice_amount: 0,
       status: 'open',
-      reference_month: new Date().toISOString().slice(0, 7),
+      reference_month: format(new Date(), 'yyyy-MM'),
       color: '#6B7280',
       notes: ''
     });
@@ -119,16 +121,20 @@ export default function CreditCards() {
 
   const handleCloseInvoice = async (id: string, currentStatus: CardStatus) => {
     if (currentStatus !== 'open') return;
+    setLoadingId(id);
     try {
       await updateCreditCard(id, { status: 'closed' });
       toast.success('Status actualizado.');
     } catch (err: any) {
       toast.error(err.message || 'Erro inesperado.');
+    } finally {
+      setLoadingId(null);
     }
   };
 
   const handleMarkAsPaid = async (id: string, currentStatus: CardStatus) => {
     if (currentStatus !== 'closed') return;
+    setLoadingId(id);
     try {
       await updateCreditCard(id, {
         status: 'paid',
@@ -137,6 +143,20 @@ export default function CreditCards() {
       toast.success('Status actualizado.');
     } catch (err: any) {
       toast.error(err.message || 'Erro inesperado.');
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    setLoadingId(id);
+    try {
+      await removeCreditCard(id);
+      toast.success('Cartão removido.');
+    } catch (err: any) {
+      toast.error(err.message || 'Erro inesperado.');
+    } finally {
+      setLoadingId(null);
     }
   };
 
@@ -304,9 +324,12 @@ export default function CreditCards() {
                       name="reference_month"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Mês Ref (YYYY-MM) *</FormLabel>
+                          <FormLabel>Mês Ref *</FormLabel>
                           <FormControl>
-                            <Input placeholder="2026-03" {...field} />
+                            <MonthPicker 
+                              value={field.value} 
+                              onChange={field.onChange} 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -414,13 +437,13 @@ export default function CreditCards() {
                   )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(card)} className="h-8 w-8">
+                  <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(card)} disabled={loadingId === card.id} className="h-8 w-8">
                     <Edit className="w-4 h-4 text-[rgba(255,255,255,0.4)] hover:text-blue-400" />
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger render={
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <Trash2 className="w-4 h-4 text-[rgba(255,255,255,0.4)] hover:text-red-400" />
+                      <Button variant="ghost" size="icon" disabled={loadingId === card.id} className="h-8 w-8">
+                        {loadingId === card.id ? <Loader2 className="w-4 h-4 text-[rgba(255,255,255,0.4)] animate-spin" /> : <Trash2 className="w-4 h-4 text-[rgba(255,255,255,0.4)] hover:text-red-400" />}
                       </Button>
                     } />
                     <AlertDialogContent>
@@ -432,14 +455,7 @@ export default function CreditCards() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={async () => {
-                          try {
-                            await removeCreditCard(card.id);
-                            toast.success('Cartão removido.');
-                          } catch (err: any) {
-                            toast.error(err.message || 'Erro inesperado.');
-                          }
-                        }} className="bg-red-600 hover:bg-red-700 text-white">
+                        <AlertDialogAction onClick={() => handleDelete(card.id)} className="bg-red-600 hover:bg-red-700 text-white">
                           Remover
                         </AlertDialogAction>
                       </AlertDialogFooter>
@@ -477,8 +493,9 @@ export default function CreditCards() {
                     className="w-full bg-[rgba(245,158,11,0.15)] hover:bg-[rgba(245,158,11,0.25)] text-[#F59E0B] border border-[rgba(245,158,11,0.3)] font-medium"
                     variant="outline"
                     onClick={() => handleCloseInvoice(card.id, card.status)}
-                    disabled={loading}
+                    disabled={loadingId === card.id || loading}
                   >
+                    {loadingId === card.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                     Fechar fatura
                   </Button>
                 )}
@@ -487,8 +504,9 @@ export default function CreditCards() {
                     className="w-full bg-[rgba(16,185,129,0.15)] hover:bg-[rgba(16,185,129,0.25)] text-[#10B981] border border-[rgba(16,185,129,0.3)] font-medium"
                     variant="outline"
                     onClick={() => handleMarkAsPaid(card.id, card.status)}
-                    disabled={loading}
+                    disabled={loadingId === card.id || loading}
                   >
+                    {loadingId === card.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                     Marcar como paga
                   </Button>
                 )}

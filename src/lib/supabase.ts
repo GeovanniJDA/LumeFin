@@ -50,11 +50,12 @@ export interface Database {
   };
 }
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+import { env } from './env';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Supabase URL or Anon Key is missing');
-}
-
-export const supabase = createClient<any>(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient<any>(env.supabaseUrl, env.supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+  }
+});

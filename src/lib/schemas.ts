@@ -67,3 +67,26 @@ export const authSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 export type AuthFormValues = z.infer<typeof authSchema>;
+
+export const usernameSchema = z.object({
+  username: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres')
+});
+export type UsernameFormValues = z.infer<typeof usernameSchema>;
+
+export const emailSchema = z.object({
+  email: z.string().email('Email inválido'),
+  confirmEmail: z.string().email('Email inválido')
+}).refine(d => d.email === d.confirmEmail, {
+  message: 'Os emails não coincidem.',
+  path: ['confirmEmail']
+});
+export type EmailFormValues = z.infer<typeof emailSchema>;
+
+export const passwordSchema = z.object({
+  password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
+  confirmPassword: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres')
+}).refine(d => d.password === d.confirmPassword, {
+  message: 'As senhas não coincidem.',
+  path: ['confirmPassword']
+});
+export type PasswordFormValues = z.infer<typeof passwordSchema>;

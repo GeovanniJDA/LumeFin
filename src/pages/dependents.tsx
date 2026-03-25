@@ -47,6 +47,7 @@ export default function Dependents() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const form = useForm<DependentFormValues>({
     resolver: zodResolver(dependentSchema),
@@ -89,6 +90,18 @@ export default function Dependents() {
       toast.error(err.message || 'Erro inesperado.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    setLoadingId(id);
+    try {
+      await removeDependent(id);
+      toast.success('Dependente removido.');
+    } catch (err: any) {
+      toast.error(err.message || 'Erro inesperado.');
+    } finally {
+      setLoadingId(null);
     }
   };
 
@@ -218,14 +231,14 @@ export default function Dependents() {
               </div>
 
               <div className="flex items-center gap-1 ml-4 shrink-0">
-                <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(dep)}>
+                <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(dep)} disabled={loadingId === dep.id}>
                   <Edit className="w-4 h-4 text-muted-foreground hover:text-blue-600" />
                 </Button>
 
                 <AlertDialog>
                   <AlertDialogTrigger render={
-                    <Button variant="ghost" size="icon">
-                      <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-600" />
+                    <Button variant="ghost" size="icon" disabled={loadingId === dep.id}>
+                      {loadingId === dep.id ? <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" /> : <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-600" />}
                     </Button>
                   } />
                   <AlertDialogContent>
@@ -237,14 +250,7 @@ export default function Dependents() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={async () => {
-                        try {
-                          await removeDependent(dep.id);
-                          toast.success('Dependente removido.');
-                        } catch (err: any) {
-                          toast.error(err.message || 'Erro inesperado.');
-                        }
-                      }} className="bg-red-600 hover:bg-red-700 text-white">
+                      <AlertDialogAction onClick={() => handleDelete(dep.id)} className="bg-red-600 hover:bg-red-700 text-white">
                         Remover
                       </AlertDialogAction>
                     </AlertDialogFooter>

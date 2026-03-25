@@ -79,6 +79,10 @@
     --glass-blur: blur(20px) saturate(180%);
     --glass-shadow: 0 8px 32px rgba(0,0,0,0.4);
     --glass-highlight: inset 0 1px 0 rgba(255,255,255,0.08);
+
+    --dialog-bg: rgba(15, 15, 15, 0.97);
+    --dialog-border: rgba(255, 255, 255, 0.12);
+    --dialog-blur: blur(40px) saturate(180%);
 }
 
 @theme inline {
@@ -183,4 +187,20 @@ input[type='number']::-webkit-inner-spin-button {
 input[type='number'] {
   -moz-appearance: textfield;
   appearance: textfield;
+}
+
+[data-slot="dialog-content"] {
+  background: var(--dialog-bg) !important;
+  border: 1px solid var(--dialog-border) !important;
+  backdrop-filter: var(--dialog-blur) !important;
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+[data-slot="alert-dialog-content"] {
+  background: var(--dialog-bg) !important;
+  border: 1px solid var(--dialog-border) !important;
+  backdrop-filter: var(--dialog-blur) !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8) !important;
 }

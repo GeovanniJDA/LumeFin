@@ -7,6 +7,13 @@ export type TransactionType = 'to_pay' | 'to_receive'
 export type PaymentType = 'cash' | 'installment'
 export type TransactionStatus = 'pending' | 'paid'
 
+export interface Profile {
+  id: string
+  username: string | null
+  avatar_url: string | null
+  updated_at: string
+}
+
 export interface Dependent {
   id: string
   user_id: string

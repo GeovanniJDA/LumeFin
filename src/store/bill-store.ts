@@ -11,6 +11,7 @@ interface BillStore {
   add: (data: BillFormValues) => Promise<void>;
   update: (id: string, data: Partial<BillFormValues>) => Promise<void>;
   remove: (id: string) => Promise<void>;
+  reset: () => void;
 }
 
 export const useBillStoreRaw = create<BillStore>((set, get) => ({
@@ -36,13 +37,13 @@ export const useBillStoreRaw = create<BillStore>((set, get) => ({
 
     const { dependent_ids, ...billData } = data;
     const { data: inserted, error } = await supabase.from('bills').insert([{ ...billData, user_id: user.id } as any]).select().single();
-    if (error) { set({ error: error.message, loading: false }); return; }
+    if (error) { set({ error: error.message, loading: false }); throw new Error(error.message); }
     
     if (dependent_ids && dependent_ids.length > 0) {
       const { error: depError } = await supabase.from('bill_dependents').insert(
         dependent_ids.map(id => ({ bill_id: inserted.id, dependent_id: id })) as any
       );
-      if (depError) { set({ error: depError.message, loading: false }); return; }
+      if (depError) { set({ error: depError.message, loading: false }); throw new Error(depError.message); }
     }
     
     await get().fetch();
@@ -53,7 +54,7 @@ export const useBillStoreRaw = create<BillStore>((set, get) => ({
     
     if (Object.keys(billData).length > 0) {
       const { error } = await supabase.from('bills').update(billData as any).eq('id', id);
-      if (error) { set({ error: error.message, loading: false }); return; }
+      if (error) { set({ error: error.message, loading: false }); throw new Error(error.message); }
     }
     
     if (dependent_ids) {
@@ -70,7 +71,8 @@ export const useBillStoreRaw = create<BillStore>((set, get) => ({
   remove: async (id) => {
     set({ loading: true, error: null });
     const { error } = await supabase.from('bills').delete().eq('id', id);
-    if (error) set({ error: error.message, loading: false });
+    if (error) { set({ error: error.message, loading: false }); throw new Error(error.message); }
     else await get().fetch();
-  }
+  },
+  reset: () => set({ records: [], loading: false, error: null })
 }));
