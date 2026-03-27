@@ -18,6 +18,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 
 const RELATIONSHIP_LABELS: Record<string, string> = {
   mae: 'Mãe', pai: 'Pai', avo: 'Avô', avoa: 'Avó',
@@ -26,11 +27,18 @@ const RELATIONSHIP_LABELS: Record<string, string> = {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { bills, loading: billsLoading, getOverdueBills, getDueSoonBills } = useBills();
-  const { creditCards, loading: cardsLoading, getOverdueCards, getDueSoonCards } = useCreditCards();
-  const { transactions, loading: txLoading, netBalanceByDependent } = useTransactions();
-  const { dependents, loading: depsLoading } = useDependents();
+  const { bills, loading: billsLoading, getOverdueBills, getDueSoonBills, refreshBills: fetchBills } = useBills();
+  const { creditCards, loading: cardsLoading, getOverdueCards, getDueSoonCards, refreshCreditCards: fetchCreditCards } = useCreditCards();
+  const { transactions, loading: txLoading, netBalanceByDependent, refreshTransactions: fetchTransactions } = useTransactions();
+  const { dependents, loading: depsLoading, refreshDependents: fetchDependents } = useDependents();
   const { categories, loading: catsLoading } = useCategories();
+
+  useEffect(() => {
+    fetchBills();
+    fetchCreditCards();
+    fetchTransactions();
+    fetchDependents();
+  }, []);
 
   const isLoading = billsLoading || cardsLoading || txLoading || depsLoading || catsLoading;
 

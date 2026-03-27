@@ -8,6 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { toast } from 'sonner';
 import { Loader2, Camera, Trash2 } from 'lucide-react';
 import { PageHeader } from '../components/shared/page-header';
+import { useProfileStore } from '@/store/profile-store';
 import { 
   usernameSchema, 
   emailSchema, 
@@ -18,10 +19,12 @@ import type {
   EmailFormValues, 
   PasswordFormValues 
 } from '../lib/schemas';
-import type { Profile } from '../types';
+
+const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 export default function ProfilePage() {
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const { profile, update: updateProfile } = useProfileStore();
   const [userEmail, setUserEmail] = useState<string>('');
   const [userId, setUserId] = useState<string>('');
   
@@ -63,7 +66,6 @@ export default function ProfilePage() {
           .single()
           .then(({ data }) => {
             if (data) {
-              setProfile(data);
               usernameForm.setValue('username', data.username || '');
             }
           });
@@ -74,6 +76,16 @@ export default function ProfilePage() {
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !userId) return;
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast.error('Formato inválido. Use JPEG, PNG, WebP ou GIF.');
+      return;
+    }
+
+    if (file.size > MAX_SIZE) {
+      toast.error('Imagem muito grande. Máximo 2MB.');
+      return;
+    }
 
     setIsUploadingAvatar(true);
     try {
@@ -90,14 +102,7 @@ export default function ProfilePage() {
         .from('avatars')
         .getPublicUrl(filePath);
 
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', userId);
-
-      if (updateError) throw updateError;
-
-      setProfile(prev => prev ? { ...prev, avatar_url: publicUrl } : null);
+      await updateProfile(userId, { avatar_url: publicUrl });
       toast.success('Avatar actualizado.');
     } catch (err: any) {
       toast.error(err.message || 'Erro ao actualizar avatar.');
@@ -111,14 +116,7 @@ export default function ProfilePage() {
     if (!userId) return;
     setIsRemovingAvatar(true);
     try {
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: null })
-        .eq('id', userId);
-
-      if (updateError) throw updateError;
-
-      setProfile(prev => prev ? { ...prev, avatar_url: null } : null);
+      await updateProfile(userId, { avatar_url: null });
       toast.success('Avatar removido.');
     } catch (err: any) {
       toast.error(err.message || 'Erro ao remover avatar.');
@@ -131,14 +129,7 @@ export default function ProfilePage() {
     if (!userId) return;
     setIsSubmittingUsername(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ username: values.username })
-        .eq('id', userId);
-
-      if (error) throw error;
-      
-      setProfile(prev => prev ? { ...prev, username: values.username } : null);
+      await updateProfile(userId, { username: values.username });
       toast.success('Nome actualizado.');
     } catch (err: any) {
       toast.error(err.message || 'Erro ao actualizar nome.');

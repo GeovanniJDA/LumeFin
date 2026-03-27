@@ -17,7 +17,7 @@ import { useDependentStoreRaw } from '../../store/dependent-store';
 import { useCreditCardStoreRaw } from '../../store/credit-card-store';
 import { useTransactionStoreRaw } from '../../store/transaction-store';
 import { useCategoryStoreRaw } from '../../store/category-store';
-import type { Profile } from '../../types';
+import { useProfileStore } from '@/store/profile-store';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -29,7 +29,7 @@ const navigation = [
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const { profile, fetch: fetchProfile } = useProfileStore();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -38,12 +38,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUserEmail(session?.user.email ?? null);
       if (session?.user.id) {
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data }) => setProfile(data));
+        fetchProfile(session.user.id);
       }
     });
   }, []);
@@ -60,6 +55,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         useCreditCardStoreRaw.getState().reset();
         useTransactionStoreRaw.getState().reset();
         useCategoryStoreRaw.getState().reset();
+        useProfileStore.getState().reset();
         toast.success('Sessão encerrada.');
         navigate('/auth');
       }

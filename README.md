@@ -1,73 +1,152 @@
-# React + TypeScript + Vite
+# Finfolk
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> Open source family financial management web app.
 
-Currently, two official plugins are available:
+Finfolk is a personal tool to manage finances across multiple family members — tracking bills, credit cards, and bidirectional debts in a single interface.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Dependents** — register family members and associate them with bills and cards
+- **Bills** — track fixed monthly bills with categories, due dates, and payment status
+- **Credit Cards** — manage invoices per card with open/closed/paid status
+- **Transactions** — track bidirectional debts (to pay / to receive) with installment support
+- **Dashboard** — consolidated view with alerts for overdue and due-soon items
+- **Profile** — update username, email, password, and avatar
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Stack
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+| Layer | Technology |
+|---|---|
+| Frontend | React + Vite + TypeScript (strict) |
+| UI | shadcn/ui + Tailwind CSS |
+| State | Zustand |
+| Backend | Supabase (Postgres + Auth + Storage + RLS) |
+| Forms | React Hook Form + Zod |
+| Dates | date-fns |
+| Icons | lucide-react |
+| Deploy | Vercel |
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- pnpm
+- A [Supabase](https://supabase.com) account (free tier is sufficient)
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/your-username/finfolk.git
+cd finfolk
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Install dependencies
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm install
 ```
+
+### 3. Configure environment variables
+
+```bash
+cp .env.example .env
+```
+
+Fill in your Supabase credentials in `.env`:
+
+```
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### 4. Set up the database
+
+Run the following SQL files in order in your Supabase SQL Editor:
+
+1. `supabase/migrations/001_initial_schema.sql`
+2. `supabase/migrations/002_seed_categories.sql`
+3. `supabase/migrations/003_rls_policies.sql`
+4. `supabase/migrations/004_profiles.sql`
+
+### 5. Set up Supabase Storage
+
+In your Supabase Dashboard:
+- Go to **Storage → New bucket**
+- Name: `avatars`
+- Public: ✅
+
+Then run in SQL Editor:
+
+```sql
+create policy "avatar_upload" on storage.objects
+  for all using (
+    bucket_id = 'avatars'
+    and auth.uid()::text = (storage.foldername(name))[1]
+  );
+```
+
+### 6. Start the development server
+
+```bash
+pnpm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173).
+
+---
+
+## Project Structure
+
+```
+src/
+├── components/
+│   ├── ui/           # shadcn components — never edit manually
+│   ├── shared/       # reusable app components
+│   └── sections/     # page-level section components
+├── hooks/            # one custom hook per domain
+├── lib/
+│   ├── supabase.ts   # supabase client
+│   ├── schemas.ts    # all Zod schemas (single source of truth)
+│   └── utils.ts      # pure utility functions (no side effects)
+├── pages/            # one file per route
+├── store/            # Zustand stores — one per domain
+└── types/            # TypeScript interfaces
+supabase/
+└── migrations/       # versioned SQL files
+```
+
+---
+
+## Domain Model
+
+```
+User (Supabase Auth)
+├── Dependents (family members)
+├── BillCategories (system defaults + custom)
+├── Bills → belongs to category, has many dependents
+├── CreditCards → optionally linked to a dependent
+└── DependentTransactions → linked to a dependent (to_pay | to_receive)
+```
+
+---
+
+## Security
+
+- Row Level Security (RLS) enabled on all tables
+- All data is scoped to the authenticated user via `auth.uid()`
+- Environment variables validated at startup
+- Session timeout after 30 minutes of inactivity
+- `.env` excluded from version control
+
+---
+
+## License
+
+MIT
