@@ -67,7 +67,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#000000] font-quicksand pb-16 md:pb-0 md:flex">
+    <div className="min-h-screen bg-black font-quicksand pb-16 md:pb-0 md:flex">
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex flex-col w-64 fixed inset-y-0 z-10 glass border-r border-[rgba(255,255,255,0.06)]" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(20px)' }}>
         <div className="p-6">

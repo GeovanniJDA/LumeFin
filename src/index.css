@@ -130,13 +130,22 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
-  body {
-    @apply bg-background text-foreground;
-    }
+  }
   html {
     @apply font-sans;
-    }
+    background: #000000;
+    min-height: 100%;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background: #000000;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  #root {
+    background: #000000;
+    min-height: 100vh;
+  }
 }
 
 /* Glass card utilities */
