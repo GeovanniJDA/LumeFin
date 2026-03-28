@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import { supabase } from './lib/supabase';
+import { supabase, setupAuthListener } from './lib/supabase';
 import Dashboard from './pages/dashboard';
 import Bills from './pages/bills';
 import Dependents from './pages/dependents';
@@ -11,30 +11,13 @@ import Profile from './pages/profile';
 import { AuthGuard } from './components/shared/auth-guard';
 import { AppLayout } from './components/shared/app-layout';
 import { Toaster } from '@/components/ui/sonner';
-import { useBillStoreRaw } from './store/bill-store';
-import { useDependentStoreRaw } from './store/dependent-store';
-import { useCreditCardStoreRaw } from './store/credit-card-store';
-import { useTransactionStoreRaw } from './store/transaction-store';
-import { useCategoryStoreRaw } from './store/category-store';
 import { toast } from 'sonner';
 
 function AuthListener() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_OUT') {
-        useBillStoreRaw.getState().reset();
-        useDependentStoreRaw.getState().reset();
-        useCreditCardStoreRaw.getState().reset();
-        useTransactionStoreRaw.getState().reset();
-        useCategoryStoreRaw.getState().reset();
-        navigate('/auth');
-      } else if (event === 'SIGNED_IN') {
-        navigate('/');
-      }
-    });
-
+    const { data: { subscription } } = setupAuthListener(navigate);
     return () => subscription.unsubscribe();
   }, [navigate]);
 

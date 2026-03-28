@@ -91,7 +91,7 @@ const RELATIONSHIP_LABELS: Record<string, string> = {
 };
 
 export default function Transactions() {
-  const { transactions, loading, error, addTransaction, updateTransaction, removeTransaction, netBalanceByDependent } = useTransactions();
+  const { transactions, loading, error, addTransaction, updateTransaction, removeTransaction, netBalanceByDependent, page, totalPages, hasNextPage, hasPrevPage, nextPage, prevPage, resetPage } = useTransactions();
   const { dependents } = useDependents();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -150,6 +150,7 @@ export default function Transactions() {
     setFilterDependent('all');
     setFilterType('all');
     setFilterStatus('all');
+    resetPage();
   };
 
   const handleOpenAdd = () => {
@@ -556,7 +557,7 @@ export default function Transactions() {
       {/* Filter Bar */}
       <div className="flex flex-col md:flex-row gap-3 glass rounded-2xl p-4">
         <div className="w-full md:w-48">
-          <Select value={filterDependent} onValueChange={(val) => setFilterDependent(val || 'all')}>
+          <Select value={filterDependent} onValueChange={(val) => { setFilterDependent(val || 'all'); resetPage(); }}>
             <SelectTrigger>
               <SelectValue placeholder="Dependente">
                 {filterDependent === 'all'
@@ -574,7 +575,7 @@ export default function Transactions() {
         </div>
 
         <div className="w-full md:w-48">
-          <Select value={filterType} onValueChange={(val) => setFilterType(val || 'all')}>
+          <Select value={filterType} onValueChange={(val) => { setFilterType(val || 'all'); resetPage(); }}>
             <SelectTrigger>
               <SelectValue placeholder="Tipo">
                 {filterType === 'all' ? 'Todos os Tipos' : TYPE_LABELS[filterType as TransactionType]}
@@ -589,7 +590,7 @@ export default function Transactions() {
         </div>
 
         <div className="w-full md:w-48">
-          <Select value={filterStatus} onValueChange={(val) => setFilterStatus(val || 'all')}>
+          <Select value={filterStatus} onValueChange={(val) => { setFilterStatus(val || 'all'); resetPage(); }}>
             <SelectTrigger>
               <SelectValue placeholder="Status">
                 {filterStatus === 'all' ? 'Todos os Status' : STATUS_LABELS[filterStatus as TransactionStatus]}
@@ -725,6 +726,31 @@ export default function Transactions() {
               </tbody>
             </table>
           </div>
+          {totalPages > 0 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t border-white/8">
+              <span className="text-sm text-white/40">
+                Página {page + 1} de {totalPages || 1}
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={prevPage}
+                  disabled={!hasPrevPage}
+                >
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={nextPage}
+                  disabled={!hasNextPage}
+                >
+                  Próxima
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

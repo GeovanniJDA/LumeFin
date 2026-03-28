@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { Profile } from '@/types'
-import { supabase } from '@/lib/supabase'
+import { supabase, handleSupabaseError } from '@/lib/supabase'
 
 interface ProfileStore {
   profile: Profile | null
@@ -16,12 +16,15 @@ export const useProfileStore = create<ProfileStore>((set) => ({
 
   fetch: async (userId) => {
     set({ loading: true })
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single()
     
+    if (error) {
+      if (handleSupabaseError(error)) return;
+    }
     set({ profile: data, loading: false })
   },
 
@@ -33,7 +36,10 @@ export const useProfileStore = create<ProfileStore>((set) => ({
       .select()
       .single()
       
-    if (error) throw new Error(error.message)
+    if (error) {
+      if (handleSupabaseError(error)) return;
+      throw new Error(error.message)
+    }
     set({ profile: data })
   },
 

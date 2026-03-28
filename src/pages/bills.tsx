@@ -99,7 +99,7 @@ const STATUS_COLORS: Record<BillStatus, string> = {
 };
 
 export default function Bills() {
-  const { bills, loading, error, addBill, updateBill, removeBill } = useBills();
+  const { bills, loading, error, addBill, updateBill, removeBill, page, totalPages, hasNextPage, hasPrevPage, nextPage, prevPage, resetPage } = useBills();
   const { categories, systemCategories, userCategories, loading: categoriesLoading } = useCategories();
   const { dependents } = useDependents();
 
@@ -149,6 +149,7 @@ export default function Bills() {
     setFilterMonth('');
     setFilterDependent('all');
     setFilterCategory('all');
+    resetPage();
   };
 
   const handleOpenAdd = () => {
@@ -485,7 +486,7 @@ export default function Bills() {
       {/* Filter Bar */}
       <div className="flex flex-col md:flex-row gap-3 glass rounded-2xl p-4">
         <div className="w-full md:w-48">
-          <Select value={filterStatus} onValueChange={(val) => setFilterStatus(val || 'all')}>
+          <Select value={filterStatus} onValueChange={(val) => { setFilterStatus(val || 'all'); resetPage(); }}>
             <SelectTrigger>
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -501,7 +502,7 @@ export default function Bills() {
           <div className="flex-1">
             <MonthPicker
               value={filterMonth}
-              onChange={setFilterMonth}
+              onChange={(val) => { setFilterMonth(val); resetPage(); }}
             />
           </div>
           {filterMonth && (
@@ -509,7 +510,7 @@ export default function Bills() {
               variant="outline"
               size="icon"
               className="h-10 w-10 shrink-0 border-dashed text-muted-foreground hover:text-foreground"
-              onClick={() => setFilterMonth('')}
+              onClick={() => { setFilterMonth(''); resetPage(); }}
             >
               <FilterX className="h-4 w-4" />
             </Button>
@@ -517,7 +518,7 @@ export default function Bills() {
         </div>
 
         <div className="w-full md:w-48">
-          <Select value={filterDependent} onValueChange={(val) => setFilterDependent(val || 'all')}>
+          <Select value={filterDependent} onValueChange={(val) => { setFilterDependent(val || 'all'); resetPage(); }}>
             <SelectTrigger>
               <SelectValue placeholder="Dependente">
                 {filterDependent === 'all'
@@ -535,7 +536,7 @@ export default function Bills() {
         </div>
 
         <div className="w-full md:w-48">
-          <Select value={filterCategory} onValueChange={(val) => setFilterCategory(val || 'all')}>
+          <Select value={filterCategory} onValueChange={(val) => { setFilterCategory(val || 'all'); resetPage(); }}>
             <SelectTrigger>
               <SelectValue placeholder="Categoria">
                 {filterCategory === 'all'
@@ -680,6 +681,31 @@ export default function Bills() {
               </tbody>
             </table>
           </div>
+          {totalPages > 0 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t border-white/8">
+              <span className="text-sm text-white/40">
+                Página {page + 1} de {totalPages || 1}
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={prevPage}
+                  disabled={!hasPrevPage}
+                >
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={nextPage}
+                  disabled={!hasNextPage}
+                >
+                  Próxima
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
