@@ -12,7 +12,7 @@ Object.defineProperty(window, 'localStorage', {
 })
 
 // Mock do fetch
-global.fetch = vi.fn()
+globalThis.fetch = vi.fn()
 
 // Mock do console.error para evitar ruído nos testes
 console.error = vi.fn()
