@@ -207,11 +207,10 @@ export default function CreditCards() {
                               type="button"
                               title={c.label}
                               onClick={() => field.onChange(c.value)}
-                              className={`w-8 h-8 rounded-full border-2 transition-all ${
-                                field.value === c.value
-                                  ? 'border-white scale-110'
-                                  : 'border-transparent opacity-70 hover:opacity-100'
-                              }`}
+                              className={`w-8 h-8 rounded-full border-2 transition-all ${field.value === c.value
+                                ? 'border-white scale-110'
+                                : 'border-transparent opacity-70 hover:opacity-100'
+                                }`}
                               style={{ backgroundColor: c.value }}
                             />
                           ))}
@@ -226,9 +225,9 @@ export default function CreditCards() {
                     name="dependent_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Dependente (Opcional)</FormLabel>
+                        <FormLabel>DependenNenhumte (Opcional)</FormLabel>
                         <Select
-                          value={field.value || "none"}
+                          value={field.value || "Selecione"}
                           onValueChange={(val) => field.onChange(val === "none" ? null : val)}
                         >
                           <FormControl>
@@ -326,9 +325,9 @@ export default function CreditCards() {
                         <FormItem>
                           <FormLabel>Mês Ref *</FormLabel>
                           <FormControl>
-                            <MonthPicker 
-                              value={field.value} 
-                              onChange={field.onChange} 
+                            <MonthPicker
+                              value={field.value}
+                              onChange={field.onChange}
                             />
                           </FormControl>
                           <FormMessage />
@@ -489,7 +488,7 @@ export default function CreditCards() {
 
               <div className="pt-4 mt-2">
                 {card.status === 'open' && (
-                  <Button 
+                  <Button
                     className="w-full bg-[rgba(245,158,11,0.15)] hover:bg-[rgba(245,158,11,0.25)] text-[#F59E0B] border border-[rgba(245,158,11,0.3)] font-medium"
                     variant="outline"
                     onClick={() => handleCloseInvoice(card.id, card.status)}
@@ -500,7 +499,7 @@ export default function CreditCards() {
                   </Button>
                 )}
                 {card.status === 'closed' && (
-                  <Button 
+                  <Button
                     className="w-full bg-[rgba(16,185,129,0.15)] hover:bg-[rgba(16,185,129,0.25)] text-[#10B981] border border-[rgba(16,185,129,0.3)] font-medium"
                     variant="outline"
                     onClick={() => handleMarkAsPaid(card.id, card.status)}

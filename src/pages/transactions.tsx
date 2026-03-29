@@ -402,10 +402,11 @@ export default function Transactions() {
                               <Input
                                 type="text"
                                 inputMode="numeric"
-                                value={field.value === 0 ? '' : String(field.value)}
+                                value={field.value === 1 ? '' : String(field.value)}
+                                placeholder="1"
                                 onChange={(e) => {
                                   const val = e.target.value.replace(/[^0-9]/g, '');
-                                  field.onChange(val === '' ? 1 : Number(val));
+                                  field.onChange(val === '' ? 1 : parseInt(val, 10));
                                 }}
                               />
                             </FormControl>
@@ -423,10 +424,13 @@ export default function Transactions() {
                               <Input
                                 type="text"
                                 inputMode="numeric"
-                                value={String(field.value)}
+                                value={field.value === 0 ? '' : String(field.value)}
+                                placeholder="0"
                                 onChange={(e) => {
                                   const val = e.target.value.replace(/[^0-9]/g, '');
-                                  field.onChange(val === '' ? 0 : Number(val));
+                                  const parsed = val === '' ? 0 : parseInt(val, 10);
+                                  const max = form.getValues('installments') || 1;
+                                  field.onChange(Math.min(parsed, max));
                                 }}
                               />
                             </FormControl>

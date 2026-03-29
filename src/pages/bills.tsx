@@ -67,7 +67,11 @@ import {
   Home,
   HeartPulse,
   Car,
-  FilterX
+  FilterX,
+  Tag,
+  Phone,
+  GraduationCap,
+  Music
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
@@ -81,6 +85,19 @@ const ICON_MAP: Record<string, LucideIcon> = {
   'home': Home,
   'heart-pulse': HeartPulse,
   'car': Car,
+  'tag': Tag,
+  'phone': Phone,
+  'graduation-cap': GraduationCap,
+  'music': Music,
+  'receipt': Receipt
+};
+
+const ICON_LABELS: Record<string, string> = {
+  'zap': 'Energia', 'droplets': 'Água', 'wifi': 'Internet',
+  'tv': 'Streaming', 'shopping-cart': 'Compras',
+  'home': 'Casa', 'heart-pulse': 'Saúde', 'car': 'Transporte',
+  'tag': 'Outros', 'receipt': 'Geral', 'phone': 'Telefone',
+  'graduation-cap': 'Educação', 'music': 'Entretenimento'
 };
 
 function getCategoryIcon(iconName: string | null) {
@@ -100,7 +117,7 @@ const STATUS_COLORS: Record<BillStatus, string> = {
 
 export default function Bills() {
   const { bills, loading, error, addBill, updateBill, removeBill, page, totalPages, hasNextPage, hasPrevPage, nextPage, prevPage, resetPage } = useBills();
-  const { categories, systemCategories, userCategories, loading: categoriesLoading } = useCategories();
+  const { categories, systemCategories, userCategories, loading: categoriesLoading, addCategory, removeCategory } = useCategories();
   const { dependents } = useDependents();
 
   // Dialog & Form State
@@ -108,6 +125,15 @@ export default function Bills() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+
+  // Category Manager State
+  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryIcon, setNewCategoryIcon] = useState('tag');
+  const [isCategorySubmitting, setIsCategorySubmitting] = useState(false);
+
+  const [isNewCategoryDialogOpen, setIsNewCategoryDialogOpen] = useState(false);
+  const [isSavingCategory, setIsSavingCategory] = useState(false);
 
   // Filters State
   const currentMonthStr = format(new Date(), 'yyyy-MM');
@@ -229,28 +255,137 @@ export default function Bills() {
     }
   };
 
+  const handleAddCategory = async () => {
+    if (newCategoryName.length < 2) return;
+    setIsCategorySubmitting(true);
+    try {
+      await addCategory({
+        name: newCategoryName,
+        icon: newCategoryIcon,
+        is_system: false
+      });
+      toast.success('Categoria adicionada.');
+      setNewCategoryName('');
+      setNewCategoryIcon('tag');
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao adicionar categoria.');
+    } finally {
+      setIsCategorySubmitting(false);
+    }
+  };
+
+  const handleRemoveCategory = async (id: string) => {
+    try {
+      await removeCategory(id);
+      toast.success('Categoria removida.');
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao remover categoria.');
+    }
+  };
+
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
       <PageHeader
         title="Contas"
         description="Gerencie suas contas e despesas."
         action={
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger
-              render={
-                <Button
-                  onClick={handleOpenAdd}
-                  disabled={categoriesLoading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm font-quicksand font-bold"
-                >
-                  <Plus className="w-4 h-4" /> Adicionar Conta
-                </Button>
-              }
-            />
-            <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingId ? 'Editar Conta' : 'Adicionar Conta'}</DialogTitle>
-              </DialogHeader>
+          <div className="flex items-center gap-2">
+            <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+              <DialogTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    className="gap-2 shadow-sm font-quicksand font-bold border-white/10"
+                  >
+                    Gerenciar Categorias
+                  </Button>
+                }
+              />
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Gerenciar Categorias</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Nome (*)"
+                      value={newCategoryName}
+                      onChange={e => setNewCategoryName(e.target.value)}
+                    />
+                    <Select value={newCategoryIcon} onValueChange={v => v && setNewCategoryIcon(v)}>
+                      <SelectTrigger className="w-[150px]">
+                        <SelectValue placeholder="Ícone" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.keys(ICON_MAP).map(iconName => {
+                          const IconComp = ICON_MAP[iconName];
+                          return (
+                            <SelectItem key={iconName} value={iconName}>
+                              <div className="flex items-center gap-2">
+                                <IconComp className="w-4 h-4" /> 
+                                <span className="truncate">{ICON_LABELS[iconName] || iconName}</span>
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                    <Button 
+                      onClick={handleAddCategory} 
+                      disabled={newCategoryName.length < 2 || isCategorySubmitting}
+                      className="bg-blue-600 hover:bg-blue-700 text-white shrink-0"
+                    >
+                      {isCategorySubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                    {userCategories.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-4">Nenhuma categoria personalizada.</p>
+                    ) : (
+                      userCategories.map(cat => {
+                        const IconComponent = getCategoryIcon(cat.icon);
+                        return (
+                          <div key={cat.id} className="flex items-center justify-between p-2 rounded-md border border-white/5 bg-white/5">
+                            <div className="flex items-center gap-3">
+                              <div className="p-1.5 bg-secondary rounded-md">
+                                <IconComponent className="w-4 h-4" />
+                              </div>
+                              <span className="text-sm font-medium">{cat.name}</span>
+                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="w-8 h-8 text-muted-foreground hover:text-red-500"
+                              onClick={() => handleRemoveCategory(cat.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        )
+                      })
+                    )}
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger
+                render={
+                  <Button
+                    onClick={handleOpenAdd}
+                    disabled={categoriesLoading}
+                    className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm font-quicksand font-bold"
+                  >
+                    <Plus className="w-4 h-4" /> Adicionar Conta
+                  </Button>
+                }
+              />
+              <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>{editingId ? 'Editar Conta' : 'Adicionar Conta'}</DialogTitle>
+                </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit as any)} className="space-y-4 pt-4">
 
@@ -263,7 +398,14 @@ export default function Bills() {
                         <Select
                           key={`category-${categories.length}`}
                           value={field.value}
-                          onValueChange={field.onChange}
+                          onValueChange={(value) => {
+                            const selected = categories.find(c => c.id === value)
+                            if (selected?.name === 'Outros') {
+                              setIsNewCategoryDialogOpen(true)
+                            } else {
+                              field.onChange(value)
+                            }
+                          }}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione...">
@@ -290,6 +432,99 @@ export default function Bills() {
                           </SelectContent>
                         </Select>
                         <FormMessage />
+
+                        <Dialog
+                          open={isNewCategoryDialogOpen}
+                          onOpenChange={setIsNewCategoryDialogOpen}
+                        >
+                          <DialogContent className="sm:max-w-[360px]">
+                            <DialogHeader>
+                              <DialogTitle>Nova Categoria</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4 pt-2">
+                              <div>
+                                <label className="text-sm font-medium text-white/80">
+                                  Nome da Categoria *
+                                </label>
+                                <Input
+                                  value={newCategoryName}
+                                  onChange={e => setNewCategoryName(e.target.value)}
+                                  placeholder="Ex: Academia, Pet, Farmácia..."
+                                  className="mt-1"
+                                  autoFocus
+                                />
+                              </div>
+                              <div>
+                                <label className="text-sm font-medium text-white/80">
+                                  Ícone
+                                </label>
+                                <Select value={newCategoryIcon} onValueChange={v => v && setNewCategoryIcon(v)}>
+                                  <SelectTrigger className="mt-1">
+                                    <SelectValue>
+                                      {newCategoryIcon}
+                                    </SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="tag">Outros</SelectItem>
+                                    <SelectItem value="receipt">Geral</SelectItem>
+                                    <SelectItem value="zap">Energia</SelectItem>
+                                    <SelectItem value="droplets">Água</SelectItem>
+                                    <SelectItem value="wifi">Internet</SelectItem>
+                                    <SelectItem value="tv">Streaming</SelectItem>
+                                    <SelectItem value="shopping-cart">Compras</SelectItem>
+                                    <SelectItem value="home">Casa</SelectItem>
+                                    <SelectItem value="heart-pulse">Saúde</SelectItem>
+                                    <SelectItem value="car">Transporte</SelectItem>
+                                    <SelectItem value="phone">Telefone</SelectItem>
+                                    <SelectItem value="graduation-cap">Educação</SelectItem>
+                                    <SelectItem value="music">Entretenimento</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="flex justify-end gap-2 pt-2">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setIsNewCategoryDialogOpen(false)
+                                    setNewCategoryName('')
+                                    setNewCategoryIcon('tag')
+                                  }}
+                                >
+                                  Cancelar
+                                </Button>
+                                <Button
+                                  type="button"
+                                  disabled={isSavingCategory || newCategoryName.trim().length < 2}
+                                  onClick={async () => {
+                                    setIsSavingCategory(true)
+                                    try {
+                                      const newCat = await addCategory({
+                                        name: newCategoryName.trim(),
+                                        icon: newCategoryIcon,
+                                        is_system: false
+                                      })
+                                      if (newCat) field.onChange(newCat.id)
+                                      setIsNewCategoryDialogOpen(false)
+                                      setNewCategoryName('')
+                                      setNewCategoryIcon('tag')
+                                      toast.success('Categoria criada.')
+                                    } catch (err: any) {
+                                      toast.error(err.message || 'Erro ao criar categoria.')
+                                    } finally {
+                                      setIsSavingCategory(false)
+                                    }
+                                  }}
+                                >
+                                  {isSavingCategory
+                                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                                    : 'Criar e Selecionar'
+                                  }
+                                </Button>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       </FormItem>
                     )}
                   />
@@ -474,6 +709,7 @@ export default function Bills() {
               </Form>
             </DialogContent>
           </Dialog>
+          </div>
         }
       />
 

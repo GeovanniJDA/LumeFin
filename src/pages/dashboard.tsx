@@ -61,9 +61,12 @@ export default function Dashboard() {
 
   // ── Section 2: Alerts ──
   const overdueBills = getOverdueBills();
-  const dueSoonBills = getDueSoonBills();
+  const overdueBillIds = new Set(overdueBills.map(b => b.id));
+  const dueSoonBills = getDueSoonBills().filter(b => !overdueBillIds.has(b.id));
+
   const overdueCards = getOverdueCards();
-  const dueSoonCards = getDueSoonCards();
+  const overdueCardIds = new Set(overdueCards.map(c => c.id));
+  const dueSoonCards = getDueSoonCards().filter(c => !overdueCardIds.has(c.id));
   const hasAlerts = overdueBills.length > 0 || dueSoonBills.length > 0 || overdueCards.length > 0 || dueSoonCards.length > 0;
 
   const getCategoryName = (categoryId: string) => {

@@ -8,7 +8,7 @@ interface CategoryStore {
   loading: boolean;
   error: string | null;
   fetch: () => Promise<void>;
-  add: (data: BillCategoryFormValues) => Promise<void>;
+  add: (data: BillCategoryFormValues) => Promise<BillCategory | undefined>;
   update: (id: string, data: Partial<BillCategoryFormValues>) => Promise<void>;
   remove: (id: string) => Promise<void>;
   reset: () => void;
@@ -36,9 +36,9 @@ export const useCategoryStoreRaw = create<CategoryStore>((set, get) => ({
       user_id: user.id
     };
 
-    const { error } = await supabase.from('bill_categories').insert([row as any]);
+    const { data: newRow, error } = await supabase.from('bill_categories').insert([row as any]).select().single();
     if (error) { set({ error: error.message, loading: false }); throw new Error(error.message); }
-    else await get().fetch();
+    else { await get().fetch(); return newRow as BillCategory; }
   },
   update: async (id, data) => {
     set({ loading: true, error: null });

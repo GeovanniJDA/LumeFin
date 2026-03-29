@@ -1,13 +1,14 @@
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { supabase, setupAuthListener } from './lib/supabase';
-import Dashboard from './pages/dashboard';
-import Bills from './pages/bills';
-import Dependents from './pages/dependents';
-import CreditCards from './pages/credit-cards';
-import Transactions from './pages/transactions';
-import Auth from './pages/auth';
-import Profile from './pages/profile';
+
+const Dashboard = lazy(() => import('./pages/dashboard'));
+const Bills = lazy(() => import('./pages/bills'));
+const Dependents = lazy(() => import('./pages/dependents'));
+const CreditCards = lazy(() => import('./pages/credit-cards'));
+const Transactions = lazy(() => import('./pages/transactions'));
+const Auth = lazy(() => import('./pages/auth'));
+const Profile = lazy(() => import('./pages/profile'));
 import { AuthGuard } from './components/shared/auth-guard';
 import { AppLayout } from './components/shared/app-layout';
 import { Toaster } from '@/components/ui/sonner';
@@ -55,16 +56,22 @@ function App() {
     <BrowserRouter>
       <AuthListener />
       <InactivityListener />
-      <Routes>
-        <Route path="/auth" element={<Auth />} />
+      <Suspense fallback={
+        <div className="min-h-screen bg-black flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }>
+        <Routes>
+          <Route path="/auth" element={<Auth />} />
 
-        <Route path="/" element={<AuthGuard><AppLayout><Dashboard /></AppLayout></AuthGuard>} />
-        <Route path="/bills" element={<AuthGuard><AppLayout><Bills /></AppLayout></AuthGuard>} />
-        <Route path="/dependents" element={<AuthGuard><AppLayout><Dependents /></AppLayout></AuthGuard>} />
-        <Route path="/credit-cards" element={<AuthGuard><AppLayout><CreditCards /></AppLayout></AuthGuard>} />
-        <Route path="/transactions" element={<AuthGuard><AppLayout><Transactions /></AppLayout></AuthGuard>} />
-        <Route path="/profile" element={<AuthGuard><AppLayout><Profile /></AppLayout></AuthGuard>} />
-      </Routes>
+          <Route path="/" element={<AuthGuard><AppLayout><Dashboard /></AppLayout></AuthGuard>} />
+          <Route path="/bills" element={<AuthGuard><AppLayout><Bills /></AppLayout></AuthGuard>} />
+          <Route path="/dependents" element={<AuthGuard><AppLayout><Dependents /></AppLayout></AuthGuard>} />
+          <Route path="/credit-cards" element={<AuthGuard><AppLayout><CreditCards /></AppLayout></AuthGuard>} />
+          <Route path="/transactions" element={<AuthGuard><AppLayout><Transactions /></AppLayout></AuthGuard>} />
+          <Route path="/profile" element={<AuthGuard><AppLayout><Profile /></AppLayout></AuthGuard>} />
+        </Routes>
+      </Suspense>
       <Toaster position="bottom-right" richColors theme="dark" />
     </BrowserRouter>
   );

@@ -9,6 +9,19 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { authSchema, type AuthFormValues } from '../lib/schemas';
 import { useNavigate } from 'react-router-dom';
 
+const AUTH_ERRORS: Record<string, string> = {
+  'Invalid login credentials': 'Email ou senha incorrectos.',
+  'Email not confirmed': 'Email não confirmado. Verifique sua caixa de entrada.',
+  'User already registered': 'Este email já está cadastrado.',
+  'Password should be at least 6 characters':
+    'A senha deve ter pelo menos 6 caracteres.',
+  'Signup is disabled': 'Cadastro desactivado temporariamente.',
+  'Email rate limit exceeded': 'Limite de emails atingido. Tente mais tarde.',
+}
+
+const getAuthError = (message: string): string =>
+  AUTH_ERRORS[message] ?? message
+
 export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
@@ -33,10 +46,10 @@ export default function Auth() {
       : await supabase.auth.signInWithPassword({ email: data.email, password: data.password });
 
     if (error) {
-      setMessage({ text: error.message, type: 'error' });
+      setMessage({ text: getAuthError(error.message), type: 'error' });
     } else {
       if (isSignUp) {
-        setMessage({ text: 'Check your email for the confirmation link.', type: 'success' });
+        setMessage({ text: 'Verifique seu e-mail para confirmar a conta.', type: 'success' });
       } else {
         navigate('/');
       }
@@ -50,17 +63,17 @@ export default function Auth() {
         <CardHeader className="space-y-1 text-center pb-6">
           <CardTitle className="text-4xl font-bold font-caveat text-blue-600 mb-2">Finfolk</CardTitle>
           <CardDescription className="text-muted-foreground">
-            {isSignUp ? 'Create an account to manage your family finances' : 'Sign in to your account'}
+            {isSignUp ? 'Crie uma conta para gerenciar suas finanças' : 'Entre na sua conta'}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2 text-left">
-              <Label htmlFor="email" className="font-semibold text-foreground">Email</Label>
+              <Label htmlFor="email" className="font-semibold text-foreground">E-mail</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="email address"
+                placeholder="seu@email.com"
                 {...register('email')}
                 className={`mt-1 ${errors.email ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
               />
@@ -68,7 +81,7 @@ export default function Auth() {
             </div>
 
             <div className="space-y-2 text-left">
-              <Label htmlFor="password" className="font-semibold text-foreground">Password</Label>
+              <Label htmlFor="password" className="font-semibold text-foreground">Senha</Label>
               <Input
                 id="password"
                 type="password"
@@ -85,19 +98,19 @@ export default function Auth() {
             )}
 
             <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 font-semibold text-white transition-colors duration-200 mt-2" disabled={loading}>
-              {loading ? 'Processing...' : (isSignUp ? 'Sign Up' : 'Sign In')}
+              {loading ? 'Processando...' : (isSignUp ? 'Cadastrar-se' : 'Entrar')}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col border-t pt-6 space-y-4">
           <div className="text-center text-sm text-muted-foreground">
-            {isSignUp ? 'Already have an account?' : "Don't have an account?"}
+            {isSignUp ? 'Já tem uma conta?' : 'Não tem uma conta?'}
             <button
               type="button"
               onClick={() => { setIsSignUp(!isSignUp); setMessage(null); }}
               className="ml-1 text-blue-600 hover:text-blue-800 hover:underline font-semibold transition-colors duration-200"
             >
-              {isSignUp ? 'Sign In' : 'Sign Up'}
+              {isSignUp ? 'Entre aqui' : 'Cadastre-se aqui'}
             </button>
           </div>
         </CardFooter>
