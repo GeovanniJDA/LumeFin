@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useCurrencyInput } from '../hooks/use-currency-input';
 import { useCreditCards } from '../hooks/use-credit-cards';
 import { useDependents } from '../hooks/use-dependents';
 import { PageHeader } from '../components/shared/page-header';
@@ -69,6 +70,8 @@ export default function CreditCards() {
     }
   });
 
+  const invoiceAmountInput = useCurrencyInput(0);
+
   const handleOpenAdd = () => {
     setEditingId(null);
     form.reset({
@@ -82,6 +85,7 @@ export default function CreditCards() {
       color: '#6B7280',
       notes: ''
     });
+    invoiceAmountInput.reset(0);
     setIsDialogOpen(true);
   };
 
@@ -98,6 +102,7 @@ export default function CreditCards() {
       color: card.color || '#6B7280',
       notes: card.notes || ''
     });
+    invoiceAmountInput.reset(card.invoice_amount ?? 0);
     setIsDialogOpen(true);
   };
 
@@ -305,24 +310,9 @@ export default function CreditCards() {
                           <FormControl>
                             <Input
                               type="text"
-                              inputMode="decimal"
-                              value={
-                                field.value === 0
-                                  ? ''
-                                  : String(field.value).replace('.', ',')
-                              }
-                              onChange={(e) => {
-                                // Allow only digits, comma and dot
-                                const raw = e.target.value.replace(/[^0-9.,]/g, '')
-                                // Replace comma with dot for JS number parsing
-                                const normalized = raw.replace(',', '.')
-                                // Prevent multiple dots
-                                const parts = normalized.split('.')
-                                const clean = parts.length > 2
-                                  ? parts[0] + '.' + parts.slice(1).join('')
-                                  : normalized
-                                field.onChange(clean === '' ? 0 : Number(clean))
-                              }}
+                              inputMode="numeric"
+                              value={invoiceAmountInput.displayValue}
+                              onChange={(e) => invoiceAmountInput.handleChange(e, field.onChange)}
                               placeholder="0,00"
                             />
                           </FormControl>

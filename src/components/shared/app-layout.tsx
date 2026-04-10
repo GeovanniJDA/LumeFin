@@ -93,71 +93,71 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           })}
         </div>
 
-        <div className="p-4 border-t border-[rgba(255,255,255,0.06)]">
+        <div className="p-4 border-t border-[rgba(255,255,255,0.06)] relative">
           <DropdownMenu>
-            <DropdownMenuTrigger>
-              <div
-                className="w-full flex items-center gap-3 p-3 rounded-xl
-                  border border-white/8 bg-white/4
-                  hover:bg-white/8 hover:border-white/12
-                  backdrop-blur-sm transition-all duration-200
-                  group cursor-pointer"
-              >
-                {/* Avatar */}
-                <div className="relative shrink-0">
-                  {profile?.avatar_url ? (
-                    <img
-                      src={profile.avatar_url}
-                      alt="avatar"
-                      className="w-9 h-9 rounded-full object-cover
-                        ring-2 ring-white/10 group-hover:ring-white/20
-                        transition-all duration-200"
-                    />
-                  ) : (
-                    <div className="w-9 h-9 rounded-full bg-blue-600/20
-                      border border-blue-500/30 flex items-center justify-center
+            <DropdownMenuTrigger
+              render={<div />}
+              className="w-full flex items-center gap-3 p-3 rounded-xl
+                border border-white/8 bg-white/4
+                hover:bg-white/8 hover:border-white/12
+                backdrop-blur-sm transition-all duration-200
+                group cursor-pointer"
+            >
+              {/* Avatar */}
+              <div className="relative shrink-0">
+                {profile?.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt="avatar"
+                    className="w-9 h-9 rounded-full object-cover
                       ring-2 ring-white/10 group-hover:ring-white/20
-                      transition-all duration-200">
-                      <span className="text-blue-400 text-sm font-bold">
-                        {(profile?.username || userEmail || '?')
-                          .charAt(0)
-                          .toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-                  {/* Online indicator */}
-                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5
-                    bg-green-500 rounded-full border-2 border-black" />
-                </div>
-
-                {/* Name + email */}
-                <div className="flex-1 text-left overflow-hidden">
-                  <p className="text-sm font-semibold text-white/90 truncate
-                    group-hover:text-white transition-colors">
-                    {profile?.username || 'Utilizador'}
-                  </p>
-                  <p className="text-xs text-white/40 truncate
-                    group-hover:text-white/60 transition-colors">
-                    {userEmail}
-                  </p>
-                </div>
-
-                {/* Chevron */}
-                <ChevronsUpDown className="w-4 h-4 text-white/30
-                  group-hover:text-white/60 transition-colors shrink-0" />
+                      transition-all duration-200"
+                  />
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-blue-600/20
+                    border border-blue-500/30 flex items-center justify-center
+                    ring-2 ring-white/10 group-hover:ring-white/20
+                    transition-all duration-200">
+                    <span className="text-blue-400 text-sm font-bold">
+                      {(profile?.username || userEmail || '?')
+                        .charAt(0)
+                        .toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                {/* Online indicator */}
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5
+                  bg-green-500 rounded-full border-2 border-black" />
               </div>
+
+              {/* Name + email */}
+              <div className="flex-1 text-left overflow-hidden">
+                <p className="text-sm font-semibold text-white/90 truncate
+                  group-hover:text-white transition-colors">
+                  {profile?.username || 'Utilizador'}
+                </p>
+                <p className="text-xs text-white/40 truncate
+                  group-hover:text-white/60 transition-colors">
+                  {userEmail}
+                </p>
+              </div>
+
+              {/* Chevron */}
+              <ChevronsUpDown className="w-4 h-4 text-white/30
+                group-hover:text-white/60 transition-colors shrink-0" />
             </DropdownMenuTrigger>
 
             <DropdownMenuContent
               side="top"
               align="start"
               sideOffset={8}
-              // @ts-ignore
-              avoidCollisions={true}
-              // @ts-ignore
-              collisionPadding={16}
               className="w-56 bg-zinc-900/95 border border-white/10
-                backdrop-blur-xl shadow-2xl shadow-black/50 rounded-xl p-1 z-50"
+                backdrop-blur-xl shadow-2xl shadow-black/50 rounded-xl p-1
+                z-[100]"
+              style={{
+                maxHeight: 'calc(100vh - 80px)',
+                overflowY: 'auto'
+              }}
             >
               <DropdownMenuGroup>
                 <DropdownMenuLabel className="px-3 py-2">

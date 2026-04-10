@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useCurrencyInput } from '../hooks/use-currency-input';
 import { useBills } from '../hooks/use-bills';
 import { useCategories } from '../hooks/use-categories';
 import { useDependents } from '../hooks/use-dependents';
@@ -156,7 +157,7 @@ export default function Bills() {
     }
   });
 
-  // Filter Logic
+  const amountInput = useCurrencyInput(0);
   const filteredBills = useMemo(() => {
     return bills.filter(bill => {
       if (filterStatus !== 'all' && bill.status !== filterStatus) return false;
@@ -190,6 +191,7 @@ export default function Bills() {
       dependent_ids: [],
       notes: ''
     });
+    amountInput.reset(0);
     setIsDialogOpen(true);
   };
 
@@ -206,6 +208,7 @@ export default function Bills() {
       dependent_ids: bill.dependents?.map(d => d.id) || [],
       notes: bill.notes || ''
     });
+    amountInput.reset(bill.amount ?? 0);
     setIsDialogOpen(true);
   };
 
@@ -539,24 +542,9 @@ export default function Bills() {
                           <FormControl>
                             <Input
                               type="text"
-                              inputMode="decimal"
-                              value={
-                                field.value === 0
-                                  ? ''
-                                  : String(field.value).replace('.', ',')
-                              }
-                              onChange={(e) => {
-                                // Allow only digits, comma and dot
-                                const raw = e.target.value.replace(/[^0-9.,]/g, '')
-                                // Replace comma with dot for JS number parsing
-                                const normalized = raw.replace(',', '.')
-                                // Prevent multiple dots
-                                const parts = normalized.split('.')
-                                const clean = parts.length > 2
-                                  ? parts[0] + '.' + parts.slice(1).join('')
-                                  : normalized
-                                field.onChange(clean === '' ? 0 : Number(clean))
-                              }}
+                              inputMode="numeric"
+                              value={amountInput.displayValue}
+                              onChange={(e) => amountInput.handleChange(e, field.onChange)}
                               placeholder="0,00"
                             />
                           </FormControl>
