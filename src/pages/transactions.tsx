@@ -312,12 +312,25 @@ export default function Transactions() {
                           <FormControl>
                             <Input
                               type="text"
-                              inputMode="numeric"
-                              value={field.value === 0 ? '' : String(field.value)}
+                              inputMode="decimal"
+                              value={
+                                field.value === 0
+                                  ? ''
+                                  : String(field.value).replace('.', ',')
+                              }
                               onChange={(e) => {
-                                const val = e.target.value.replace(/[^0-9.,]/g, '');
-                                field.onChange(val === '' ? 0 : Number(val.replace(',', '.')));
+                                // Allow only digits, comma and dot
+                                const raw = e.target.value.replace(/[^0-9.,]/g, '')
+                                // Replace comma with dot for JS number parsing
+                                const normalized = raw.replace(',', '.')
+                                // Prevent multiple dots
+                                const parts = normalized.split('.')
+                                const clean = parts.length > 2
+                                  ? parts[0] + '.' + parts.slice(1).join('')
+                                  : normalized
+                                field.onChange(clean === '' ? 0 : Number(clean))
                               }}
+                              placeholder="0,00"
                             />
                           </FormControl>
                           <FormMessage />

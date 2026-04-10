@@ -69,7 +69,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-black font-quicksand pb-16 md:pb-0 md:flex">
       {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex flex-col w-64 fixed inset-y-0 z-10 glass border-r border-[rgba(255,255,255,0.06)]" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(20px)' }}>
+      <aside className="hidden md:flex flex-col w-64 fixed inset-y-0 z-10 glass border-r border-[rgba(255,255,255,0.06)] overflow-visible" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(20px)' }}>
         <div className="p-6">
           <h1 className="text-3xl font-extrabold text-blue-500">Finfolk</h1>
         </div>
@@ -152,8 +152,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               side="top"
               align="start"
               sideOffset={8}
+              // @ts-ignore
+              avoidCollisions={true}
+              // @ts-ignore
+              collisionPadding={16}
               className="w-56 bg-zinc-900/95 border border-white/10
-                backdrop-blur-xl shadow-2xl shadow-black/50 rounded-xl p-1"
+                backdrop-blur-xl shadow-2xl shadow-black/50 rounded-xl p-1 z-50"
             >
               <DropdownMenuGroup>
                 <DropdownMenuLabel className="px-3 py-2">

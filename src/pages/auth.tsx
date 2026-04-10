@@ -31,6 +31,7 @@ export default function Auth() {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors }
   } = useForm<AuthFormValues>({
     resolver: zodResolver(authSchema),
@@ -107,7 +108,11 @@ export default function Auth() {
             {isSignUp ? 'Já tem uma conta?' : 'Não tem uma conta?'}
             <button
               type="button"
-              onClick={() => { setIsSignUp(!isSignUp); setMessage(null); }}
+              onClick={() => { 
+                setIsSignUp(prev => !prev); 
+                reset({ email: '', password: '' }); 
+                setMessage(null); 
+              }}
               className="ml-1 text-blue-600 hover:text-blue-800 hover:underline font-semibold transition-colors duration-200"
             >
               {isSignUp ? 'Entre aqui' : 'Cadastre-se aqui'}

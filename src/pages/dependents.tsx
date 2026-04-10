@@ -147,7 +147,11 @@ export default function Dependents() {
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Selecione o parentesco" />
+                              <SelectValue placeholder="Selecione o parentesco">
+                                {field.value
+                                  ? RELATIONSHIP_LABELS[field.value as Relationship] ?? field.value
+                                  : 'Selecione o parentesco'}
+                              </SelectValue>
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
