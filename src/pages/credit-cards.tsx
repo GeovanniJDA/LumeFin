@@ -14,6 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { creditCardSchema, type CreditCardFormValues } from '../lib/schemas';
+import { DatePicker } from '@/components/shared/date-picker';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -266,10 +267,10 @@ export default function CreditCards() {
                         <FormItem>
                           <FormLabel>Data de Vencimento *</FormLabel>
                           <FormControl>
-                            <Input
-                              type="date"
-                              value={field.value ?? ''}
-                              onChange={(e) => field.onChange(e.target.value)}
+                            <DatePicker
+                              value={field.value ?? null}
+                              onChange={field.onChange}
+                              placeholder="Selecione o vencimento"
                             />
                           </FormControl>
                           <FormMessage />

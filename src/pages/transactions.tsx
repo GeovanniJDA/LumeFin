@@ -45,6 +45,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { transactionSchema, type TransactionFormValues } from '../lib/schemas';
+import { DatePicker } from '@/components/shared/date-picker';
 import { formatCurrency } from '../lib/utils';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -296,10 +297,10 @@ export default function Transactions() {
                         <FormItem>
                           <FormLabel>Data *</FormLabel>
                           <FormControl>
-                            <Input
-                              type="date"
-                              value={field.value ?? ''}
-                              onChange={(e) => field.onChange(e.target.value)}
+                            <DatePicker
+                              value={field.value ?? null}
+                              onChange={field.onChange}
+                              placeholder="Selecione a data"
                             />
                           </FormControl>
                           <FormMessage />
@@ -476,10 +477,10 @@ export default function Transactions() {
                         <FormItem>
                           <FormLabel>Data de Liquidação</FormLabel>
                           <FormControl>
-                            <Input
-                              type="date"
-                              value={field.value ? field.value.split('T')[0] : ''}
-                              onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value).toISOString() : null)}
+                            <DatePicker
+                              value={field.value ? field.value.split('T')[0] : null}
+                              onChange={(val) => field.onChange(val ? new Date(val).toISOString() : null)}
+                              placeholder="Selecione a data de liquidação"
                             />
                           </FormControl>
                           <FormMessage />
