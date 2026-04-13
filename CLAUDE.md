@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-FinFolk is a personal finance management application built with React, TypeScript, and Vite. It uses Supabase as the backend database and follows a modern component architecture with Zustand for state management.
+LumeFin is a personal finance management application built with React, TypeScript, and Vite. It uses Supabase as the backend database and follows a modern component architecture with Zustand for state management.
 
 ## Key Technologies & Architecture
 

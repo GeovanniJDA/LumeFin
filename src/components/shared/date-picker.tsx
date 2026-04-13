@@ -77,7 +77,7 @@ export function DatePicker({
             month_caption: 'text-white font-medium',
             weekday: 'text-white/40',
             day: 'text-white/80 hover:bg-white/10 rounded-md',
-            today: 'text-blue-400 font-bold bg-transparent',
+            today: 'text-amber-400 font-bold bg-transparent',
             outside: 'text-white/20',
             disabled: 'text-white/20 opacity-50',
           }}

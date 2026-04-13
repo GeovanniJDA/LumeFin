@@ -250,7 +250,7 @@ export default function Transactions() {
             <DialogTrigger render={
               <Button
                 onClick={handleOpenAdd}
-                className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm font-quicksand font-bold"
+                className="bg-amber-500 hover:bg-amber-600 text-white gap-2 shadow-sm font-quicksand font-bold"
               >
                 <Plus className="w-4 h-4" /> Adicionar Transação
               </Button>
@@ -513,7 +513,7 @@ export default function Transactions() {
                     <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting}>
                       Cancelar
                     </Button>
-                    <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Button type="submit" disabled={isSubmitting} className="bg-amber-500 hover:bg-amber-600 text-white">
                       {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                       {editingId ? 'Salvar' : 'Adicionar'}
                     </Button>
@@ -703,7 +703,7 @@ export default function Transactions() {
                             </Button>
                           )}
                           <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(tx)} disabled={loadingId === tx.id} className="h-8 w-8">
-                            <Edit className="w-4 h-4 text-muted-foreground hover:text-blue-600" />
+                            <Edit className="w-4 h-4 text-muted-foreground hover:text-amber-500" />
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger render={

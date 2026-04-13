@@ -113,7 +113,7 @@ export default function Dependents() {
         action={
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger render={
-              <Button onClick={handleOpenAdd} className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm font-quicksand font-bold">
+              <Button onClick={handleOpenAdd} className="bg-amber-500 hover:bg-amber-600 text-white gap-2 shadow-sm font-quicksand font-bold">
                 <Plus className="w-4 h-4" /> Adicionar Dependente
               </Button>
             } />
@@ -188,7 +188,7 @@ export default function Dependents() {
                     <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting}>
                       Cancelar
                     </Button>
-                    <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Button type="submit" disabled={isSubmitting} className="bg-amber-500 hover:bg-amber-600 text-white">
                       {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                       {editingId ? 'Salvar' : 'Adicionar'}
                     </Button>
@@ -236,7 +236,7 @@ export default function Dependents() {
 
               <div className="flex items-center gap-1 ml-4 shrink-0">
                 <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(dep)} disabled={loadingId === dep.id}>
-                  <Edit className="w-4 h-4 text-muted-foreground hover:text-blue-600" />
+                  <Edit className="w-4 h-4 text-muted-foreground hover:text-amber-500" />
                 </Button>
 
                 <AlertDialog>

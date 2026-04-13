@@ -71,7 +71,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex flex-col w-64 fixed inset-y-0 z-10 glass border-r border-[rgba(255,255,255,0.06)] overflow-visible" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(20px)' }}>
         <div className="p-6">
-          <h1 className="text-3xl font-extrabold text-blue-500">Finfolk</h1>
+          <h1 className="text-3xl font-extrabold text-amber-400">LumeFin</h1>
         </div>
 
         <div className="flex-1 px-4 space-y-1 overflow-y-auto">
@@ -83,10 +83,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 to={item.href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all
                   ${isActive
-                    ? 'bg-[rgba(255,255,255,0.08)] text-white border-l-2 border-blue-500'
+                    ? 'bg-[rgba(255,255,255,0.08)] text-white border-l-2 border-amber-400'
                     : 'text-[rgba(255,255,255,0.5)] hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.8)]'}`}
               >
-                <item.icon className={`h-5 w-5 ${isActive ? 'text-blue-500' : 'text-[rgba(255,255,255,0.4)]'}`} />
+                <item.icon className={`h-5 w-5 ${isActive ? 'text-amber-400' : 'text-[rgba(255,255,255,0.4)]'}`} />
                 {item.name}
               </NavLink>
             );
@@ -114,11 +114,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                       transition-all duration-200"
                   />
                 ) : (
-                  <div className="w-9 h-9 rounded-full bg-blue-600/20
-                    border border-blue-500/30 flex items-center justify-center
+                  <div className="w-9 h-9 rounded-full bg-amber-500/20
+                    border border-amber-400/30 flex items-center justify-center
                     ring-2 ring-white/10 group-hover:ring-white/20
                     transition-all duration-200">
-                    <span className="text-blue-400 text-sm font-bold">
+                    <span className="text-amber-300 text-sm font-bold">
                       {(profile?.username || userEmail || '?')
                         .charAt(0)
                         .toUpperCase()}
@@ -221,7 +221,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               to={item.href}
               className={`flex flex-col items-center justify-center p-2 rounded-xl min-w-[64px] transition-all
                 ${isActive
-                  ? 'text-blue-500'
+                  ? 'text-amber-400'
                   : 'text-[rgba(255,255,255,0.4)] hover:text-[rgba(255,255,255,0.6)]'}`}
             >
               <item.icon className="h-5 w-5 mb-1" strokeWidth={isActive ? 2.5 : 2} />

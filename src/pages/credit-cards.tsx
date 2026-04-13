@@ -31,7 +31,7 @@ const STATUS_LABELS: Record<CardStatus, string> = {
 };
 
 const STATUS_COLORS: Record<CardStatus, string> = {
-  open: 'bg-[rgba(59,130,246,0.15)] text-[#3B82F6] border-[rgba(59,130,246,0.3)]',
+  open: 'bg-[rgba(245,158,11,0.15)] text-[#F59E0B] border-[rgba(245,158,11,0.3)]',
   closed: 'bg-[rgba(245,158,11,0.15)] text-[#F59E0B] border-[rgba(245,158,11,0.3)]',
   paid: 'bg-[rgba(16,185,129,0.15)] text-[#10B981] border-[rgba(16,185,129,0.3)]'
 };
@@ -174,7 +174,7 @@ export default function CreditCards() {
         action={
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger render={
-              <Button onClick={handleOpenAdd} className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm font-quicksand font-bold">
+              <Button onClick={handleOpenAdd} className="bg-amber-500 hover:bg-amber-600 text-white gap-2 shadow-sm font-quicksand font-bold">
                 <Plus className="w-4 h-4" /> Adicionar Cartão
               </Button>
             } />
@@ -386,7 +386,7 @@ export default function CreditCards() {
                     <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting}>
                       Cancelar
                     </Button>
-                    <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Button type="submit" disabled={isSubmitting} className="bg-amber-500 hover:bg-amber-600 text-white">
                       {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                       {editingId ? 'Salvar' : 'Adicionar'}
                     </Button>
@@ -441,7 +441,7 @@ export default function CreditCards() {
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(card)} disabled={loadingId === card.id} className="h-8 w-8">
-                    <Edit className="w-4 h-4 text-[rgba(255,255,255,0.4)] hover:text-blue-400" />
+                    <Edit className="w-4 h-4 text-[rgba(255,255,255,0.4)] hover:text-amber-300" />
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger render={

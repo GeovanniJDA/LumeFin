@@ -1,8 +1,8 @@
-# Finfolk
+# LumeFin
 
 > Open source family financial management web app.
 
-Finfolk is a personal tool to manage finances across multiple family members — tracking bills, credit cards, and bidirectional debts in a single interface.
+LumeFin is a personal tool to manage finances across multiple family members — tracking bills, credit cards, and bidirectional debts in a single interface.
 
 ---
 
@@ -43,8 +43,8 @@ Finfolk is a personal tool to manage finances across multiple family members —
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/finfolk.git
-cd finfolk
+git clone https://github.com/your-username/lumefin.git
+cd lumefin
 ```
 
 ### 2. Install dependencies

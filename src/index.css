@@ -83,6 +83,12 @@
     --dialog-bg: rgba(15, 15, 15, 0.97);
     --dialog-border: rgba(255, 255, 255, 0.12);
     --dialog-blur: blur(40px) saturate(180%);
+
+    /* Primary amber tokens */
+    --primary-amber: #F59E0B;
+    --primary-amber-dark: #D97706;
+    --primary-amber-subtle: rgba(245, 158, 11, 0.15);
+    --primary-amber-border: rgba(245, 158, 11, 0.3);
 }
 
 @theme inline {
@@ -174,7 +180,7 @@ body::before {
   height: 600px;
   background: radial-gradient(
     circle,
-    rgba(59,130,246,0.04) 0%,
+    rgba(245,158,11,0.04) 0%,
     transparent 70%
   );
   pointer-events: none;

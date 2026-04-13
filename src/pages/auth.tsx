@@ -62,7 +62,7 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-muted p-4 font-quicksand">
       <Card className="w-full max-w-md shadow-lg border-0 bg-background">
         <CardHeader className="space-y-1 text-center pb-6">
-          <CardTitle className="text-4xl font-bold font-caveat text-blue-600 mb-2">Finfolk</CardTitle>
+          <CardTitle className="text-4xl font-bold font-caveat text-amber-500 mb-2">LumeFin</CardTitle>
           <CardDescription className="text-muted-foreground">
             {isSignUp ? 'Crie uma conta para gerenciar suas finanças' : 'Entre na sua conta'}
           </CardDescription>
@@ -98,7 +98,7 @@ export default function Auth() {
               </div>
             )}
 
-            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 font-semibold text-white transition-colors duration-200 mt-2" disabled={loading}>
+            <Button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 font-semibold text-white transition-colors duration-200 mt-2" disabled={loading}>
               {loading ? 'Processando...' : (isSignUp ? 'Cadastrar-se' : 'Entrar')}
             </Button>
           </form>
@@ -113,7 +113,7 @@ export default function Auth() {
                 reset({ email: '', password: '' }); 
                 setMessage(null); 
               }}
-              className="ml-1 text-blue-600 hover:text-blue-800 hover:underline font-semibold transition-colors duration-200"
+              className="ml-1 text-amber-500 hover:text-amber-600 hover:underline font-semibold transition-colors duration-200"
             >
               {isSignUp ? 'Entre aqui' : 'Cadastre-se aqui'}
             </button>

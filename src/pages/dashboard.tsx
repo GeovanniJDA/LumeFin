@@ -123,8 +123,8 @@ export default function Dashboard() {
           <div className="glass-strong rounded-2xl p-5 hover:shadow-lg transition-all">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-medium text-[rgba(255,255,255,0.5)]">Faturas em Aberto</span>
-              <div className="p-2 bg-[rgba(59,130,246,0.15)] rounded-lg">
-                <CreditCard className="w-4 h-4 text-[#3B82F6]" />
+              <div className="p-2 bg-[rgba(245,158,11,0.15)] rounded-lg">
+                <CreditCard className="w-4 h-4 text-[#F59E0B]" />
               </div>
             </div>
             <div className="text-3xl font-bold text-white font-quicksand">{openCardsCount}</div>
@@ -283,19 +283,19 @@ export default function Dashboard() {
                 <div className="flex gap-2 pt-1">
                   <button
                     onClick={() => navigate('/bills')}
-                    className="flex items-center gap-1 text-xs text-[#3B82F6] hover:text-blue-400 font-medium transition-colors"
+                    className="flex items-center gap-1 text-xs text-[#F59E0B] hover:text-amber-300 font-medium transition-colors"
                   >
                     Contas <ArrowRight className="w-3 h-3" />
                   </button>
                   <button
                     onClick={() => navigate('/credit-cards')}
-                    className="flex items-center gap-1 text-xs text-[#3B82F6] hover:text-blue-400 font-medium transition-colors"
+                    className="flex items-center gap-1 text-xs text-[#F59E0B] hover:text-amber-300 font-medium transition-colors"
                   >
                     Cartões <ArrowRight className="w-3 h-3" />
                   </button>
                   <button
                     onClick={() => navigate('/transactions')}
-                    className="flex items-center gap-1 text-xs text-[#3B82F6] hover:text-blue-400 font-medium transition-colors"
+                    className="flex items-center gap-1 text-xs text-[#F59E0B] hover:text-amber-300 font-medium transition-colors"
                   >
                     Transações <ArrowRight className="w-3 h-3" />
                   </button>

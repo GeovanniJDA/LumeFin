@@ -1,4 +1,4 @@
-# Contributing to Finfolk
+# Contributing to LumeFin
 
 Thank you for considering a contribution. This document explains how to get started.
 
