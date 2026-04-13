@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { useEffect, lazy, Suspense } from 'react';
 import { supabase, setupAuthListener } from './lib/supabase';
 
+const Landing = lazy(() => import('./pages/landing'));
 const Dashboard = lazy(() => import('./pages/dashboard'));
 const Bills = lazy(() => import('./pages/bills'));
 const Dependents = lazy(() => import('./pages/dependents'));
@@ -62,14 +63,15 @@ function App() {
         </div>
       }>
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
 
-          <Route path="/" element={<AuthGuard><AppLayout><Dashboard /></AppLayout></AuthGuard>} />
-          <Route path="/bills" element={<AuthGuard><AppLayout><Bills /></AppLayout></AuthGuard>} />
-          <Route path="/dependents" element={<AuthGuard><AppLayout><Dependents /></AppLayout></AuthGuard>} />
-          <Route path="/credit-cards" element={<AuthGuard><AppLayout><CreditCards /></AppLayout></AuthGuard>} />
-          <Route path="/transactions" element={<AuthGuard><AppLayout><Transactions /></AppLayout></AuthGuard>} />
-          <Route path="/profile" element={<AuthGuard><AppLayout><Profile /></AppLayout></AuthGuard>} />
+          <Route path="/app" element={<AuthGuard><AppLayout><Dashboard /></AppLayout></AuthGuard>} />
+          <Route path="/app/bills" element={<AuthGuard><AppLayout><Bills /></AppLayout></AuthGuard>} />
+          <Route path="/app/dependents" element={<AuthGuard><AppLayout><Dependents /></AppLayout></AuthGuard>} />
+          <Route path="/app/credit-cards" element={<AuthGuard><AppLayout><CreditCards /></AppLayout></AuthGuard>} />
+          <Route path="/app/transactions" element={<AuthGuard><AppLayout><Transactions /></AppLayout></AuthGuard>} />
+          <Route path="/app/profile" element={<AuthGuard><AppLayout><Profile /></AppLayout></AuthGuard>} />
         </Routes>
       </Suspense>
       <Toaster position="bottom-right" richColors theme="dark" />

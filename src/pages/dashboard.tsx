@@ -282,19 +282,19 @@ export default function Dashboard() {
 
                 <div className="flex gap-2 pt-1">
                   <button
-                    onClick={() => navigate('/bills')}
+                    onClick={() => navigate('/app/bills')}
                     className="flex items-center gap-1 text-xs text-[#F59E0B] hover:text-amber-300 font-medium transition-colors"
                   >
                     Contas <ArrowRight className="w-3 h-3" />
                   </button>
                   <button
-                    onClick={() => navigate('/credit-cards')}
+                    onClick={() => navigate('/app/credit-cards')}
                     className="flex items-center gap-1 text-xs text-[#F59E0B] hover:text-amber-300 font-medium transition-colors"
                   >
                     Cartões <ArrowRight className="w-3 h-3" />
                   </button>
                   <button
-                    onClick={() => navigate('/transactions')}
+                    onClick={() => navigate('/app/transactions')}
                     className="flex items-center gap-1 text-xs text-[#F59E0B] hover:text-amber-300 font-medium transition-colors"
                   >
                     Transações <ArrowRight className="w-3 h-3" />

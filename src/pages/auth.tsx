@@ -52,7 +52,7 @@ export default function Auth() {
       if (isSignUp) {
         setMessage({ text: 'Verifique seu e-mail para confirmar a conta.', type: 'success' });
       } else {
-        navigate('/');
+        navigate('/app');
       }
     }
     setLoading(false);

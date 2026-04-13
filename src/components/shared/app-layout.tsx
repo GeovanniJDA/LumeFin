@@ -20,11 +20,11 @@ import { useCategoryStoreRaw } from '../../store/category-store';
 import { useProfileStore } from '@/store/profile-store';
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Contas', href: '/bills', icon: Receipt },
-  { name: 'Cartões', href: '/credit-cards', icon: CreditCard },
-  { name: 'Transações', href: '/transactions', icon: ArrowRightLeft },
-  { name: 'Dependentes', href: '/dependents', icon: Users },
+  { name: 'Dashboard', href: '/app', icon: LayoutDashboard },
+  { name: 'Contas', href: '/app/bills', icon: Receipt },
+  { name: 'Cartões', href: '/app/credit-cards', icon: CreditCard },
+  { name: 'Transações', href: '/app/transactions', icon: ArrowRightLeft },
+  { name: 'Dependentes', href: '/app/dependents', icon: Users },
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -172,7 +172,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
               <DropdownMenuGroup>
                 <DropdownMenuItem
-                  onClick={() => navigate('/profile')}
+                  onClick={() => navigate('/app/profile')}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg
                     text-white/70 hover:text-white hover:bg-white/8
                     cursor-pointer transition-colors"

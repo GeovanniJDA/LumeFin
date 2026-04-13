@@ -141,6 +141,7 @@
     @apply font-sans;
     background: #000000;
     min-height: 100%;
+    scroll-behavior: smooth;
   }
   body {
     @apply bg-background text-foreground;
