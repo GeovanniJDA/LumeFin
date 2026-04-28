@@ -31,6 +31,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const { profile, fetch: fetchProfile } = useProfileStore();
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -68,145 +69,153 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-black font-quicksand pb-16 md:pb-0 md:flex">
+      {/* Mobile top bar */}
+      <header className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-3 border-b border-white/6"
+        style={{ background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(20px)' }}
+      >
+        <h1 className="text-xl font-extrabold text-amber-400">LumeFin</h1>
+
+        <button
+          onClick={() => navigate('/app/profile')}
+          className="relative w-9 h-9 rounded-full flex items-center justify-center border border-amber-400/30 bg-amber-500/10 active:bg-amber-500/20 transition-colors"
+        >
+          {profile?.avatar_url ? (
+            <img
+              src={profile.avatar_url}
+              alt="avatar"
+              className="w-9 h-9 rounded-full object-cover"
+            />
+          ) : (
+            <span className="text-amber-300 text-sm font-bold">
+              {(profile?.username || userEmail || '?')
+                .charAt(0).toUpperCase()}
+            </span>
+          )}
+          {/* Online indicator */}
+          <span className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-black" />
+        </button>
+      </header>
+
       {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex flex-col w-64 fixed inset-y-0 z-10 glass border-r border-[rgba(255,255,255,0.06)] overflow-visible" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(20px)' }}>
-        <div className="p-6">
-          <h1 className="text-3xl font-extrabold text-amber-400">LumeFin</h1>
+      <aside
+        onMouseEnter={() => setSidebarExpanded(true)}
+        onMouseLeave={() => setSidebarExpanded(false)}
+        className={`hidden md:flex flex-col fixed inset-y-0 z-20 border-r border-[rgba(255,255,255,0.06)] overflow-visible transition-all duration-300 ease-in-out ${sidebarExpanded ? 'w-64' : 'w-16'}`}
+        style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(20px)' }}
+      >
+        <div className="p-4 flex items-center justify-center overflow-hidden">
+          {sidebarExpanded ? (
+            <h1 className="text-2xl font-extrabold text-amber-400 whitespace-nowrap">LumeFin</h1>
+          ) : (
+            <h1 className="text-xl font-extrabold text-amber-400">L</h1>
+          )}
         </div>
 
-        <div className="flex-1 px-4 space-y-1 overflow-y-auto">
+        <div className="flex-1 px-2 space-y-1 overflow-y-auto">
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
             return (
               <NavLink
                 key={item.name}
                 to={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all
-                  ${isActive
-                    ? 'bg-[rgba(255,255,255,0.08)] text-white border-l-2 border-amber-400'
-                    : 'text-[rgba(255,255,255,0.5)] hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.8)]'}`}
+                title={!sidebarExpanded ? item.name : undefined}
+                className={`flex items-center gap-3 rounded-lg transition-all duration-200 ${sidebarExpanded ? 'px-3 py-2.5' : 'px-0 py-2.5 justify-center'} ${isActive ? 'bg-[rgba(255,255,255,0.08)] text-white border-l-2 border-amber-400' : 'text-[rgba(255,255,255,0.5)] hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.8)]'}`}
               >
-                <item.icon className={`h-5 w-5 ${isActive ? 'text-amber-400' : 'text-[rgba(255,255,255,0.4)]'}`} />
-                {item.name}
+                <item.icon className={`h-5 w-5 shrink-0 ${isActive ? 'text-amber-400' : 'text-[rgba(255,255,255,0.4)]'}`} />
+                {sidebarExpanded && (
+                  <span className="text-sm font-semibold whitespace-nowrap overflow-hidden">{item.name}</span>
+                )}
               </NavLink>
             );
           })}
         </div>
 
-        <div className="p-4 border-t border-[rgba(255,255,255,0.06)] relative">
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={<div />}
-              className="w-full flex items-center gap-3 p-3 rounded-xl
-                border border-white/8 bg-white/4
-                hover:bg-white/8 hover:border-white/12
-                backdrop-blur-sm transition-all duration-200
-                group cursor-pointer"
+        {!sidebarExpanded ? (
+          <div className="p-2 flex justify-center border-t border-[rgba(255,255,255,0.06)]">
+            <div
+              className="w-9 h-9 rounded-full bg-amber-500/20 border border-amber-400/30 flex items-center justify-center cursor-pointer"
+              onClick={() => setSidebarExpanded(true)}
             >
-              {/* Avatar */}
-              <div className="relative shrink-0">
-                {profile?.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt="avatar"
-                    className="w-9 h-9 rounded-full object-cover
-                      ring-2 ring-white/10 group-hover:ring-white/20
-                      transition-all duration-200"
-                  />
-                ) : (
-                  <div className="w-9 h-9 rounded-full bg-amber-500/20
-                    border border-amber-400/30 flex items-center justify-center
-                    ring-2 ring-white/10 group-hover:ring-white/20
-                    transition-all duration-200">
-                    <span className="text-amber-300 text-sm font-bold">
-                      {(profile?.username || userEmail || '?')
-                        .charAt(0)
-                        .toUpperCase()}
-                    </span>
-                  </div>
-                )}
-                {/* Online indicator */}
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5
-                  bg-green-500 rounded-full border-2 border-black" />
-              </div>
-
-              {/* Name + email */}
-              <div className="flex-1 text-left overflow-hidden">
-                <p className="text-sm font-semibold text-white/90 truncate
-                  group-hover:text-white transition-colors">
-                  {profile?.username || 'Utilizador'}
-                </p>
-                <p className="text-xs text-white/40 truncate
-                  group-hover:text-white/60 transition-colors">
-                  {userEmail}
-                </p>
-              </div>
-
-              {/* Chevron */}
-              <ChevronsUpDown className="w-4 h-4 text-white/30
-                group-hover:text-white/60 transition-colors shrink-0" />
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent
-              side="top"
-              align="start"
-              sideOffset={8}
-              className="w-56 bg-zinc-900/95 border border-white/10
-                backdrop-blur-xl shadow-2xl shadow-black/50 rounded-xl p-1
-                z-[100]"
-              style={{
-                maxHeight: 'calc(100vh - 80px)',
-                overflowY: 'auto'
-              }}
-            >
-              <DropdownMenuGroup>
-                <DropdownMenuLabel className="px-3 py-2">
-                  <p className="text-sm font-semibold text-white/90">
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} className="w-9 h-9 rounded-full object-cover" alt="avatar" />
+              ) : (
+                <span className="text-amber-300 text-sm font-bold">
+                  {(profile?.username || userEmail || '?').charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="p-4 border-t border-[rgba(255,255,255,0.06)] relative">
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={<div />}
+                className="w-full flex items-center gap-3 p-3 rounded-xl border border-white/8 bg-white/4 hover:bg-white/8 hover:border-white/12 backdrop-blur-sm transition-all duration-200 group cursor-pointer"
+              >
+                <div className="relative shrink-0">
+                  {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt="avatar" className="w-9 h-9 rounded-full object-cover ring-2 ring-white/10 group-hover:ring-white/20 transition-all duration-200" />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-amber-500/20 border border-amber-400/30 flex items-center justify-center ring-2 ring-white/10 group-hover:ring-white/20 transition-all duration-200">
+                      <span className="text-amber-300 text-sm font-bold">
+                        {(profile?.username || userEmail || '?').charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-black" />
+                </div>
+                <div className="flex-1 text-left overflow-hidden">
+                  <p className="text-sm font-semibold text-white/90 truncate group-hover:text-white transition-colors">
                     {profile?.username || 'Utilizador'}
                   </p>
-                  <p className="text-xs text-white/40 truncate">{userEmail}</p>
-                </DropdownMenuLabel>
-              </DropdownMenuGroup>
+                  <p className="text-xs text-white/40 truncate group-hover:text-white/60 transition-colors">{userEmail}</p>
+                </div>
+                <ChevronsUpDown className="w-4 h-4 text-white/30 group-hover:text-white/60 transition-colors shrink-0" />
+              </DropdownMenuTrigger>
 
-              <DropdownMenuSeparator className="bg-white/8 my-1" />
-
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  onClick={() => navigate('/app/profile')}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg
-                    text-white/70 hover:text-white hover:bg-white/8
-                    cursor-pointer transition-colors"
-                >
-                  <UserCircle className="w-4 h-4" />
-                  <span>Meu Perfil</span>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-
-              <DropdownMenuSeparator className="bg-white/8 my-1" />
-
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  onClick={handleSignOut}
-                  disabled={isSigningOut}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg
-                    text-red-400 hover:text-red-300 hover:bg-red-500/10
-                    cursor-pointer transition-colors"
-                >
-                  {isSigningOut
-                    ? <Loader2 className="w-4 h-4 animate-spin" />
-                    : <LogOut className="w-4 h-4" />
-                  }
-                  <span>{isSigningOut ? 'Saindo...' : 'Sair'}</span>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+              <DropdownMenuContent
+                side="top"
+                align="start"
+                sideOffset={8}
+                className="w-56 bg-zinc-900/95 border border-white/10 backdrop-blur-xl shadow-2xl shadow-black/50 rounded-xl p-1 z-[100]"
+                style={{ maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}
+              >
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="px-3 py-2">
+                    <p className="text-sm font-semibold text-white/90">{profile?.username || 'Utilizador'}</p>
+                    <p className="text-xs text-white/40 truncate">{userEmail}</p>
+                  </DropdownMenuLabel>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator className="bg-white/8 my-1" />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={() => navigate('/app/profile')}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-white/70 hover:text-white hover:bg-white/8 cursor-pointer transition-colors"
+                  >
+                    <UserCircle className="w-4 h-4" />
+                    <span>Meu Perfil</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator className="bg-white/8 my-1" />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={handleSignOut}
+                    disabled={isSigningOut}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 cursor-pointer transition-colors"
+                  >
+                    {isSigningOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
+                    <span>{isSigningOut ? 'Saindo...' : 'Sair'}</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 md:pl-64">
-        <div className="p-4 md:p-8 max-w-7xl mx-auto h-full space-y-6">
+      {/* Main Content — always pl-16, sidebar overlays when expanded */}
+      <main className="flex-1 md:pl-16">
+        <div className="pt-16 md:pt-0 p-4 md:p-8 max-w-7xl mx-auto h-full space-y-6">
           {children}
         </div>
       </main>
@@ -219,10 +228,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <NavLink
               key={item.name}
               to={item.href}
-              className={`flex flex-col items-center justify-center p-2 rounded-xl min-w-[64px] transition-all
-                ${isActive
-                  ? 'text-amber-400'
-                  : 'text-[rgba(255,255,255,0.4)] hover:text-[rgba(255,255,255,0.6)]'}`}
+              className={`flex flex-col items-center justify-center p-2 rounded-xl min-w-[64px] transition-all ${isActive ? 'text-amber-400' : 'text-[rgba(255,255,255,0.4)] hover:text-[rgba(255,255,255,0.6)]'}`}
             >
               <item.icon className="h-5 w-5 mb-1" strokeWidth={isActive ? 2.5 : 2} />
               <span className="text-[10px] font-semibold">{item.name}</span>

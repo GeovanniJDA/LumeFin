@@ -798,7 +798,7 @@ export default function Bills() {
       {loading && bills.length === 0 ? (
         <div className="space-y-4">
           {[1, 2, 3].map(i => (
-            <Skeleton key={i} className="h-16 w-full rounded-xl" />
+            <Skeleton key={i} className="h-28 w-full rounded-2xl" />
           ))}
         </div>
       ) : filteredBills.length === 0 ? (
@@ -808,142 +808,215 @@ export default function Bills() {
           description="Ajuste os filtros ou adicione uma nova conta clicando no botão acima."
         />
       ) : (
-        <div className="rounded-2xl overflow-hidden glass">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs uppercase" style={{ background: 'rgba(255,255,255,0.02)', color: 'rgba(255,255,255,0.4)' }}>
-                <tr>
-                  <th scope="col" className="px-6 py-4 font-semibold">Categoria</th>
-                  <th scope="col" className="px-6 py-4 font-semibold">Dependentes</th>
-                  <th scope="col" className="px-6 py-4 font-semibold">Valor</th>
-                  <th scope="col" className="px-6 py-4 font-semibold">Vencimento</th>
-                  <th scope="col" className="px-6 py-4 font-semibold">Ref</th>
-                  <th scope="col" className="px-6 py-4 font-semibold">Status</th>
-                  <th scope="col" className="px-6 py-4 font-semibold text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {filteredBills.map(bill => {
-                  const cat = categories.find(c => c.id === bill.category_id);
-                  const Icon = getCategoryIcon(cat?.icon || null);
-                  const billDeps = bill.dependents || [];
+        <>
+          {/* Mobile view — cards */}
+          <div className="md:hidden space-y-3">
+            {filteredBills.map(bill => {
+              const cat = categories.find(c => c.id === bill.category_id);
+              const Icon = getCategoryIcon(cat?.icon || null);
+              const billDeps = bill.dependents || [];
+              return (
+                <div key={bill.id}
+                  className="glass rounded-2xl p-4 space-y-3 border border-white/6">
+                  {/* Top: icon + category + status */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-white/6">
+                        <Icon className="w-4 h-4 text-amber-400" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-white text-sm">{cat?.name || 'Desconhecida'}</p>
+                        <p className="text-xs text-white/40">
+                          Vence {format(parseISO(bill.due_date), 'dd/MM/yyyy', { locale: ptBR })}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`px-2 py-1 rounded-md text-xs font-semibold border ${STATUS_COLORS[bill.status]}`}>
+                      {STATUS_LABELS[bill.status]}
+                    </span>
+                  </div>
 
-                  return (
-                    <tr key={bill.id} className="hover:bg-muted/50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-secondary rounded-lg">
-                            <Icon className="w-4 h-4 text-primary" />
-                          </div>
-                          <span className="font-medium text-foreground">{cat?.name || 'Desconhecida'}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-wrap gap-1">
-                          {billDeps.length === 0 ? (
-                            <span className="text-muted-foreground text-xs italic">Nenhum</span>
-                          ) : (
-                            <>
-                              {billDeps.slice(0, 2).map(d => (
-                                <Badge key={d.id} variant="secondary" className="text-[13px] font-medium py-0 h-5">
-                                  {d.name}
-                                </Badge>
-                              ))}
-                              {billDeps.length > 2 && (
-                                <Badge variant="outline" className="text-[13px] font-medium py-0 h-5 bg-background">
-                                  +{billDeps.length - 2} mais
-                                </Badge>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap font-bold text-foreground">
-                        {formatCurrency(bill.amount)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-muted-foreground">
-                        {format(parseISO(bill.due_date), 'dd/MM/yyyy', { locale: ptBR })}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-muted-foreground">
-                        {bill.reference_month}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${STATUS_COLORS[bill.status]}`}>
-                          {STATUS_LABELS[bill.status]}
+                  {/* Amount + dependents */}
+                  <div className="flex items-center justify-between">
+                    <p className="text-xl font-black text-white">{formatCurrency(bill.amount)}</p>
+                    <div className="flex gap-1 flex-wrap justify-end">
+                      {billDeps.slice(0, 2).map(d => (
+                        <span key={d.id}
+                          className="text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-white/60 font-medium">
+                          {d.name}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {bill.status === 'pending' && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 text-xs font-semibold text-green-600 border-green-200 hover:bg-green-50"
-                              onClick={() => handleMarkAsPaid(bill.id, bill.status)}
-                              disabled={loadingId === bill.id || loading}
-                            >
-                              {loadingId === bill.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                              Marcar como paga
-                            </Button>
-                          )}
-                          <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(bill)} disabled={loadingId === bill.id} className="h-8 w-8">
-                            <Edit className="w-4 h-4 text-muted-foreground hover:text-amber-500" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger render={
-                              <Button variant="ghost" size="icon" disabled={loadingId === bill.id} className="h-8 w-8">
-                                {loadingId === bill.id ? <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" /> : <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-600" />}
-                              </Button>
-                            } />
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Esta ação não pode ser desfeita.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDelete(bill.id)} className="bg-red-600 hover:bg-red-700 text-white">
-                                  Remover
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      ))}
+                      {billDeps.length > 2 && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/6 text-white/40 font-medium">
+                          +{billDeps.length - 2}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/6">
+                    {bill.status === 'pending' && (
+                      <Button variant="outline" size="sm"
+                        className="h-7 text-xs text-green-400 border-green-400/30 hover:bg-green-400/10"
+                        onClick={() => handleMarkAsPaid(bill.id, bill.status)}
+                        disabled={loadingId === bill.id}>
+                        {loadingId === bill.id ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : null}
+                        Marcar paga
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="icon" className="h-7 w-7"
+                      onClick={() => handleOpenEdit(bill)}
+                      disabled={loadingId === bill.id}>
+                      <Edit className="w-3 h-3 text-white/40" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger render={
+                        <Button variant="ghost" size="icon" className="h-7 w-7" disabled={loadingId === bill.id}>
+                          {loadingId === bill.id ? <Loader2 className="w-3 h-3 text-white/40 animate-spin" /> : <Trash2 className="w-3 h-3 text-white/40" />}
+                        </Button>
+                      } />
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+                          <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(bill.id)} className="bg-red-600 hover:bg-red-700 text-white">Remover</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          {totalPages > 0 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-white/8">
-              <span className="text-sm text-white/40">
-                Página {page + 1} de {totalPages || 1}
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={prevPage}
-                  disabled={!hasPrevPage}
-                >
-                  Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={nextPage}
-                  disabled={!hasNextPage}
-                >
-                  Próxima
-                </Button>
-              </div>
+
+          {/* Desktop view — existing table */}
+          <div className="hidden md:block rounded-2xl overflow-hidden glass">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="text-xs uppercase" style={{ background: 'rgba(255,255,255,0.02)', color: 'rgba(255,255,255,0.4)' }}>
+                  <tr>
+                    <th scope="col" className="px-6 py-4 font-semibold">Categoria</th>
+                    <th scope="col" className="px-6 py-4 font-semibold">Dependentes</th>
+                    <th scope="col" className="px-6 py-4 font-semibold">Valor</th>
+                    <th scope="col" className="px-6 py-4 font-semibold">Vencimento</th>
+                    <th scope="col" className="px-6 py-4 font-semibold">Ref</th>
+                    <th scope="col" className="px-6 py-4 font-semibold">Status</th>
+                    <th scope="col" className="px-6 py-4 font-semibold text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {filteredBills.map(bill => {
+                    const cat = categories.find(c => c.id === bill.category_id);
+                    const Icon = getCategoryIcon(cat?.icon || null);
+                    const billDeps = bill.dependents || [];
+
+                    return (
+                      <tr key={bill.id} className="hover:bg-muted/50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-secondary rounded-lg">
+                              <Icon className="w-4 h-4 text-primary" />
+                            </div>
+                            <span className="font-medium text-foreground">{cat?.name || 'Desconhecida'}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-wrap gap-1">
+                            {billDeps.length === 0 ? (
+                              <span className="text-muted-foreground text-xs italic">Nenhum</span>
+                            ) : (
+                              <>
+                                {billDeps.slice(0, 2).map(d => (
+                                  <Badge key={d.id} variant="secondary" className="text-[13px] font-medium py-0 h-5">
+                                    {d.name}
+                                  </Badge>
+                                ))}
+                                {billDeps.length > 2 && (
+                                  <Badge variant="outline" className="text-[13px] font-medium py-0 h-5 bg-background">
+                                    +{billDeps.length - 2} mais
+                                  </Badge>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap font-bold text-foreground">
+                          {formatCurrency(bill.amount)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-muted-foreground">
+                          {format(parseISO(bill.due_date), 'dd/MM/yyyy', { locale: ptBR })}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-muted-foreground">
+                          {bill.reference_month}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${STATUS_COLORS[bill.status]}`}>
+                            {STATUS_LABELS[bill.status]}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {bill.status === 'pending' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-xs font-semibold text-green-600 border-green-200 hover:bg-green-50"
+                                onClick={() => handleMarkAsPaid(bill.id, bill.status)}
+                                disabled={loadingId === bill.id || loading}
+                              >
+                                {loadingId === bill.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                                Marcar como paga
+                              </Button>
+                            )}
+                            <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(bill)} disabled={loadingId === bill.id} className="h-8 w-8">
+                              <Edit className="w-4 h-4 text-muted-foreground hover:text-amber-500" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger render={
+                                <Button variant="ghost" size="icon" disabled={loadingId === bill.id} className="h-8 w-8">
+                                  {loadingId === bill.id ? <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" /> : <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-600" />}
+                                </Button>
+                              } />
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Esta ação não pode ser desfeita.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDelete(bill.id)} className="bg-red-600 hover:bg-red-700 text-white">
+                                    Remover
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          )}
-        </div>
+            {totalPages > 0 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-white/8">
+                <span className="text-sm text-white/40">
+                  Página {page + 1} de {totalPages || 1}
+                </span>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={prevPage} disabled={!hasPrevPage}>Anterior</Button>
+                  <Button variant="outline" size="sm" onClick={nextPage} disabled={!hasNextPage}>Próxima</Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

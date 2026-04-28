@@ -59,8 +59,20 @@ export default function Dashboard() {
     .filter(t => t.type === 'to_pay' && t.status === 'pending')
     .reduce((acc, t) => acc + t.amount, 0);
 
+  // Hero card derived values
+  const totalPending = pendingBillsTotal + openCardsTotal;
+  const totalToReceive = pendingToReceive;
+  const totalToPay = pendingToPay;
+  const allTransactions = transactions;
+  const transactionCounts = {
+    toReceive: allTransactions.filter(t => t.type === 'to_receive' && t.status === 'pending').length,
+    toPay: allTransactions.filter(t => t.type === 'to_pay' && t.status === 'pending').length,
+  };
+  const totalInvoiceAmount = openCardsTotal;
+
   // ── Section 2: Alerts ──
   const overdueBills = getOverdueBills();
+  const overdueCount = overdueBills.length;
   const overdueBillIds = new Set(overdueBills.map(b => b.id));
   const dueSoonBills = getDueSoonBills().filter(b => !overdueBillIds.has(b.id));
 
@@ -98,6 +110,63 @@ export default function Dashboard() {
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
       <PageHeader title="Dashboard" description="Visão geral financeira e alertas." />
 
+      {/* ── Hero Card ── */}
+      {!isLoading && (
+        <div
+          className="relative overflow-hidden rounded-2xl p-4 md:p-6 border border-amber-400/20"
+          style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(245,158,11,0.05) 50%, transparent 100%)' }}
+        >
+          <div
+            className="absolute top-0 right-0 w-64 h-64 rounded-full pointer-events-none"
+            style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%)', transform: 'translate(30%, -30%)' }}
+          />
+          <div className="relative z-10 flex flex-col gap-4">
+            {/* Total amount — always full width */}
+            <div>
+              <p className="text-sm text-white/50 uppercase tracking-widest font-semibold mb-1">
+                Visão Geral — {format(new Date(), 'MMMM yyyy', { locale: ptBR })}
+              </p>
+              <p className="text-3xl md:text-5xl font-black text-white">
+                {formatCurrency(totalPending)}
+              </p>
+              <p className="text-sm text-white/50 mt-1">
+                em contas e faturas pendentes este mês
+              </p>
+            </div>
+
+            {/* 3 metrics in a row — always horizontal but smaller on mobile */}
+            <div className="flex gap-3 md:gap-6">
+              <div>
+                <p className="text-[10px] md:text-xs text-white/40 mb-0.5">
+                  A Receber
+                </p>
+                <p className="text-sm md:text-lg font-bold text-emerald-400">
+                  {formatCurrency(totalToReceive)}
+                </p>
+              </div>
+              <div className="w-px bg-white/10" />
+              <div>
+                <p className="text-[10px] md:text-xs text-white/40 mb-0.5">
+                  A Pagar
+                </p>
+                <p className="text-sm md:text-lg font-bold text-red-400">
+                  {formatCurrency(totalToPay)}
+                </p>
+              </div>
+              <div className="w-px bg-white/10" />
+              <div>
+                <p className="text-[10px] md:text-xs text-white/40 mb-0.5">
+                  Vencidas
+                </p>
+                <p className="text-sm md:text-lg font-bold text-amber-400">
+                  {overdueCount}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Section 1: Summary Cards ── */}
       {isLoading ? (
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
@@ -117,6 +186,7 @@ export default function Dashboard() {
             </div>
             <div className="text-3xl font-bold text-white font-quicksand">{pendingBillsCount}</div>
             <p className="text-xs text-[rgba(255,255,255,0.4)] mt-1">{formatCurrency(pendingBillsTotal)}</p>
+            <p className="text-xs text-white/40 mt-1">{overdueCount} vencida{overdueCount !== 1 ? 's' : ''}</p>
           </div>
 
           {/* Faturas em Aberto */}
@@ -129,6 +199,7 @@ export default function Dashboard() {
             </div>
             <div className="text-3xl font-bold text-white font-quicksand">{openCardsCount}</div>
             <p className="text-xs text-[rgba(255,255,255,0.4)] mt-1">{formatCurrency(openCardsTotal)}</p>
+            <p className="text-xs text-white/40 mt-1">{formatCurrency(totalInvoiceAmount)} em aberto</p>
           </div>
 
           {/* A Receber */}
@@ -140,6 +211,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="text-3xl font-bold text-[#10B981] font-quicksand">{formatCurrency(pendingToReceive)}</div>
+            <p className="text-xs text-white/40 mt-1">{transactionCounts.toReceive} transaç{transactionCounts.toReceive !== 1 ? 'ões' : 'ão'}</p>
           </div>
 
           {/* A Pagar */}
@@ -151,6 +223,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="text-3xl font-bold text-[#EF4444] font-quicksand">{formatCurrency(pendingToPay)}</div>
+            <p className="text-xs text-white/40 mt-1">{transactionCounts.toPay} transaç{transactionCounts.toPay !== 1 ? 'ões' : 'ão'}</p>
           </div>
         </div>
       )}

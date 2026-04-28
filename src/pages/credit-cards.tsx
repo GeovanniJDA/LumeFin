@@ -417,36 +417,45 @@ export default function CreditCards() {
           description="Você ainda não adicionou nenhum cartão de crédito. Clique no botão acima para começar."
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {creditCards.map(card => (
             <div
               key={card.id}
-              className="glass rounded-2xl p-5 flex flex-col justify-between hover:shadow-lg transition-all"
-              style={{ borderLeftWidth: 3, borderLeftColor: card.color ?? '#6B7280' }}
+              className="relative overflow-hidden rounded-2xl p-5 flex flex-col justify-between gap-4 border border-white/8 hover:border-white/14 transition-all duration-200"
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                backdropFilter: 'blur(20px)',
+                borderLeftWidth: 3,
+                borderLeftColor: card.color ?? '#6B7280'
+              }}
             >
-              <div className="flex justify-between items-start mb-4">
+              {/* Subtle colored glow */}
+              <div className="absolute top-0 right-0 w-32 h-32 pointer-events-none"
+                style={{
+                  background: `radial-gradient(circle, ${card.color ?? '#6B7280'}28 0%, transparent 70%)`,
+                  transform: 'translate(30%, -30%)'
+                }}
+              />
+
+              {/* Top: name + color dot + actions */}
+              <div className="relative flex justify-between items-start">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <div
-                      className="w-3 h-3 rounded-full shrink-0"
-                      style={{ backgroundColor: card.color ?? '#6B7280' }}
-                    />
-                    <h3 className="font-semibold text-lg text-white font-quicksand truncate">{card.name}</h3>
+                    <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: card.color ?? '#6B7280' }} />
+                    <h3 className="font-bold text-white text-lg leading-tight truncate">{card.name}</h3>
                   </div>
                   {card.dependents && (
-                    <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.6)]">
-                      Dependente: {card.dependents.name}
-                    </span>
+                    <p className="text-xs text-white/40">{card.dependents.name}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(card)} disabled={loadingId === card.id} className="h-8 w-8">
-                    <Edit className="w-4 h-4 text-[rgba(255,255,255,0.4)] hover:text-amber-300" />
+                    <Edit className="w-4 h-4 text-white/40 hover:text-amber-300" />
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger render={
                       <Button variant="ghost" size="icon" disabled={loadingId === card.id} className="h-8 w-8">
-                        {loadingId === card.id ? <Loader2 className="w-4 h-4 text-[rgba(255,255,255,0.4)] animate-spin" /> : <Trash2 className="w-4 h-4 text-[rgba(255,255,255,0.4)] hover:text-red-400" />}
+                        {loadingId === card.id ? <Loader2 className="w-4 h-4 text-white/40 animate-spin" /> : <Trash2 className="w-4 h-4 text-white/40 hover:text-red-400" />}
                       </Button>
                     } />
                     <AlertDialogContent>
@@ -467,30 +476,27 @@ export default function CreditCards() {
                 </div>
               </div>
 
-              <div className="space-y-4 flex-1">
-                <div className="flex flex-col">
-                  <span className="text-sm text-[rgba(255,255,255,0.4)]">Valor da Fatura</span>
-                  <span className="text-2xl font-bold text-white">
-                    {formatCurrency(card.invoice_amount)}
-                  </span>
-                </div>
+              {/* Invoice amount — prominent */}
+              <div className="relative">
+                <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Valor da Fatura</p>
+                <p className="text-3xl font-black text-white">{formatCurrency(card.invoice_amount)}</p>
+              </div>
 
-                <div className="flex flex-wrap gap-2 text-sm">
-                  <span className={`px-2 py-1 rounded-md border font-medium ${STATUS_COLORS[card.status]}`}>
+              {/* Meta row */}
+              <div className="relative flex items-center justify-between pt-3 border-t border-white/6">
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-1 rounded-md border text-xs font-semibold ${STATUS_COLORS[card.status]}`}>
                     {STATUS_LABELS[card.status]}
                   </span>
-                  <span className="px-2 py-1 rounded-md bg-[rgba(255,255,255,0.06)] text-[rgba(255,255,255,0.5)] text-xs flex items-center">
-                    Ref: {card.reference_month}
-                  </span>
+                  <span className="text-xs text-white/30">{card.reference_month}</span>
                 </div>
-
-                <div className="grid grid-cols-2 gap-2 text-sm text-[rgba(255,255,255,0.4)] pt-2 border-t border-[rgba(255,255,255,0.06)]">
-                  <div>Vence em {format(parseISO(card.due_date), 'dd/MM/yyyy', { locale: ptBR })}</div>
-                  <div>Fecha dia {card.closing_day}</div>
+                <div className="text-right">
+                  <p className="text-xs text-white/40">Vence {format(parseISO(card.due_date), 'dd/MM', { locale: ptBR })}</p>
                 </div>
               </div>
 
-              <div className="pt-4 mt-2">
+              {/* Action button */}
+              <div className="relative">
                 {card.status === 'open' && (
                   <Button
                     className="w-full bg-[rgba(245,158,11,0.15)] hover:bg-[rgba(245,158,11,0.25)] text-[#F59E0B] border border-[rgba(245,158,11,0.3)] font-medium"

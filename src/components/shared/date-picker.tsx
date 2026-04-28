@@ -58,13 +58,15 @@ export function DatePicker({
       </PopoverTrigger>
 
       <PopoverContent
-        className={cn(
-          'w-auto p-0',
-          'bg-zinc-900 border border-white/10',
-          'shadow-2xl shadow-black/50 rounded-xl',
-        )}
+        className="w-auto p-3 rounded-2xl z-[200]
+          border border-white/10
+          shadow-2xl shadow-black/60"
+        style={{
+          background: 'rgba(10, 10, 10, 0.98)',
+          backdropFilter: 'blur(40px)',
+        }}
         align="start"
-        sideOffset={6}
+        avoidCollisions
       >
         <Calendar
           mode="single"
@@ -73,13 +75,44 @@ export function DatePicker({
           locale={ptBR}
           autoFocus
           classNames={{
-            // react-day-picker v9 class keys
-            month_caption: 'text-white font-medium',
-            weekday: 'text-white/40',
-            day: 'text-white/80 hover:bg-white/10 rounded-md',
-            today: 'text-amber-400 font-bold bg-transparent',
-            outside: 'text-white/20',
-            disabled: 'text-white/20 opacity-50',
+            months: 'flex flex-col space-y-4',
+            month: 'space-y-4',
+            caption: 'flex justify-center pt-1 relative items-center',
+            caption_label: 'text-sm font-semibold text-white',
+            nav: 'flex items-center gap-1',
+            nav_button: cn(
+              'h-8 w-8 bg-transparent p-0 rounded-lg transition-colors',
+              'text-white/60 hover:text-white hover:bg-white/10',
+              'flex items-center justify-center border border-white/10'
+            ),
+            nav_button_previous: 'absolute left-1',
+            nav_button_next: 'absolute right-1',
+            table: 'w-full border-collapse',
+            head_row: 'flex w-full',
+            head_cell: cn(
+              'text-white/40 rounded-md font-normal text-[0.75rem]',
+              'w-9 h-9 flex items-center justify-center'
+            ),
+            row: 'flex w-full mt-1',
+            cell: cn(
+              'w-9 h-9 text-center text-sm p-0 relative',
+              'focus-within:relative focus-within:z-20'
+            ),
+            day: cn(
+              'w-9 h-9 p-0 font-normal rounded-lg transition-colors',
+              'text-white/80 hover:bg-white/10 hover:text-white',
+              'flex items-center justify-center'
+            ),
+            day_selected: cn(
+              'bg-amber-500 text-black font-bold',
+              'hover:bg-amber-600 hover:text-black',
+              'rounded-lg'
+            ),
+            day_today: 'text-amber-400 font-bold',
+            day_outside: 'text-white/20 opacity-50',
+            day_disabled: 'text-white/20 opacity-30 cursor-not-allowed',
+            day_range_middle: 'rounded-none',
+            day_hidden: 'invisible',
           }}
         />
       </PopoverContent>

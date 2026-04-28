@@ -621,7 +621,7 @@ export default function Transactions() {
       {loading && transactions.length === 0 ? (
         <div className="space-y-4">
           {[1, 2, 3].map(i => (
-            <Skeleton key={i} className="h-16 w-full rounded-xl" />
+            <Skeleton key={i} className="h-28 w-full rounded-2xl" />
           ))}
         </div>
       ) : filteredTransactions.length === 0 ? (
@@ -631,135 +631,204 @@ export default function Transactions() {
           description="Ajuste os filtros ou adicione uma nova transação clicando no botão acima."
         />
       ) : (
-        <div className="rounded-2xl overflow-hidden glass">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs uppercase" style={{ background: 'rgba(255,255,255,0.02)', color: 'rgba(255,255,255,0.4)' }}>
-                <tr>
-                  <th scope="col" className="px-6 py-4 font-semibold">Dependente</th>
-                  <th scope="col" className="px-6 py-4 font-semibold">Descrição</th>
-                  <th scope="col" className="px-6 py-4 font-semibold">Valor</th>
-                  <th scope="col" className="px-6 py-4 font-semibold">Tipo</th>
-                  <th scope="col" className="px-6 py-4 font-semibold">Pagamento</th>
-                  <th scope="col" className="px-6 py-4 font-semibold">Status</th>
-                  <th scope="col" className="px-6 py-4 font-semibold text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {filteredTransactions.map(tx => {
-                  const dep = dependents.find(d => d.id === tx.dependent_id);
-                  return (
-                    <tr key={tx.id} className="hover:bg-muted/50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-foreground">{dep?.name || 'Desconhecido'}</span>
-                          {dep?.relationship && (
-                            <Badge variant="secondary" className="text-[10px] font-medium py-0 h-5">
-                              {RELATIONSHIP_LABELS[dep.relationship] || dep.relationship}
-                            </Badge>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                          <span className="font-medium text-foreground">{tx.description}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {format(parseISO(tx.transaction_date), 'dd/MM/yyyy', { locale: ptBR })}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap font-bold text-foreground">
-                        <span className={tx.type === 'to_receive' ? 'text-green-600' : 'text-red-600'}>
-                          {tx.type === 'to_receive' ? '+' : '-'}{formatCurrency(tx.amount)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${TYPE_COLORS[tx.type]}`}>
-                          {TYPE_LABELS[tx.type]}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-muted-foreground text-sm">
-                        {tx.payment_type === 'installment'
-                          ? `${tx.paid_installments || 0}/${tx.installments || 1} parcelas`
-                          : PAYMENT_LABELS[tx.payment_type]}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${STATUS_COLORS[tx.status]}`}>
-                          {STATUS_LABELS[tx.status]}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {tx.status === 'pending' && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-8 text-xs font-semibold text-green-600 border-green-200 hover:bg-green-50"
-                              onClick={() => handleMarkAsPaid(tx.id)}
-                              disabled={loadingId === tx.id || loading}
-                            >
-                              {loadingId === tx.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                              Marcar como pago
-                            </Button>
-                          )}
-                          <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(tx)} disabled={loadingId === tx.id} className="h-8 w-8">
-                            <Edit className="w-4 h-4 text-muted-foreground hover:text-amber-500" />
+        <>
+          {/* Mobile view — cards */}
+          <div className="md:hidden space-y-3">
+            {filteredTransactions.map(tx => {
+              const dep = dependents.find(d => d.id === tx.dependent_id);
+              return (
+                <div key={tx.id}
+                  className="glass rounded-2xl p-4 space-y-3 border border-white/6"
+                  style={{
+                    borderLeftWidth: 2,
+                    borderLeftColor: tx.type === 'to_receive' ? '#10B981' : '#EF4444'
+                  }}>
+                  {/* Top: dependent + type badge */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-bold text-white text-sm">{dep?.name || 'Desconhecido'}</p>
+                      <p className="text-xs text-white/40 mt-0.5">{tx.description}</p>
+                    </div>
+                    <span className={`px-2 py-1 rounded-md text-xs font-semibold border shrink-0 ${TYPE_COLORS[tx.type]}`}>
+                      {TYPE_LABELS[tx.type]}
+                    </span>
+                  </div>
+
+                  {/* Amount + date */}
+                  <div className="flex items-center justify-between">
+                    <p className={`text-2xl font-black ${tx.type === 'to_receive' ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {tx.type === 'to_receive' ? '+' : '-'}{formatCurrency(tx.amount)}
+                    </p>
+                    <div className="text-right">
+                      <p className="text-xs text-white/40">
+                        {format(parseISO(tx.transaction_date), 'dd/MM/yyyy', { locale: ptBR })}
+                      </p>
+                      {tx.payment_type === 'installment' && (
+                        <p className="text-xs text-white/40">{tx.paid_installments}/{tx.installments}x</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Status + actions */}
+                  <div className="flex items-center justify-between pt-2 border-t border-white/6">
+                    <span className={`px-2 py-1 rounded-md text-xs font-semibold border ${STATUS_COLORS[tx.status]}`}>
+                      {STATUS_LABELS[tx.status]}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      {tx.status === 'pending' && (
+                        <Button variant="outline" size="sm"
+                          className="h-7 text-xs text-green-400 border-green-400/30 hover:bg-green-400/10"
+                          onClick={() => handleMarkAsPaid(tx.id)}
+                          disabled={loadingId === tx.id}>
+                          Marcar pago
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="icon" className="h-7 w-7"
+                        onClick={() => handleOpenEdit(tx)}
+                        disabled={loadingId === tx.id}>
+                        <Edit className="w-3 h-3 text-white/40" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger render={
+                          <Button variant="ghost" size="icon" className="h-7 w-7" disabled={loadingId === tx.id}>
+                            {loadingId === tx.id ? <Loader2 className="w-3 h-3 text-white/40 animate-spin" /> : <Trash2 className="w-3 h-3 text-white/40" />}
                           </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger render={
-                              <Button variant="ghost" size="icon" disabled={loadingId === tx.id} className="h-8 w-8">
-                                {loadingId === tx.id ? <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" /> : <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-600" />}
-                              </Button>
-                            } />
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Esta ação não pode ser desfeita.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDelete(tx.id)} className="bg-red-600 hover:bg-red-700 text-white">
-                                  Remover
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        } />
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+                            <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(tx.id)} className="bg-red-600 hover:bg-red-700 text-white">Remover</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          {totalPages > 0 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-white/8">
-              <span className="text-sm text-white/40">
-                Página {page + 1} de {totalPages || 1}
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={prevPage}
-                  disabled={!hasPrevPage}
-                >
-                  Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={nextPage}
-                  disabled={!hasNextPage}
-                >
-                  Próxima
-                </Button>
-              </div>
+
+          {/* Desktop view — existing table */}
+          <div className="hidden md:block rounded-2xl overflow-hidden glass">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="text-xs uppercase" style={{ background: 'rgba(255,255,255,0.02)', color: 'rgba(255,255,255,0.4)' }}>
+                  <tr>
+                    <th scope="col" className="px-6 py-4 font-semibold">Dependente</th>
+                    <th scope="col" className="px-6 py-4 font-semibold">Descrição</th>
+                    <th scope="col" className="px-6 py-4 font-semibold">Valor</th>
+                    <th scope="col" className="px-6 py-4 font-semibold">Tipo</th>
+                    <th scope="col" className="px-6 py-4 font-semibold">Pagamento</th>
+                    <th scope="col" className="px-6 py-4 font-semibold">Status</th>
+                    <th scope="col" className="px-6 py-4 font-semibold text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {filteredTransactions.map(tx => {
+                    const dep = dependents.find(d => d.id === tx.dependent_id);
+                    return (
+                      <tr key={tx.id} className="hover:bg-muted/50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-foreground">{dep?.name || 'Desconhecido'}</span>
+                            {dep?.relationship && (
+                              <Badge variant="secondary" className="text-[10px] font-medium py-0 h-5">
+                                {RELATIONSHIP_LABELS[dep.relationship] || dep.relationship}
+                              </Badge>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col">
+                            <span className="font-medium text-foreground">{tx.description}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {format(parseISO(tx.transaction_date), 'dd/MM/yyyy', { locale: ptBR })}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap font-bold text-foreground">
+                          <span className={tx.type === 'to_receive' ? 'text-green-600' : 'text-red-600'}>
+                            {tx.type === 'to_receive' ? '+' : '-'}{formatCurrency(tx.amount)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${TYPE_COLORS[tx.type]}`}>
+                            {TYPE_LABELS[tx.type]}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-muted-foreground text-sm">
+                          {tx.payment_type === 'installment'
+                            ? `${tx.paid_installments || 0}/${tx.installments || 1} parcelas`
+                            : PAYMENT_LABELS[tx.payment_type]}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${STATUS_COLORS[tx.status]}`}>
+                            {STATUS_LABELS[tx.status]}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {tx.status === 'pending' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-xs font-semibold text-green-600 border-green-200 hover:bg-green-50"
+                                onClick={() => handleMarkAsPaid(tx.id)}
+                                disabled={loadingId === tx.id || loading}
+                              >
+                                {loadingId === tx.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                Marcar como pago
+                              </Button>
+                            )}
+                            <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(tx)} disabled={loadingId === tx.id} className="h-8 w-8">
+                              <Edit className="w-4 h-4 text-muted-foreground hover:text-amber-500" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger render={
+                                <Button variant="ghost" size="icon" disabled={loadingId === tx.id} className="h-8 w-8">
+                                  {loadingId === tx.id ? <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" /> : <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-600" />}
+                                </Button>
+                              } />
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Esta ação não pode ser desfeita.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDelete(tx.id)} className="bg-red-600 hover:bg-red-700 text-white">
+                                    Remover
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          )}
-        </div>
+            {totalPages > 0 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-white/8">
+                <span className="text-sm text-white/40">
+                  Página {page + 1} de {totalPages || 1}
+                </span>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={prevPage} disabled={!hasPrevPage}>Anterior</Button>
+                  <Button variant="outline" size="sm" onClick={nextPage} disabled={!hasNextPage}>Próxima</Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

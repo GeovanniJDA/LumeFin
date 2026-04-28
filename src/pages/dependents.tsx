@@ -207,9 +207,9 @@ export default function Dependents() {
       )}
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {[1, 2, 3, 4].map(i => (
-            <Skeleton key={i} className="h-32 w-full rounded-xl" />
+            <Skeleton key={i} className="h-48 w-full rounded-2xl" />
           ))}
         </div>
       ) : dependents.length === 0 ? (
@@ -219,48 +219,66 @@ export default function Dependents() {
           description="Você ainda não adicionou nenhum dependente. Clique no botão acima para começar."
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {dependents.map(dep => (
-            <div key={dep.id} className="glass rounded-2xl p-5 flex justify-between items-start hover:shadow-lg transition-all">
-              <div className="space-y-3 flex-1 overflow-hidden">
+            <div key={dep.id}
+              className="glass rounded-2xl p-5 flex flex-col gap-4
+                hover:border-white/12 transition-all duration-200
+                border border-white/6">
+
+              {/* Top row: avatar + name + relationship + actions */}
+              <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <h3 className="font-semibold text-lg text-foreground font-quicksand truncate">{dep.name}</h3>
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${RELATIONSHIP_COLORS[dep.relationship]}`}>
-                    {RELATIONSHIP_LABELS[dep.relationship]}
-                  </span>
+                  {/* Avatar with initials */}
+                  <div
+                    className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 text-lg font-black border-2 ${RELATIONSHIP_COLORS[dep.relationship]}`}
+                    style={{ background: 'rgba(255,255,255,0.06)' }}
+                  >
+                    {dep.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white text-base leading-tight">{dep.name}</h3>
+                    <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${RELATIONSHIP_COLORS[dep.relationship]}`}>
+                      {RELATIONSHIP_LABELS[dep.relationship]}
+                    </span>
+                  </div>
                 </div>
-                {dep.notes && (
-                  <p className="text-sm text-muted-foreground line-clamp-2 pr-4">{dep.notes}</p>
-                )}
+
+                {/* Action buttons */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(dep)} disabled={loadingId === dep.id}>
+                    <Edit className="w-4 h-4 text-white/40 hover:text-amber-400" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger render={
+                      <Button variant="ghost" size="icon" disabled={loadingId === dep.id}>
+                        {loadingId === dep.id ? <Loader2 className="w-4 h-4 text-white/40 animate-spin" /> : <Trash2 className="w-4 h-4 text-white/40 hover:text-red-400" />}
+                      </Button>
+                    } />
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Esta ação não pode ser desfeita. Isso removerá o dependente {dep.name} permanentemente.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(dep.id)} className="bg-red-600 hover:bg-red-700 text-white">
+                          Remover
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </div>
 
-              <div className="flex items-center gap-1 ml-4 shrink-0">
-                <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(dep)} disabled={loadingId === dep.id}>
-                  <Edit className="w-4 h-4 text-muted-foreground hover:text-amber-500" />
-                </Button>
-
-                <AlertDialog>
-                  <AlertDialogTrigger render={
-                    <Button variant="ghost" size="icon" disabled={loadingId === dep.id}>
-                      {loadingId === dep.id ? <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" /> : <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-600" />}
-                    </Button>
-                  } />
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Esta ação não pode ser desfeita. Isso removerá o dependente {dep.name} permanentemente.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => handleDelete(dep.id)} className="bg-red-600 hover:bg-red-700 text-white">
-                        Remover
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
+              {/* Notes if present */}
+              {dep.notes && (
+                <p className="text-sm text-white/50 line-clamp-2 leading-relaxed">
+                  {dep.notes}
+                </p>
+              )}
             </div>
           ))}
         </div>
