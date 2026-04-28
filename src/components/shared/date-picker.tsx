@@ -66,7 +66,6 @@ export function DatePicker({
           backdropFilter: 'blur(40px)',
         }}
         align="start"
-        avoidCollisions
       >
         <Calendar
           mode="single"
