@@ -33,6 +33,7 @@ export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFlipping, setIsFlipping] = useState(false);
   const navigate = useNavigate();
 
   const form = useForm<AuthFormValues>({
@@ -41,9 +42,14 @@ export default function Auth() {
   });
 
   const toggleMode = () => {
-    setIsLogin(!isLogin);
-    form.reset({ email: '', password: '' });
-    setAuthError(null);
+    if (isFlipping) return;
+    setIsFlipping(true);
+    setTimeout(() => {
+      setIsLogin((prev) => !prev);
+      form.reset({ email: '', password: '' });
+      setAuthError(null);
+      setIsFlipping(false);
+    }, 250);
   };
 
   const onSubmit = async (data: AuthFormValues) => {
@@ -161,7 +167,16 @@ export default function Auth() {
           }}
         />
 
-        <div className="w-full max-w-sm space-y-8">
+        <div 
+          className="w-full max-w-sm space-y-8"
+          style={{
+            transform: isFlipping 
+              ? 'perspective(1000px) rotateY(90deg) scale(0.95)' 
+              : 'perspective(1000px) rotateY(0deg) scale(1)',
+            opacity: isFlipping ? 0 : 1,
+            transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease-in-out',
+          }}
+        >
 
           {/* Mobile logo — only visible on mobile */}
           <div className="lg:hidden text-center">

@@ -148,6 +148,11 @@
     background: #000000;
     min-height: 100vh;
     overflow-x: hidden;
+    font-family: 'Inter', sans-serif;
+  }
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   #root {
     background: #000000;
@@ -222,7 +227,10 @@ input[type='number'] {
 }
 
 /* ── Landing page: fonts ────────────────────────────────────── */
-.font-syne { font-family: 'Syne', sans-serif; }
+.font-syne {
+  font-family: 'Syne', sans-serif;
+  font-optical-sizing: auto;
+}
 
 /* ── Cinematic reveal ───────────────────────────────────────── */
 .reveal {

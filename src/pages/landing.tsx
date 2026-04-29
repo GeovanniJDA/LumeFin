@@ -1,19 +1,155 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Users, Receipt, CreditCard, ArrowRightLeft,
   Bell, Shield
 } from 'lucide-react'
 
+const useTilt = () => {
+  const ref = useRef<HTMLDivElement>(null)
+  const [tilt, setTilt] = useState({ x: 0, y: 0 })
+  const [hovered, setHovered] = useState(false)
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (window.innerWidth < 768) return;
+    const rect = ref.current?.getBoundingClientRect()
+    if (!rect) return
+    const x = ((e.clientY - rect.top) / rect.height - 0.5) * 10
+    const y = ((e.clientX - rect.left) / rect.width - 0.5) * -10
+    setTilt({ x, y })
+  }
+
+  const handleMouseLeave = () => {
+    setTilt({ x: 0, y: 0 })
+    setHovered(false)
+  }
+
+  const style = {
+    transform: `perspective(800px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(${hovered ? 1.02 : 1})`,
+    transition: hovered
+      ? 'transform 0.1s ease'
+      : 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+  }
+
+  return {
+    ref,
+    style,
+    onMouseMove: handleMouseMove,
+    onMouseEnter: () => setHovered(true),
+    onMouseLeave: handleMouseLeave,
+  }
+}
+
+const useCountUp = (target: number, duration = 1500, trigger: boolean) => {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    if (!trigger) return
+    let start = 0
+    const step = target / (duration / 16)
+    const timer = setInterval(() => {
+      start += step
+      if (start >= target) {
+        setCount(target)
+        clearInterval(timer)
+      } else {
+        setCount(Math.floor(start))
+      }
+    }, 16)
+    return () => clearInterval(timer)
+  }, [trigger, target, duration])
+
+  return count
+}
+
+const StatCard = ({ value, suffix, label, sub, trigger, delayClass }: any) => {
+  const isNumber = !isNaN(Number(value))
+  const count = useCountUp(isNumber ? Number(value) : 0, 1500, trigger)
+  return (
+    <div className={`scroll-reveal reveal text-center ${delayClass}`}>
+      <p className="font-syne font-bold text-amber-400 mb-1"
+        style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
+        {isNumber ? count : value}{suffix}
+      </p>
+      <p className="text-white font-semibold text-sm">{label}</p>
+      <p className="text-white/40 text-xs mt-0.5">{sub}</p>
+    </div>
+  )
+}
+
+const FeatureCard = ({ children, className, style, delayClass }: any) => {
+  const tilt = useTilt()
+  return (
+    <div
+      ref={tilt.ref}
+      onMouseMove={tilt.onMouseMove}
+      onMouseEnter={tilt.onMouseEnter}
+      onMouseLeave={tilt.onMouseLeave}
+      className={`scroll-reveal reveal ${delayClass || ''} ${className}`}
+      style={{ ...style, ...tilt.style }}
+    >
+      {children}
+    </div>
+  )
+}
+
+const StepCard = ({ item, delayClass }: any) => {
+  const tilt = useTilt()
+  return (
+    <div
+      ref={tilt.ref}
+      onMouseMove={tilt.onMouseMove}
+      onMouseEnter={tilt.onMouseEnter}
+      onMouseLeave={tilt.onMouseLeave}
+      className={`scroll-reveal reveal ${delayClass} relative flex items-center gap-8 mb-16 last:mb-0 ${item.side === 'right' ? 'md:flex-row-reverse' : 'md:flex-row'}`}
+      style={tilt.style}
+    >
+      <div className="relative shrink-0">
+        <div className="w-16 h-16 rounded-full flex items-center justify-center font-syne font-bold text-xl border-2 border-amber-400/40 text-amber-400"
+          style={{ background: 'rgba(245,158,11,0.08)' }}>
+          {item.step}
+        </div>
+      </div>
+      <div className={`flex-1 p-6 rounded-2xl ${item.side === 'right' ? 'md:text-right' : 'md:text-left'}`}
+        style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+        <h3 className="font-syne font-bold text-white text-xl mb-2">{item.title}</h3>
+        <p className="text-white/50 leading-relaxed">{item.desc}</p>
+      </div>
+    </div>
+  )
+}
+
 export default function Landing() {
   const navigate = useNavigate()
   const [scrolled, setScrolled] = useState(false)
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+  const [scrollProgress, setScrollProgress] = useState(0)
+  
+  const ctaRef = useRef<HTMLButtonElement>(null)
+  const [ctaOffset, setCtaOffset] = useState({ x: 0, y: 0 })
+  const [ctaHovered, setCtaHovered] = useState(false)
 
-  // Scroll navbar effect
+  const [statsTrigger, setStatsTrigger] = useState(false)
+  const statsRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20)
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20)
+      const total = document.documentElement.scrollHeight - window.innerHeight
+      setScrollProgress((window.scrollY / total) * 100)
+    }
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 2
+      const y = (e.clientY / window.innerHeight - 0.5) * 2
+      setMousePos({ x, y })
+    }
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
   }, [])
 
   // Reveal animations
@@ -45,8 +181,42 @@ export default function Landing() {
     }
   }, [])
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setStatsTrigger(true)
+      },
+      { threshold: 0.3 }
+    )
+    if (statsRef.current) observer.observe(statsRef.current)
+    return () => observer.disconnect()
+  }, [])
+
+  const handleCtaMouseMove = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = ctaRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const x = (e.clientX - rect.left - rect.width / 2) * 0.3
+    const y = (e.clientY - rect.top - rect.height / 2) * 0.3
+    setCtaOffset({ x, y })
+  }
+
+  const handleCtaMouseLeave = () => {
+    setCtaOffset({ x: 0, y: 0 })
+    setCtaHovered(false)
+  }
+
   return (
-    <div className="min-h-screen bg-black text-white overflow-x-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-black text-white overflow-x-hidden">
+
+      <div
+        className="fixed top-0 left-0 z-[100] h-[2px] pointer-events-none"
+        style={{
+          width: `${scrollProgress}%`,
+          background: 'linear-gradient(90deg, #F59E0B, #FDE68A)',
+          boxShadow: '0 0 8px rgba(245,158,11,0.8)',
+          transition: 'width 0.1s linear'
+        }}
+      />
 
       {/* ── NAVBAR ── */}
       <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
@@ -57,7 +227,7 @@ export default function Landing() {
         }}
       >
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <span className="font-syne text-xl font-black text-amber-400 tracking-tight">
+          <span className="font-syne text-xl font-bold text-amber-400 tracking-tight">
             LumeFin
           </span>
           <div className="hidden md:flex items-center gap-8">
@@ -87,7 +257,9 @@ export default function Landing() {
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full"
             style={{
               background: 'radial-gradient(ellipse, rgba(245,158,11,0.12) 0%, transparent 60%)',
-              animation: 'ambientPulse 8s ease-in-out infinite'
+              animation: 'ambientPulse 8s ease-in-out infinite',
+              transform: `translate(${mousePos.x * -15}px, ${mousePos.y * -10}px)`,
+              transition: 'transform 1.2s cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           />
           <div className="absolute bottom-0 left-0 w-[400px] h-[400px]"
@@ -96,7 +268,9 @@ export default function Landing() {
           <div className="absolute inset-0 opacity-[0.03]"
             style={{
               backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
-              backgroundSize: '60px 60px'
+              backgroundSize: '60px 60px',
+              transform: `translate(${mousePos.x * -5}px, ${mousePos.y * -5}px)`,
+              transition: 'transform 2s cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           />
         </div>
@@ -111,8 +285,12 @@ export default function Landing() {
         </div>
 
         {/* Headline */}
-        <h1 className="reveal delay-200 font-syne font-black text-center leading-[0.9] mb-6 max-w-4xl"
-          style={{ fontSize: 'clamp(3rem, 8vw, 7rem)' }}>
+        <h1 className="reveal delay-200 font-syne font-bold text-center leading-[0.9] mb-6 max-w-4xl"
+          style={{ 
+            fontSize: 'clamp(3rem, 8vw, 7rem)',
+            transform: `translate(${mousePos.x * 3}px, ${mousePos.y * 2}px)`,
+            transition: 'transform 1s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}>
           <span className="text-white">Clareza</span>
           <br />
           <span style={{
@@ -139,9 +317,21 @@ export default function Landing() {
 
         {/* CTAs */}
         <div className="reveal delay-400 flex flex-col sm:flex-row items-center gap-4 mb-16">
-          <button onClick={() => navigate('/auth')}
-            className="group relative px-8 py-4 rounded-full font-bold text-black overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
-            style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)' }}>
+          <button 
+            ref={ctaRef}
+            onClick={() => navigate('/auth')}
+            onMouseMove={handleCtaMouseMove}
+            onMouseEnter={() => setCtaHovered(true)}
+            onMouseLeave={handleCtaMouseLeave}
+            className="group relative px-8 py-4 rounded-full font-bold text-black overflow-hidden cursor-pointer"
+            style={{ 
+              background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+              transform: `translate(${ctaOffset.x}px, ${ctaOffset.y}px) scale(${ctaHovered ? 1.05 : 1})`,
+              transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+              boxShadow: ctaHovered
+                ? '0 0 60px rgba(245,158,11,0.5), 0 20px 40px rgba(0,0,0,0.4)'
+                : '0 0 40px rgba(245,158,11,0.3)'
+            }}>
             <span className="relative z-10">Começar gratuitamente →</span>
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               style={{
@@ -161,17 +351,19 @@ export default function Landing() {
         <div className="reveal delay-500 relative w-full max-w-2xl h-64 md:h-80">
 
           {/* Main dashboard card */}
-          <div className="absolute left-1/2 -translate-x-1/2 w-72 md:w-80 float z-10"
+          <div className="absolute left-1/2 -translate-x-1/2 w-72 md:w-80 z-10"
             style={{
               background: 'rgba(255,255,255,0.06)',
               border: '1px solid rgba(255,255,255,0.1)',
               backdropFilter: 'blur(20px)',
               borderRadius: 16,
               padding: '20px',
-              boxShadow: '0 32px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)'
+              boxShadow: '0 32px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)',
+              transform: `translate(${mousePos.x * 8}px, ${mousePos.y * 6}px)`,
+              transition: 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
             }}>
             <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Total pendente</p>
-            <p className="font-syne font-black text-white text-2xl mb-3">R$ 2.847,00</p>
+            <p className="font-syne font-bold text-white text-2xl mb-3">R$ 2.847,00</p>
             <div className="flex gap-2">
               {[
                 { label: 'Contas', value: '3', color: '#F59E0B' },
@@ -188,14 +380,16 @@ export default function Landing() {
           </div>
 
           {/* Left floating card */}
-          <div className="absolute left-0 md:left-4 top-8 w-44 float-delayed hidden sm:block"
+          <div className="absolute left-0 md:left-4 top-8 w-44 hidden sm:block"
             style={{
               background: 'rgba(245,158,11,0.08)',
               border: '1px solid rgba(245,158,11,0.2)',
               backdropFilter: 'blur(16px)',
               borderRadius: 12,
               padding: '14px',
-              boxShadow: '0 16px 40px rgba(0,0,0,0.4)'
+              boxShadow: '0 16px 40px rgba(0,0,0,0.4)',
+              transform: `translate(${mousePos.x * -14}px, ${mousePos.y * -10}px) rotate(-1deg)`,
+              transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
             }}>
             <div className="flex items-center gap-2 mb-1">
               <div className="w-2 h-2 rounded-full bg-amber-400" />
@@ -206,15 +400,16 @@ export default function Landing() {
           </div>
 
           {/* Right floating card */}
-          <div className="absolute right-0 md:right-4 top-16 w-44 float hidden sm:block"
+          <div className="absolute right-0 md:right-4 top-16 w-44 hidden sm:block"
             style={{
-              animationDelay: '3s',
               background: 'rgba(16,185,129,0.08)',
               border: '1px solid rgba(16,185,129,0.2)',
               backdropFilter: 'blur(16px)',
               borderRadius: 12,
               padding: '14px',
-              boxShadow: '0 16px 40px rgba(0,0,0,0.4)'
+              boxShadow: '0 16px 40px rgba(0,0,0,0.4)',
+              transform: `translate(${mousePos.x * 18}px, ${mousePos.y * 12}px) rotate(1deg)`,
+              transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
             }}>
             <div className="flex items-center gap-2 mb-1">
               <div className="w-2 h-2 rounded-full bg-emerald-400" />
@@ -244,22 +439,14 @@ export default function Landing() {
           }}
         />
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
+          <div ref={statsRef} className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
             {[
-              { value: '100%', label: 'Gratuito', sub: 'para sempre' },
-              { value: '5+', label: 'Dependentes', sub: 'por família' },
-              { value: '∞', label: 'Transações', sub: 'sem limite' },
-              { value: '0', label: 'Anúncios', sub: 'jamais' },
+              { value: '100', suffix: '%', label: 'Gratuito', sub: 'para sempre' },
+              { value: '5', suffix: '+', label: 'Dependentes', sub: 'por família' },
+              { value: '∞', suffix: '', label: 'Transações', sub: 'sem limite' },
+              { value: '0', suffix: '', label: 'Anúncios', sub: 'jamais' },
             ].map((stat, i) => (
-              <div key={stat.label}
-                className={`scroll-reveal reveal text-center delay-${(i + 1) * 100}`}>
-                <p className="font-syne font-black text-amber-400 mb-1"
-                  style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
-                  {stat.value}
-                </p>
-                <p className="text-white font-semibold text-sm">{stat.label}</p>
-                <p className="text-white/40 text-xs mt-0.5">{stat.sub}</p>
-              </div>
+              <StatCard key={stat.label} value={stat.value} suffix={stat.suffix} label={stat.label} sub={stat.sub} trigger={statsTrigger} delayClass={`delay-${(i + 1) * 100}`} />
             ))}
           </div>
         </div>
@@ -272,7 +459,7 @@ export default function Landing() {
             <p className="text-xs uppercase tracking-[0.3em] text-amber-400/70 font-semibold mb-4">
               Funcionalidades
             </p>
-            <h2 className="font-syne font-black text-white mb-4"
+            <h2 className="font-syne font-bold text-white mb-4"
               style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
               Tudo que sua família precisa
             </h2>
@@ -284,7 +471,7 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
 
             {/* Large feature */}
-            <div className="scroll-reveal reveal md:col-span-7 relative overflow-hidden rounded-3xl p-8 md:p-10 min-h-[320px] flex flex-col justify-between group"
+            <FeatureCard className="md:col-span-7 relative overflow-hidden rounded-3xl p-8 md:p-10 min-h-[320px] flex flex-col justify-between group"
               style={{
                 background: 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(245,158,11,0.02) 100%)',
                 border: '1px solid rgba(245,158,11,0.15)',
@@ -297,7 +484,7 @@ export default function Landing() {
                   style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)' }}>
                   <Users className="w-6 h-6 text-amber-400" />
                 </div>
-                <h3 className="font-syne font-black text-white text-2xl mb-3">Dependentes</h3>
+                <h3 className="font-syne font-bold text-white text-2xl mb-3">Dependentes</h3>
                 <p className="text-white/50 leading-relaxed max-w-sm">
                   Cadastre cada familiar e associe contas, cartões e transações individualmente.
                   Visão completa de cada membro da família.
@@ -312,7 +499,7 @@ export default function Landing() {
                   </span>
                 ))}
               </div>
-            </div>
+            </FeatureCard>
 
             {/* Small features - right */}
             <div className="md:col-span-5 grid grid-cols-1 gap-4">
@@ -320,8 +507,8 @@ export default function Landing() {
                 { icon: Receipt, title: 'Contas Fixas', desc: 'Energia, água, internet — nunca perca um vencimento.', color: '#10B981' },
                 { icon: CreditCard, title: 'Cartões de Crédito', desc: 'Faturas abertas, fechadas e pagas com histórico.', color: '#3B82F6' },
               ].map((feat, i) => (
-                <div key={feat.title}
-                  className={`scroll-reveal reveal delay-${(i + 1) * 200} relative overflow-hidden rounded-3xl p-6 group transition-all duration-300`}
+                <FeatureCard key={feat.title} delayClass={`delay-${(i + 1) * 200}`}
+                  className="relative overflow-hidden rounded-3xl p-6 group transition-all duration-300"
                   style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
@@ -333,7 +520,7 @@ export default function Landing() {
                       <p className="text-white/40 text-sm leading-relaxed">{feat.desc}</p>
                     </div>
                   </div>
-                </div>
+                </FeatureCard>
               ))}
             </div>
 
@@ -343,8 +530,8 @@ export default function Landing() {
               { icon: Bell, title: 'Alertas', desc: 'Saiba quais contas vencem nos próximos dias.', color: '#F59E0B' },
               { icon: Shield, title: 'Seguro', desc: 'Autenticação e RLS — seus dados só para você.', color: '#10B981' },
             ].map((feat, i) => (
-              <div key={feat.title}
-                className={`scroll-reveal reveal delay-${(i + 1) * 150} md:col-span-4 relative overflow-hidden rounded-3xl p-6 group transition-all duration-300`}
+              <FeatureCard key={feat.title} delayClass={`delay-${(i + 1) * 150}`}
+                className="md:col-span-4 relative overflow-hidden rounded-3xl p-6 group transition-all duration-300"
                 style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
                   style={{ background: `${feat.color}18`, border: `1px solid ${feat.color}30` }}>
@@ -352,7 +539,7 @@ export default function Landing() {
                 </div>
                 <h3 className="font-syne font-bold text-white mb-2">{feat.title}</h3>
                 <p className="text-white/40 text-sm leading-relaxed">{feat.desc}</p>
-              </div>
+              </FeatureCard>
             ))}
           </div>
         </div>
@@ -368,7 +555,7 @@ export default function Landing() {
             <p className="text-xs uppercase tracking-[0.3em] text-amber-400/70 font-semibold mb-4">
               Como funciona
             </p>
-            <h2 className="font-syne font-black text-white"
+            <h2 className="font-syne font-bold text-white"
               style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
               Em 3 passos simples
             </h2>
@@ -383,20 +570,7 @@ export default function Landing() {
               { step: '02', title: 'Adicione sua família', desc: 'Cadastre dependentes — mãe, pai, avós, irmãos. Cada um com seu perfil.', side: 'right' },
               { step: '03', title: 'Organize e acompanhe', desc: 'Adicione contas, cartões e transações. O dashboard mostra tudo em tempo real.', side: 'left' },
             ].map((item, i) => (
-              <div key={item.step}
-                className={`scroll-reveal reveal delay-${(i + 1) * 200} relative flex items-center gap-8 mb-16 last:mb-0 ${item.side === 'right' ? 'md:flex-row-reverse' : 'md:flex-row'}`}>
-                <div className="relative shrink-0">
-                  <div className="w-16 h-16 rounded-full flex items-center justify-center font-syne font-black text-xl border-2 border-amber-400/40 text-amber-400"
-                    style={{ background: 'rgba(245,158,11,0.08)' }}>
-                    {item.step}
-                  </div>
-                </div>
-                <div className={`flex-1 p-6 rounded-2xl ${item.side === 'right' ? 'md:text-right' : 'md:text-left'}`}
-                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <h3 className="font-syne font-bold text-white text-xl mb-2">{item.title}</h3>
-                  <p className="text-white/50 leading-relaxed">{item.desc}</p>
-                </div>
-              </div>
+              <StepCard key={item.step} item={item} delayClass={`delay-${(i + 1) * 200}`} />
             ))}
           </div>
         </div>
@@ -415,7 +589,7 @@ export default function Landing() {
             <p className="text-xs uppercase tracking-[0.3em] text-amber-400/70 font-semibold mb-6">
               Comece hoje
             </p>
-            <h2 className="font-syne font-black text-white mb-6"
+            <h2 className="font-syne font-bold text-white mb-6"
               style={{ fontSize: 'clamp(2.5rem, 6vw, 5rem)', lineHeight: 0.95 }}>
               Sua família merece
               <br />
@@ -458,7 +632,7 @@ export default function Landing() {
       {/* ── FOOTER ── */}
       <footer className="py-8 px-6 border-t border-white/[0.06]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <span className="font-syne font-black text-amber-400">LumeFin</span>
+          <span className="font-syne font-bold text-amber-400">LumeFin</span>
           <p className="text-white/20 text-sm text-center">Feito com ♥ para famílias brasileiras</p>
           <div className="flex items-center gap-6">
             <a href="https://github.com" target="_blank" rel="noopener noreferrer"
