@@ -1,529 +1,476 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
-  Users,
-  Receipt,
-  CreditCard,
-  ArrowRightLeft,
-  Bell,
-  Shield,
-  ArrowRight,
-  TrendingUp,
-  TrendingDown,
-  AlertCircle,
-  ChevronRight,
-} from 'lucide-react';
+  Users, Receipt, CreditCard, ArrowRightLeft,
+  Bell, Shield
+} from 'lucide-react'
 
-/* ─── Feature cards data ─────────────────────────────────────────── */
-const features = [
-  {
-    icon: Users,
-    title: 'Dependentes',
-    description: 'Cadastre cada familiar e associe contas e cartões a eles.',
-  },
-  {
-    icon: Receipt,
-    title: 'Contas Fixas',
-    description: 'Água, energia, internet — nunca perca um vencimento.',
-  },
-  {
-    icon: CreditCard,
-    title: 'Cartões de Crédito',
-    description: 'Acompanhe faturas abertas, fechadas e pagas.',
-  },
-  {
-    icon: ArrowRightLeft,
-    title: 'Transações',
-    description: 'Controle dívidas bidirecionais — quem deve e quem vai receber.',
-  },
-  {
-    icon: Bell,
-    title: 'Alertas',
-    description: 'Saiba quais contas vencem nos próximos dias.',
-  },
-  {
-    icon: Shield,
-    title: 'Seguro',
-    description: 'Seus dados protegidos com autenticação e criptografia.',
-  },
-];
-
-/* ─── Mock dashboard data ────────────────────────────────────────── */
-const mockMetrics = [
-  { label: 'Contas Pendentes', value: '4', sub: 'R$ 1.248,00', color: '#F59E0B', Icon: Receipt },
-  { label: 'Faturas em Aberto', value: '2', sub: 'R$ 3.760,00', color: '#F59E0B', Icon: CreditCard },
-  { label: 'A Receber', value: 'R$ 850,00', sub: null, color: '#10B981', Icon: TrendingUp },
-  { label: 'A Pagar', value: 'R$ 320,00', sub: null, color: '#EF4444', Icon: TrendingDown },
-];
-
-const mockDependents = [
-  { name: 'Maria', rel: 'Mãe', bills: 2, balance: 850, positive: true },
-  { name: 'João', rel: 'Pai', bills: 1, balance: 320, positive: false },
-];
-
-/* ─── Small floating hero cards ─────────────────────────────────── */
-const heroCards = [
-  {
-    delay: '0s',
-    content: (
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg" style={{ background: 'rgba(245,158,11,0.15)' }}>
-          <Receipt className="w-4 h-4" style={{ color: '#F59E0B' }} />
-        </div>
-        <div>
-          <p className="text-xs font-semibold text-white/90">Conta de Luz</p>
-          <p className="text-[10px] text-white/40">Vence em 3 dias · R$ 187,00</p>
-        </div>
-        <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full font-semibold"
-          style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B' }}>
-          Pendente
-        </span>
-      </div>
-    ),
-  },
-  {
-    delay: '0.3s',
-    content: (
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg" style={{ background: 'rgba(16,185,129,0.15)' }}>
-          <CreditCard className="w-4 h-4" style={{ color: '#10B981' }} />
-        </div>
-        <div>
-          <p className="text-xs font-semibold text-white/90">Nubank — Maria</p>
-          <p className="text-[10px] text-white/40">Fatura aberta · R$ 1.420,00</p>
-        </div>
-        <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full font-semibold"
-          style={{ background: 'rgba(16,185,129,0.15)', color: '#10B981' }}>
-          Aberta
-        </span>
-      </div>
-    ),
-  },
-  {
-    delay: '0.6s',
-    content: (
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg" style={{ background: 'rgba(239,68,68,0.15)' }}>
-          <ArrowRightLeft className="w-4 h-4" style={{ color: '#EF4444' }} />
-        </div>
-        <div>
-          <p className="text-xs font-semibold text-white/90">Empréstimo — João</p>
-          <p className="text-[10px] text-white/40">A pagar · 3/6 parcelas</p>
-        </div>
-        <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full font-semibold"
-          style={{ background: 'rgba(239,68,68,0.15)', color: '#EF4444' }}>
-          Pendente
-        </span>
-      </div>
-    ),
-  },
-];
-
-/* ─── Component ──────────────────────────────────────────────────── */
 export default function Landing() {
-  const navigate = useNavigate();
-  const [scrolled, setScrolled] = useState(false);
+  const navigate = useNavigate()
+  const [scrolled, setScrolled] = useState(false)
 
+  // Scroll navbar effect
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+    const handleScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
-  const scrollToFeatures = () => {
-    document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // Reveal animations
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      document.querySelectorAll('.reveal').forEach(el => {
+        el.classList.add('visible')
+      })
+    }, 100)
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible')
+          }
+        })
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+    )
+
+    document.querySelectorAll('.scroll-reveal').forEach(el => {
+      observer.observe(el)
+    })
+
+    return () => {
+      clearTimeout(timer)
+      observer.disconnect()
+    }
+  }, [])
 
   return (
-    <div className="min-h-screen bg-black text-white font-quicksand overflow-x-hidden">
+    <div className="min-h-screen bg-black text-white overflow-x-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
 
-      {/* ── Ambient glow ── */}
-      <div
-        aria-hidden
+      {/* ── NAVBAR ── */}
+      <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
         style={{
-          position: 'fixed',
-          top: '-10%',
-          right: '-5%',
-          width: '600px',
-          height: '600px',
-          background: 'radial-gradient(circle, rgba(245,158,11,0.07) 0%, transparent 70%)',
-          pointerEvents: 'none',
-          zIndex: 0,
-        }}
-      />
-
-      {/* ════════════════════════════════════════
-          SECTION 1 — NAVBAR
-      ════════════════════════════════════════ */}
-      <header
-        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
-        style={{
-          background: scrolled ? 'rgba(0,0,0,0.85)' : 'transparent',
+          background: scrolled ? 'rgba(0,0,0,0.9)' : 'transparent',
           backdropFilter: scrolled ? 'blur(20px)' : 'none',
-          borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : '1px solid transparent',
-          height: '64px',
+          borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : 'none'
         }}
       >
-        <div className="max-w-6xl mx-auto px-6 h-full flex items-center justify-between">
-          <span className="text-2xl font-extrabold text-amber-400 tracking-tight">LumeFin</span>
-
-          <button
-            onClick={() => navigate('/auth')}
-            className="px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-200"
-            style={{
-              border: '1px solid rgba(245,158,11,0.4)',
-              color: '#F59E0B',
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.background = 'rgba(245,158,11,0.1)';
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.background = 'transparent';
-            }}
-          >
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <span className="font-syne text-xl font-black text-amber-400 tracking-tight">
+            LumeFin
+          </span>
+          <div className="hidden md:flex items-center gap-8">
+            {[
+              { label: 'Funcionalidades', href: '#funcionalidades' },
+              { label: 'Como funciona', href: '#como-funciona' },
+              { label: 'Começar', href: '#comecar' },
+            ].map(item => (
+              <a key={item.label} href={item.href}
+                className="text-sm text-white/60 hover:text-white transition-colors font-medium">
+                {item.label}
+              </a>
+            ))}
+          </div>
+          <button onClick={() => navigate('/auth')}
+            className="px-5 py-2 rounded-full text-sm font-semibold border border-amber-400/40 text-amber-400 hover:bg-amber-400/10 transition-all duration-200 cursor-pointer">
             Entrar
           </button>
         </div>
-      </header>
+      </nav>
 
-      {/* ════════════════════════════════════════
-          SECTION 2 — HERO
-      ════════════════════════════════════════ */}
-      <section
-        className="relative flex flex-col items-center justify-center min-h-screen pt-16 px-6 text-center"
-        style={{ zIndex: 1 }}
-      >
-        {/* Eyebrow */}
-        <p
-          className="text-xs font-bold tracking-[0.2em] uppercase mb-6"
-          style={{ color: '#F59E0B' }}
-        >
-          Gestão Financeira Familiar
-        </p>
+      {/* ── HERO ── */}
+      <section id="hero" className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-6 pt-16">
 
-        {/* Headline */}
-        <h1 className="text-5xl md:text-7xl font-extrabold leading-tight mb-6 max-w-3xl">
-          Clareza financeira
-          <br />
-          <span style={{ color: '#F59E0B' }}>para toda a família.</span>
-        </h1>
-
-        {/* Subheadline */}
-        <p className="text-lg md:text-xl max-w-lg mb-10 leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
-          Organize contas, cartões e dívidas de todos os seus familiares
-          em um único lugar. Simples, rápido e seguro.
-        </p>
-
-        {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-20">
-          <button
-            id="cta-start"
-            onClick={() => navigate('/auth')}
-            className="px-8 py-4 rounded-xl text-base font-bold transition-all duration-200 flex items-center gap-2"
-            style={{ background: '#F59E0B', color: '#000' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#D97706'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#F59E0B'; }}
-          >
-            Começar agora — é grátis <ChevronRight className="w-4 h-4" />
-          </button>
-
-          <button
-            id="cta-demo"
-            onClick={scrollToFeatures}
-            className="px-8 py-4 rounded-xl text-base font-semibold transition-all duration-200"
+        {/* Ambient background */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full"
             style={{
-              border: '1px solid rgba(255,255,255,0.15)',
-              color: 'rgba(255,255,255,0.7)',
+              background: 'radial-gradient(ellipse, rgba(245,158,11,0.12) 0%, transparent 60%)',
+              animation: 'ambientPulse 8s ease-in-out infinite'
             }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.3)';
-              (e.currentTarget as HTMLElement).style.color = '#fff';
+          />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px]"
+            style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.05) 0%, transparent 60%)' }}
+          />
+          <div className="absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+              backgroundSize: '60px 60px'
             }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.15)';
-              (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)';
-            }}
-          >
-            Ver funcionalidades
-          </button>
+          />
         </div>
 
-        {/* Floating hero cards */}
-        <div className="flex flex-col gap-3 w-full max-w-sm">
-          {heroCards.map((card, i) => (
-            <div
-              key={i}
-              className="glass rounded-2xl px-4 py-3 text-left"
+        {/* Eyebrow */}
+        <div className="reveal delay-100 flex items-center gap-2 mb-6">
+          <div className="h-px w-8 bg-amber-400/60" />
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-400/80">
+            Gestão Financeira Familiar
+          </span>
+          <div className="h-px w-8 bg-amber-400/60" />
+        </div>
+
+        {/* Headline */}
+        <h1 className="reveal delay-200 font-syne font-black text-center leading-[0.9] mb-6 max-w-4xl"
+          style={{ fontSize: 'clamp(3rem, 8vw, 7rem)' }}>
+          <span className="text-white">Clareza</span>
+          <br />
+          <span style={{
+            background: 'linear-gradient(135deg, #F59E0B 0%, #FDE68A 40%, #F59E0B 100%)',
+            backgroundSize: '200% auto',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            animation: 'shimmer 4s linear infinite'
+          }}>
+            financeira
+          </span>
+          <br />
+          <span className="text-white">para sua família.</span>
+        </h1>
+
+        {/* Subtitle */}
+        <p className="reveal delay-300 text-center text-white/50 max-w-lg leading-relaxed mb-10"
+          style={{ fontSize: 'clamp(1rem, 2vw, 1.125rem)' }}>
+          Organize contas, cartões e dívidas de todos os seus
+          familiares em um único lugar.
+          Simples, seguro e gratuito.
+        </p>
+
+        {/* CTAs */}
+        <div className="reveal delay-400 flex flex-col sm:flex-row items-center gap-4 mb-16">
+          <button onClick={() => navigate('/auth')}
+            className="group relative px-8 py-4 rounded-full font-bold text-black overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+            style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)' }}>
+            <span className="relative z-10">Começar gratuitamente →</span>
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               style={{
-                animation: 'heroFloat 3s ease-in-out infinite',
-                animationDelay: card.delay,
+                background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.3) 50%, transparent 60%)',
+                backgroundSize: '200% 100%',
+                animation: 'shimmer 0.8s ease forwards'
               }}
-            >
-              {card.content}
+            />
+          </button>
+          <a href="#funcionalidades"
+            className="px-8 py-4 rounded-full font-semibold text-white/70 border border-white/10 hover:border-white/20 hover:text-white transition-all duration-300">
+            Ver funcionalidades
+          </a>
+        </div>
+
+        {/* Floating mock UI cards */}
+        <div className="reveal delay-500 relative w-full max-w-2xl h-64 md:h-80">
+
+          {/* Main dashboard card */}
+          <div className="absolute left-1/2 -translate-x-1/2 w-72 md:w-80 float z-10"
+            style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              backdropFilter: 'blur(20px)',
+              borderRadius: 16,
+              padding: '20px',
+              boxShadow: '0 32px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)'
+            }}>
+            <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Total pendente</p>
+            <p className="font-syne font-black text-white text-2xl mb-3">R$ 2.847,00</p>
+            <div className="flex gap-2">
+              {[
+                { label: 'Contas', value: '3', color: '#F59E0B' },
+                { label: 'Cartões', value: '2', color: '#10B981' },
+                { label: 'Dívidas', value: '1', color: '#EF4444' },
+              ].map(item => (
+                <div key={item.label} className="flex-1 rounded-lg p-2 text-center"
+                  style={{ background: 'rgba(255,255,255,0.04)' }}>
+                  <p className="font-bold text-sm" style={{ color: item.color }}>{item.value}</p>
+                  <p className="text-[9px] text-white/40">{item.label}</p>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
+
+          {/* Left floating card */}
+          <div className="absolute left-0 md:left-4 top-8 w-44 float-delayed hidden sm:block"
+            style={{
+              background: 'rgba(245,158,11,0.08)',
+              border: '1px solid rgba(245,158,11,0.2)',
+              backdropFilter: 'blur(16px)',
+              borderRadius: 12,
+              padding: '14px',
+              boxShadow: '0 16px 40px rgba(0,0,0,0.4)'
+            }}>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-2 h-2 rounded-full bg-amber-400" />
+              <p className="text-[10px] text-amber-400 font-semibold">Vence em 2 dias</p>
+            </div>
+            <p className="text-xs text-white font-medium">Energia — Mãe</p>
+            <p className="text-sm font-bold text-white mt-1">R$ 189,90</p>
+          </div>
+
+          {/* Right floating card */}
+          <div className="absolute right-0 md:right-4 top-16 w-44 float hidden sm:block"
+            style={{
+              animationDelay: '3s',
+              background: 'rgba(16,185,129,0.08)',
+              border: '1px solid rgba(16,185,129,0.2)',
+              backdropFilter: 'blur(16px)',
+              borderRadius: 12,
+              padding: '14px',
+              boxShadow: '0 16px 40px rgba(0,0,0,0.4)'
+            }}>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-2 h-2 rounded-full bg-emerald-400" />
+              <p className="text-[10px] text-emerald-400 font-semibold">Pago</p>
+            </div>
+            <p className="text-xs text-white font-medium">Nubank — Pai</p>
+            <p className="text-sm font-bold text-white mt-1">R$ 1.250,00</p>
+          </div>
         </div>
 
         {/* Scroll indicator */}
-        <div
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 cursor-pointer"
-          onClick={scrollToFeatures}
-          style={{ color: 'rgba(255,255,255,0.25)' }}
-        >
-          <span className="text-[10px] uppercase tracking-widest">Scroll</span>
-          <div className="w-px h-8" style={{ background: 'rgba(255,255,255,0.15)' }} />
+        <div className="reveal delay-600 absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+          <p className="text-xs text-white/30 uppercase tracking-widest">scroll</p>
+          <div className="w-px h-8 bg-gradient-to-b from-amber-400/60 to-transparent"
+            style={{ animation: 'scrollBounce 2s ease-in-out infinite' }}
+          />
         </div>
       </section>
 
-      {/* ════════════════════════════════════════
-          SECTION 3 — FEATURES
-      ════════════════════════════════════════ */}
-      <section id="features" className="relative py-24 px-6" style={{ zIndex: 1 }}>
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="text-xs font-bold tracking-[0.2em] uppercase mb-4" style={{ color: '#F59E0B' }}>
+      {/* ── STATS ── */}
+      <section className="relative py-20 border-y border-white/[0.06]">
+        <div className="absolute top-0 left-0 right-0 h-px"
+          style={{
+            background: 'linear-gradient(90deg, transparent 0%, rgba(245,158,11,0.6) 50%, transparent 100%)',
+            backgroundSize: '200% 100%',
+            animation: 'shimmer 3s linear infinite'
+          }}
+        />
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
+            {[
+              { value: '100%', label: 'Gratuito', sub: 'para sempre' },
+              { value: '5+', label: 'Dependentes', sub: 'por família' },
+              { value: '∞', label: 'Transações', sub: 'sem limite' },
+              { value: '0', label: 'Anúncios', sub: 'jamais' },
+            ].map((stat, i) => (
+              <div key={stat.label}
+                className={`scroll-reveal reveal text-center delay-${(i + 1) * 100}`}>
+                <p className="font-syne font-black text-amber-400 mb-1"
+                  style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
+                  {stat.value}
+                </p>
+                <p className="text-white font-semibold text-sm">{stat.label}</p>
+                <p className="text-white/40 text-xs mt-0.5">{stat.sub}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FEATURES ── */}
+      <section id="funcionalidades" className="py-32 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="scroll-reveal reveal text-center mb-20">
+            <p className="text-xs uppercase tracking-[0.3em] text-amber-400/70 font-semibold mb-4">
               Funcionalidades
             </p>
-            <h2 className="text-4xl md:text-5xl font-extrabold mb-4">
+            <h2 className="font-syne font-black text-white mb-4"
+              style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
               Tudo que sua família precisa
             </h2>
-            <p className="text-lg max-w-xl mx-auto" style={{ color: 'rgba(255,255,255,0.5)' }}>
-              Cada membro da família tem suas próprias finanças.
-              O LumeFin organiza tudo em um só lugar.
+            <p className="text-white/40 max-w-md mx-auto leading-relaxed">
+              Cada funcionalidade foi pensada para tornar o controle financeiro familiar simples e claro.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {features.map((feat) => {
-              const Icon = feat.icon;
-              return (
-                <div
-                  key={feat.title}
-                  className="glass rounded-2xl p-6 hover:shadow-lg transition-all duration-300 group"
-                  style={{ cursor: 'default' }}
-                >
-                  <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 transition-all duration-300"
-                    style={{ background: 'rgba(245,158,11,0.12)' }}
-                  >
-                    <Icon className="w-5 h-5" style={{ color: '#F59E0B' }} />
-                  </div>
-                  <h3 className="text-lg font-bold mb-2 text-white">{feat.title}</h3>
-                  <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                    {feat.description}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
 
-      {/* ════════════════════════════════════════
-          SECTION 4 — MOCK DASHBOARD PREVIEW
-      ════════════════════════════════════════ */}
-      <section className="relative py-24 px-6" style={{ zIndex: 1 }}>
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-xs font-bold tracking-[0.2em] uppercase mb-4" style={{ color: '#F59E0B' }}>
-              Visual
-            </p>
-            <h2 className="text-4xl md:text-5xl font-extrabold mb-4">
-              Uma visão completa
-              <br />das suas finanças
-            </h2>
-          </div>
-
-          {/* Mock dashboard container */}
-          <div
-            className="glass rounded-3xl p-6 md:p-8"
-            style={{ border: '1px solid rgba(245,158,11,0.15)' }}
-          >
-            {/* Page header mock */}
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3 className="text-xl font-bold text-white">Dashboard</h3>
-                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Visão geral financeira e alertas.</p>
-              </div>
-              <div
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold"
-                style={{ background: 'rgba(245,158,11,0.12)', color: '#F59E0B' }}
-              >
-                Abril 2026
-              </div>
-            </div>
-
-            {/* Metric cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-              {mockMetrics.map((m) => {
-                const Icon = m.Icon;
-                return (
-                  <div
-                    key={m.label}
-                    className="rounded-2xl p-4"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px] font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                        {m.label}
-                      </span>
-                      <div
-                        className="p-1.5 rounded-md"
-                        style={{ background: `${m.color}20` }}
-                      >
-                        <Icon className="w-3 h-3" style={{ color: m.color }} />
-                      </div>
-                    </div>
-                    <div className="text-2xl font-bold text-white" style={{ color: m.color === '#10B981' || m.color === '#EF4444' ? m.color : 'white' }}>
-                      {m.value}
-                    </div>
-                    {m.sub && (
-                      <p className="text-[10px] mt-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>{m.sub}</p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Alert row */}
-            <div
-              className="flex items-center gap-3 rounded-xl px-4 py-3 mb-6"
+            {/* Large feature */}
+            <div className="scroll-reveal reveal md:col-span-7 relative overflow-hidden rounded-3xl p-8 md:p-10 min-h-[320px] flex flex-col justify-between group"
               style={{
-                background: 'rgba(239,68,68,0.06)',
-                border: '1px solid rgba(239,68,68,0.15)',
-                borderLeft: '3px solid #EF4444',
-              }}
-            >
-              <AlertCircle className="w-4 h-4 shrink-0" style={{ color: '#EF4444' }} />
-              <div className="flex-1">
-                <p className="text-sm font-semibold" style={{ color: '#EF4444' }}>Conta vence em 2 dias</p>
-                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                  Internet Vivo — R$ 119,90 · vence 15/04/2026
+                background: 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(245,158,11,0.02) 100%)',
+                border: '1px solid rgba(245,158,11,0.15)',
+              }}>
+              <div className="absolute top-0 right-0 w-64 h-64 pointer-events-none transition-transform duration-700 group-hover:scale-110"
+                style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.1) 0%, transparent 60%)' }}
+              />
+              <div className="relative">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6"
+                  style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)' }}>
+                  <Users className="w-6 h-6 text-amber-400" />
+                </div>
+                <h3 className="font-syne font-black text-white text-2xl mb-3">Dependentes</h3>
+                <p className="text-white/50 leading-relaxed max-w-sm">
+                  Cadastre cada familiar e associe contas, cartões e transações individualmente.
+                  Visão completa de cada membro da família.
                 </p>
               </div>
-              <ArrowRight className="w-4 h-4 shrink-0" style={{ color: 'rgba(255,255,255,0.2)' }} />
-            </div>
-
-            {/* Dependent summary cards */}
-            <div>
-              <p className="text-sm font-semibold mb-3" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                Resumo por Dependente
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {mockDependents.map((dep) => (
-                  <div
-                    key={dep.name}
-                    className="rounded-2xl p-4"
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
-                  >
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="font-semibold text-white">{dep.name}</span>
-                      <span
-                        className="text-[10px] px-2 py-0.5 rounded-full font-medium"
-                        style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}
-                      >
-                        {dep.rel}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2 text-center">
-                      <div className="rounded-lg p-2" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                        <div className="text-base font-bold text-white">{dep.bills}</div>
-                        <p className="text-[9px]" style={{ color: 'rgba(255,255,255,0.35)' }}>Contas</p>
-                      </div>
-                      <div className="rounded-lg p-2" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                        <div className="text-base font-bold text-white">1</div>
-                        <p className="text-[9px]" style={{ color: 'rgba(255,255,255,0.35)' }}>Cartões</p>
-                      </div>
-                      <div
-                        className="rounded-lg p-2"
-                        style={{ background: dep.positive ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)' }}
-                      >
-                        <div
-                          className="text-base font-bold"
-                          style={{ color: dep.positive ? '#10B981' : '#EF4444' }}
-                        >
-                          R${dep.balance}
-                        </div>
-                        <p className="text-[9px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                          {dep.positive ? 'A receber' : 'A pagar'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+              <div className="relative flex gap-2 mt-6">
+                {['Mãe', 'Pai', 'Avó', 'Irmã'].map(name => (
+                  <span key={name}
+                    className="px-3 py-1 rounded-full text-xs font-medium text-white/60 border border-white/10"
+                    style={{ background: 'rgba(255,255,255,0.04)' }}>
+                    {name}
+                  </span>
                 ))}
               </div>
             </div>
+
+            {/* Small features - right */}
+            <div className="md:col-span-5 grid grid-cols-1 gap-4">
+              {[
+                { icon: Receipt, title: 'Contas Fixas', desc: 'Energia, água, internet — nunca perca um vencimento.', color: '#10B981' },
+                { icon: CreditCard, title: 'Cartões de Crédito', desc: 'Faturas abertas, fechadas e pagas com histórico.', color: '#3B82F6' },
+              ].map((feat, i) => (
+                <div key={feat.title}
+                  className={`scroll-reveal reveal delay-${(i + 1) * 200} relative overflow-hidden rounded-3xl p-6 group transition-all duration-300`}
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                      style={{ background: `${feat.color}18`, border: `1px solid ${feat.color}30` }}>
+                      <feat.icon className="w-5 h-5" style={{ color: feat.color }} />
+                    </div>
+                    <div>
+                      <h3 className="font-syne font-bold text-white mb-1">{feat.title}</h3>
+                      <p className="text-white/40 text-sm leading-relaxed">{feat.desc}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Bottom row */}
+            {[
+              { icon: ArrowRightLeft, title: 'Transações', desc: 'Controle dívidas bidirecionais com histórico de parcelas.', color: '#8B5CF6' },
+              { icon: Bell, title: 'Alertas', desc: 'Saiba quais contas vencem nos próximos dias.', color: '#F59E0B' },
+              { icon: Shield, title: 'Seguro', desc: 'Autenticação e RLS — seus dados só para você.', color: '#10B981' },
+            ].map((feat, i) => (
+              <div key={feat.title}
+                className={`scroll-reveal reveal delay-${(i + 1) * 150} md:col-span-4 relative overflow-hidden rounded-3xl p-6 group transition-all duration-300`}
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+                  style={{ background: `${feat.color}18`, border: `1px solid ${feat.color}30` }}>
+                  <feat.icon className="w-5 h-5" style={{ color: feat.color }} />
+                </div>
+                <h3 className="font-syne font-bold text-white mb-2">{feat.title}</h3>
+                <p className="text-white/40 text-sm leading-relaxed">{feat.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ════════════════════════════════════════
-          SECTION 5 — FINAL CTA
-      ════════════════════════════════════════ */}
-      <section
-        className="relative py-24 px-6"
-        style={{
-          background: 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, transparent 60%)',
-          zIndex: 1,
-        }}
-      >
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-extrabold mb-4">
-            Comece hoje,
-            <br />
-            <span style={{ color: '#F59E0B' }}>gratuitamente.</span>
-          </h2>
-          <p className="text-base mb-10" style={{ color: 'rgba(255,255,255,0.5)' }}>
-            Sem cartão de crédito. Sem limite de dependentes.
-          </p>
-          <button
-            id="cta-final"
-            onClick={() => navigate('/auth')}
-            className="px-10 py-4 rounded-xl text-base font-bold transition-all duration-200 inline-flex items-center gap-2"
-            style={{ background: '#F59E0B', color: '#000' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#D97706'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#F59E0B'; }}
-          >
-            Criar minha conta <ChevronRight className="w-4 h-4" />
-          </button>
+      {/* ── HOW IT WORKS ── */}
+      <section id="como-funciona" className="py-32 px-6 relative">
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse at 80% 50%, rgba(245,158,11,0.04) 0%, transparent 60%)' }}
+        />
+        <div className="max-w-4xl mx-auto">
+          <div className="scroll-reveal reveal text-center mb-20">
+            <p className="text-xs uppercase tracking-[0.3em] text-amber-400/70 font-semibold mb-4">
+              Como funciona
+            </p>
+            <h2 className="font-syne font-black text-white"
+              style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
+              Em 3 passos simples
+            </h2>
+          </div>
+
+          <div className="relative">
+            <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-px hidden md:block"
+              style={{ background: 'linear-gradient(to bottom, rgba(245,158,11,0.4), rgba(245,158,11,0.1), transparent)' }}
+            />
+            {[
+              { step: '01', title: 'Crie sua conta', desc: 'Cadastre-se gratuitamente em menos de 30 segundos. Sem cartão de crédito.', side: 'left' },
+              { step: '02', title: 'Adicione sua família', desc: 'Cadastre dependentes — mãe, pai, avós, irmãos. Cada um com seu perfil.', side: 'right' },
+              { step: '03', title: 'Organize e acompanhe', desc: 'Adicione contas, cartões e transações. O dashboard mostra tudo em tempo real.', side: 'left' },
+            ].map((item, i) => (
+              <div key={item.step}
+                className={`scroll-reveal reveal delay-${(i + 1) * 200} relative flex items-center gap-8 mb-16 last:mb-0 ${item.side === 'right' ? 'md:flex-row-reverse' : 'md:flex-row'}`}>
+                <div className="relative shrink-0">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center font-syne font-black text-xl border-2 border-amber-400/40 text-amber-400"
+                    style={{ background: 'rgba(245,158,11,0.08)' }}>
+                    {item.step}
+                  </div>
+                </div>
+                <div className={`flex-1 p-6 rounded-2xl ${item.side === 'right' ? 'md:text-right' : 'md:text-left'}`}
+                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <h3 className="font-syne font-bold text-white text-xl mb-2">{item.title}</h3>
+                  <p className="text-white/50 leading-relaxed">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ════════════════════════════════════════
-          SECTION 6 — FOOTER
-      ════════════════════════════════════════ */}
-      <footer
-        className="relative py-8 px-6"
-        style={{
-          background: 'rgba(255,255,255,0.02)',
-          borderTop: '1px solid rgba(255,255,255,0.06)',
-          zIndex: 1,
-        }}
-      >
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>
-          <span className="font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>
-            LumeFin © 2026
-          </span>
-          <span>Feito com ♥ para famílias brasileiras</span>
-          <a
-            href="#"
-            className="transition-colors duration-200 hover:underline"
-            style={{ color: 'rgba(255,255,255,0.35)' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.35)'; }}
-          >
-            GitHub
-          </a>
+      {/* ── FINAL CTA ── */}
+      <section id="comecar" className="py-32 px-6 relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'radial-gradient(ellipse at 50% 50%, rgba(245,158,11,0.1) 0%, transparent 60%)',
+            animation: 'ambientPulse 6s ease-in-out infinite'
+          }}
+        />
+        <div className="max-w-3xl mx-auto text-center relative">
+          <div className="scroll-reveal reveal">
+            <p className="text-xs uppercase tracking-[0.3em] text-amber-400/70 font-semibold mb-6">
+              Comece hoje
+            </p>
+            <h2 className="font-syne font-black text-white mb-6"
+              style={{ fontSize: 'clamp(2.5rem, 6vw, 5rem)', lineHeight: 0.95 }}>
+              Sua família merece
+              <br />
+              <span style={{
+                background: 'linear-gradient(135deg, #F59E0B, #FDE68A, #F59E0B)',
+                backgroundSize: '200% auto',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                animation: 'shimmer 4s linear infinite'
+              }}>
+                clareza financeira.
+              </span>
+            </h2>
+            <p className="text-white/40 text-lg mb-10 leading-relaxed">
+              Gratuito. Sem anúncios. Sem limite de dependentes.
+              <br />
+              Open source e seguro.
+            </p>
+            <button onClick={() => navigate('/auth')}
+              className="group relative inline-flex items-center gap-3 px-10 py-5 rounded-full font-bold text-black text-lg overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-2xl cursor-pointer"
+              style={{
+                background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+                boxShadow: '0 0 40px rgba(245,158,11,0.3)'
+              }}>
+              <span>Criar minha conta — é grátis</span>
+              <span className="text-xl group-hover:translate-x-1 transition-transform duration-200">→</span>
+            </button>
+            <p className="text-white/20 text-sm mt-6">
+              Já tem uma conta?{' '}
+              <button onClick={() => navigate('/auth')}
+                className="text-amber-400/60 hover:text-amber-400 transition-colors underline-offset-2 hover:underline cursor-pointer">
+                Entrar
+              </button>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="py-8 px-6 border-t border-white/[0.06]">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <span className="font-syne font-black text-amber-400">LumeFin</span>
+          <p className="text-white/20 text-sm text-center">Feito com ♥ para famílias brasileiras</p>
+          <div className="flex items-center gap-6">
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer"
+              className="text-white/30 hover:text-white/60 text-sm transition-colors">
+              GitHub
+            </a>
+            <a href="/auth" className="text-white/30 hover:text-white/60 text-sm transition-colors">
+              Entrar
+            </a>
+          </div>
         </div>
       </footer>
-
-      {/* ── Float animation keyframes (injected inline) ── */}
-      <style>{`
-        @keyframes heroFloat {
-          0%, 100% { transform: translateY(0px); }
-          50%       { transform: translateY(-6px); }
-        }
-      `}</style>
     </div>
-  );
+  )
 }
