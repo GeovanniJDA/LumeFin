@@ -51,18 +51,37 @@ export default function Auth() {
     setAuthError(null);
 
     try {
-      const { error } = isLogin
-        ? await supabase.auth.signInWithPassword({ email: data.email, password: data.password })
-        : await supabase.auth.signUp({ email: data.email, password: data.password });
+      if (isLogin) {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: data.email,
+          password: data.password
+        });
 
-      if (error) {
-        setAuthError(getAuthError(error.message));
-      } else {
-        if (isLogin) {
-          navigate('/app');
+        if (error) {
+          setAuthError(getAuthError(error.message));
         } else {
-          setAuthError('Verifique seu e-mail para confirmar a conta.');
+          navigate('/app');
         }
+      } else {
+        const { data: signUpData, error } = await supabase.auth.signUp({
+          email: data.email,
+          password: data.password
+        });
+
+        if (error) {
+          setAuthError(getAuthError(error.message));
+          return;
+        }
+
+        // If session exists immediately — confirmation disabled
+        if (signUpData.session) {
+          navigate('/app');
+          return;
+        }
+
+        // If no session — confirmation still enabled
+        // (fallback message in case admin re-enables it)
+        setAuthError('Verifique seu e-mail para confirmar a conta.');
       }
     } catch (err) {
       setAuthError('Ocorreu um erro inesperado. Por favor, tente novamente.');
