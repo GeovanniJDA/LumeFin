@@ -466,11 +466,11 @@ export default function Transactions() {
                               <Input
                                 type="text"
                                 inputMode="numeric"
-                                value={field.value === 1 ? '' : String(field.value)}
+                                value={field.value === 0 ? '' : String(field.value)}
                                 placeholder="1"
                                 onChange={(e) => {
                                   const val = e.target.value.replace(/[^0-9]/g, '');
-                                  field.onChange(val === '' ? 1 : parseInt(val, 10));
+                                  field.onChange(val === '' ? 0 : parseInt(val, 10));
                                 }}
                               />
                             </FormControl>
@@ -597,11 +597,10 @@ export default function Transactions() {
           {dependentsWithTransactions.map(dep => (
             <div
               key={dep.id}
-              className={`glass-strong rounded-2xl p-4 transition-shadow hover:shadow-lg ${
-                dep.netBalance >= 0
-                  ? 'border-l-2 border-l-[#10B981]'
-                  : 'border-l-2 border-l-[#EF4444]'
-              }`}
+              className={`glass-strong rounded-2xl p-4 transition-shadow hover:shadow-lg ${dep.netBalance >= 0
+                ? 'border-l-2 border-l-[#10B981]'
+                : 'border-l-2 border-l-[#EF4444]'
+                }`}
             >
               <div className="flex items-center gap-2 mb-1">
                 {dep.netBalance >= 0 ? (
