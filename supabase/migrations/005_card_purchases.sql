@@ -1,0 +1,15 @@
+-- Already executed in Supabase — document only
+-- create table card_purchases (
+--   id uuid primary key default gen_random_uuid(),
+--   user_id uuid not null references auth.users(id) on delete cascade,
+--   credit_card_id uuid not null references credit_cards(id) on delete cascade,
+--   description text not null,
+--   amount numeric(10,2) not null,
+--   purchase_date date not null,
+--   type text not null check (type in ('cash','installment','recurring')),
+--   installments smallint not null default 1,
+--   current_installment smallint not null default 1,
+--   reference_month text not null,
+--   notes text,
+--   created_at timestamptz default now()
+-- );

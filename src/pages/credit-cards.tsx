@@ -7,7 +7,8 @@ import { EmptyState } from '../components/shared/empty-state';
 import { MonthPicker } from '../components/shared/month-picker';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { CreditCard, Plus, Trash2, Edit, Loader2 } from 'lucide-react';
+import { CreditCard, Plus, Trash2, Edit, Loader2, ChevronDown } from 'lucide-react';
+import { CardPurchasesPanel } from '@/components/sections/card-purchases-panel';
 import type { CreditCardWithDependent, CardStatus } from '../types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -48,13 +49,14 @@ const CARD_COLORS = [
 ];
 
 export default function CreditCards() {
-  const { creditCards, loading, error, addCreditCard, updateCreditCard, removeCreditCard } = useCreditCards();
+  const { creditCards, loading, error, addCreditCard, updateCreditCard, removeCreditCard, refreshCreditCards } = useCreditCards();
   const { dependents } = useDependents();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
 
   const form = useForm<CreditCardFormValues>({
     resolver: zodResolver(creditCardSchema),
@@ -317,6 +319,9 @@ export default function CreditCards() {
                               placeholder="0,00"
                             />
                           </FormControl>
+                          <p className="text-[11px] text-amber-500/80 mt-1 leading-tight">
+                            O valor da fatura é calculado automaticamente pelas compras
+                          </p>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -523,6 +528,30 @@ export default function CreditCards() {
                   <div className="w-full text-center py-2 text-sm text-[#10B981] font-medium bg-[rgba(16,185,129,0.1)] rounded-md border border-[rgba(16,185,129,0.2)]">
                     Fatura Paga
                   </div>
+                )}
+                
+                {/* Expand Purchases Button */}
+                <button
+                  onClick={() => setExpandedCardId(
+                    expandedCardId === card.id ? null : card.id
+                  )}
+                  className="w-full flex items-center justify-between
+                    pt-3 mt-2 border-t border-white/6 text-xs
+                    text-white/40 hover:text-white/70 transition-colors"
+                >
+                  <span>Compras ({card._purchaseCount ?? 0})</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200
+                    ${expandedCardId === card.id ? 'rotate-180' : ''}`} />
+                </button>
+
+                {expandedCardId === card.id && (
+                  <CardPurchasesPanel
+                    cardId={card.id}
+                    referenceMonth={card.reference_month}
+                    onInvoiceUpdated={() => {
+                      refreshCreditCards()
+                    }}
+                  />
                 )}
               </div>
             </div>

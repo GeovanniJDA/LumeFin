@@ -96,3 +96,16 @@ export const passwordSchema = z.object({
   path: ['confirmPassword']
 });
 export type PasswordFormValues = z.infer<typeof passwordSchema>;
+
+export const cardPurchaseSchema = z.object({
+  description: z.string().min(2, 'Descrição deve ter pelo menos 2 caracteres'),
+  amount: z.number().min(0.01, 'Valor deve ser maior que zero'),
+  purchase_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD format'),
+  type: z.enum(['cash', 'installment', 'recurring']),
+  installments: z.number().int().min(1).default(1),
+  current_installment: z.number().int().min(1).default(1).optional(),
+  reference_month: z.string().regex(/^\d{4}-\d{2}$/, 'Must be YYYY-MM format'),
+  notes: z.string().optional(),
+})
+export type CardPurchaseFormValues = z.infer<typeof cardPurchaseSchema>;
+

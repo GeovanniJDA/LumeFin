@@ -18,6 +18,7 @@ import { useCreditCardStoreRaw } from '../../store/credit-card-store';
 import { useTransactionStoreRaw } from '../../store/transaction-store';
 import { useCategoryStoreRaw } from '../../store/category-store';
 import { useProfileStore } from '@/store/profile-store';
+import { useCardPurchaseStore } from '@/store/card-purchase-store';
 
 const navigation = [
   { name: 'Dashboard', href: '/app', icon: LayoutDashboard },
@@ -57,6 +58,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         useTransactionStoreRaw.getState().reset();
         useCategoryStoreRaw.getState().reset();
         useProfileStore.getState().reset();
+        useCardPurchaseStore.getState().reset();
         toast.success('Sessão encerrada.');
         navigate('/auth');
       }

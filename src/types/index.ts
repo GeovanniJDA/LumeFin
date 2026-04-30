@@ -64,6 +64,24 @@ export interface CreditCard {
   color: string | null
   notes: string | null
   created_at: string
+  _purchaseCount?: number
+}
+
+export type PurchaseType = 'cash' | 'installment' | 'recurring'
+
+export interface CardPurchase {
+  id: string
+  user_id: string
+  credit_card_id: string
+  description: string
+  amount: number
+  purchase_date: string
+  type: PurchaseType
+  installments: number
+  current_installment: number
+  reference_month: string
+  notes: string | null
+  created_at: string
 }
 
 export interface DependentTransaction {
