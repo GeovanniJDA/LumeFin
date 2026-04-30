@@ -14,6 +14,14 @@ import { AuthGuard } from './components/shared/auth-guard';
 import { AppLayout } from './components/shared/app-layout';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
+import { useProfileStore } from '@/store/profile-store';
+
+window.addEventListener('focus', async () => {
+  const store = useProfileStore.getState()
+  if (store.avatarStoragePath && store.profile?.id) {
+    await store.refreshAvatarUrl(store.avatarStoragePath)
+  }
+})
 
 function AuthListener() {
   const navigate = useNavigate();

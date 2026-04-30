@@ -98,11 +98,7 @@ export default function ProfilePage() {
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      await updateProfile(userId, { avatar_url: publicUrl });
+      await updateProfile(userId, { avatar_url: filePath });
       toast.success('Avatar actualizado.');
     } catch (err: any) {
       toast.error(err.message || 'Erro ao actualizar avatar.');
@@ -116,6 +112,10 @@ export default function ProfilePage() {
     if (!userId) return;
     setIsRemovingAvatar(true);
     try {
+      const storagePath = useProfileStore.getState().avatarStoragePath;
+      if (storagePath) {
+        await supabase.storage.from('avatars').remove([storagePath]);
+      }
       await updateProfile(userId, { avatar_url: null });
       toast.success('Avatar removido.');
     } catch (err: any) {
