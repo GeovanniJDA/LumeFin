@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCurrencyInput } from '../hooks/use-currency-input';
 import { useCreditCards } from '../hooks/use-credit-cards';
 import { useDependents } from '../hooks/use-dependents';
@@ -7,8 +8,9 @@ import { EmptyState } from '../components/shared/empty-state';
 import { MonthPicker } from '../components/shared/month-picker';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { CreditCard, Plus, Trash2, Edit, Loader2, ChevronDown } from 'lucide-react';
+import { CreditCard, Plus, Trash2, Edit, Loader2, ChevronDown, ChevronRight } from 'lucide-react';
 import { CardPurchasesPanel } from '@/components/sections/card-purchases-panel';
+import { useCardPurchaseStore } from '@/store/card-purchase-store';
 import type { CreditCardWithDependent, CardStatus } from '../types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -51,12 +53,20 @@ const CARD_COLORS = [
 export default function CreditCards() {
   const { creditCards, loading, error, addCreditCard, updateCreditCard, removeCreditCard, refreshCreditCards } = useCreditCards();
   const { dependents } = useDependents();
+  const navigate = useNavigate();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
+  const purchases = useCardPurchaseStore(s => s.purchases);
+
+  useEffect(() => {
+    if (expandedCardId) {
+      useCardPurchaseStore.getState().fetchByCard(expandedCardId);
+    }
+  }, [expandedCardId]);
 
   const form = useForm<CreditCardFormValues>({
     resolver: zodResolver(creditCardSchema),
@@ -539,7 +549,12 @@ export default function CreditCards() {
                     pt-3 mt-2 border-t border-white/6 text-xs
                     text-white/40 hover:text-white/70 transition-colors"
                 >
-                  <span>Compras ({card._purchaseCount ?? 0})</span>
+                  <span>
+                    Compras
+                    {expandedCardId === card.id && purchases.filter(p => p.credit_card_id === card.id).length > 0
+                      ? ` (${purchases.filter(p => p.credit_card_id === card.id).length})`
+                      : ''}
+                  </span>
                   <ChevronDown className={`w-4 h-4 transition-transform duration-200
                     ${expandedCardId === card.id ? 'rotate-180' : ''}`} />
                 </button>
@@ -554,6 +569,20 @@ export default function CreditCards() {
                   />
                 )}
               </div>
+
+              {/* Ver detalhes button */}
+              <button
+                onClick={() => navigate(`/app/credit-cards/${card.id}`)}
+                className="w-full mt-4 py-2.5 rounded-xl text-sm font-semibold
+                  border border-amber-400/30 text-amber-400
+                  hover:bg-amber-400/10 hover:border-amber-400/60
+                  transition-all duration-200 flex items-center
+                  justify-center gap-2 group"
+              >
+                <span>Ver fatura detalhada</span>
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5
+                  transition-transform duration-200" />
+              </button>
             </div>
           ))}
         </div>

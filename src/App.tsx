@@ -7,6 +7,7 @@ const Dashboard = lazy(() => import('./pages/dashboard'));
 const Bills = lazy(() => import('./pages/bills'));
 const Dependents = lazy(() => import('./pages/dependents'));
 const CreditCards = lazy(() => import('./pages/credit-cards'));
+const CreditCardDetail = lazy(() => import('./pages/credit-card-detail'));
 const Transactions = lazy(() => import('./pages/transactions'));
 const Auth = lazy(() => import('./pages/auth'));
 const Profile = lazy(() => import('./pages/profile'));
@@ -78,6 +79,7 @@ function App() {
           <Route path="/app/bills" element={<AuthGuard><AppLayout><Bills /></AppLayout></AuthGuard>} />
           <Route path="/app/dependents" element={<AuthGuard><AppLayout><Dependents /></AppLayout></AuthGuard>} />
           <Route path="/app/credit-cards" element={<AuthGuard><AppLayout><CreditCards /></AppLayout></AuthGuard>} />
+          <Route path="/app/credit-cards/:id" element={<AuthGuard><AppLayout><CreditCardDetail /></AppLayout></AuthGuard>} />
           <Route path="/app/transactions" element={<AuthGuard><AppLayout><Transactions /></AppLayout></AuthGuard>} />
           <Route path="/app/profile" element={<AuthGuard><AppLayout><Profile /></AppLayout></AuthGuard>} />
         </Routes>
