@@ -124,7 +124,7 @@ export default function Landing() {
   const [scrolled, setScrolled] = useState(false)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const [scrollProgress, setScrollProgress] = useState(0)
-  
+
   const ctaRef = useRef<HTMLButtonElement>(null)
   const [ctaOffset, setCtaOffset] = useState({ x: 0, y: 0 })
   const [ctaHovered, setCtaHovered] = useState(false)
@@ -286,7 +286,7 @@ export default function Landing() {
 
         {/* Headline */}
         <h1 className="reveal delay-200 font-syne font-bold text-center leading-[0.9] mb-6 max-w-4xl"
-          style={{ 
+          style={{
             fontSize: 'clamp(3rem, 8vw, 7rem)',
             transform: `translate(${mousePos.x * 3}px, ${mousePos.y * 2}px)`,
             transition: 'transform 1s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -317,14 +317,14 @@ export default function Landing() {
 
         {/* CTAs */}
         <div className="reveal delay-400 flex flex-col sm:flex-row items-center gap-4 mb-16">
-          <button 
+          <button
             ref={ctaRef}
             onClick={() => navigate('/auth')}
             onMouseMove={handleCtaMouseMove}
             onMouseEnter={() => setCtaHovered(true)}
             onMouseLeave={handleCtaMouseLeave}
             className="group relative px-8 py-4 rounded-full font-bold text-black overflow-hidden cursor-pointer"
-            style={{ 
+            style={{
               background: 'linear-gradient(135deg, #F59E0B, #D97706)',
               transform: `translate(${ctaOffset.x}px, ${ctaOffset.y}px) scale(${ctaHovered ? 1.05 : 1})`,
               transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -635,12 +635,9 @@ export default function Landing() {
           <span className="font-syne font-bold text-amber-400">LumeFin</span>
           <p className="text-white/20 text-sm text-center">Feito com ♥ para famílias brasileiras</p>
           <div className="flex items-center gap-6">
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer"
+            <a href="https://github.com/GeovanniJDA/LumeFin" target="_blank" rel="noopener noreferrer"
               className="text-white/30 hover:text-white/60 text-sm transition-colors">
               GitHub
-            </a>
-            <a href="/auth" className="text-white/30 hover:text-white/60 text-sm transition-colors">
-              Entrar
             </a>
           </div>
         </div>

@@ -9,7 +9,7 @@
 
 LumeFin é uma aplicação web para organizar as finanças de toda a família — contas fixas, cartões de crédito, dívidas bidirecionais e compras parceladas, tudo num único lugar com visão consolidada por dependente.
 
-**Demo:** [lumefin.vercel.app](https://lumefin.vercel.app)
+**Demo:** [lumefin1.vercel.app](https://lumefin1.vercel.app)
 
 ---
 
