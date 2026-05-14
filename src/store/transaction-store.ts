@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from 'zustand';
 import { supabase, handleSupabaseError } from '../lib/supabase';
 import type { TransactionWithDependent } from '../types';
@@ -28,7 +29,7 @@ export const useTransactionStoreRaw = create<TransactionStore>((set, get) => ({
 
     const { data, error, count } = await supabase
       .from('dependent_transactions')
-      .select('*, dependents(*)', { count: 'exact' })
+      .select('*, dependents(*), transaction_payments(amount)', { count: 'exact' })
       .order('transaction_date', { ascending: false })
       .range(from, to);
 

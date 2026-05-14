@@ -1,0 +1,1 @@
+-- ALTER TABLE bills ADD COLUMN is_recurring boolean not null default false;

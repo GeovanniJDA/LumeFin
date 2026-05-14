@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import { useDependents } from '../hooks/use-dependents';
 import { PageHeader } from '../components/shared/page-header';

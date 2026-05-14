@@ -43,6 +43,7 @@ export interface Bill {
   reference_month: string
   notes: string | null
   created_at: string
+  is_recurring: boolean
 }
 
 export interface BillDependent {
@@ -113,4 +114,15 @@ export interface CreditCardWithDependent extends CreditCard {
 
 export interface TransactionWithDependent extends DependentTransaction {
   dependents: Dependent
+  transaction_payments?: { amount: number }[]
+}
+
+export interface TransactionPayment {
+  id: string
+  user_id: string
+  transaction_id: string
+  amount: number
+  payment_date: string
+  notes: string | null
+  created_at: string
 }

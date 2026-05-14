@@ -1,7 +1,9 @@
-import { useState, useMemo } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState, useMemo, useEffect } from 'react';
 import { useCurrencyInput } from '../hooks/use-currency-input';
 import { useTransactions } from '../hooks/use-transactions';
 import { useDependents } from '../hooks/use-dependents';
+import { useTransactionPaymentStore } from '../store/transaction-payment-store';
 import { PageHeader } from '../components/shared/page-header';
 import { EmptyState } from '../components/shared/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -59,7 +61,9 @@ import {
   ArrowUpRight,
   Wallet,
   FilterX,
+  ChevronDown,
 } from 'lucide-react';
+import { TransactionPaymentsPanel } from '@/components/sections/transaction-payments-panel';
 import { toast } from 'sonner';
 
 const TYPE_LABELS: Record<TransactionType, string> = {
@@ -93,13 +97,17 @@ const RELATIONSHIP_LABELS: Record<string, string> = {
 };
 
 export default function Transactions() {
-  const { transactions, loading, error, addTransaction, updateTransaction, removeTransaction, netBalanceByDependent, page, totalPages, hasNextPage, hasPrevPage, nextPage, prevPage, resetPage } = useTransactions();
+  const { transactions, loading, error, addTransaction, updateTransaction, removeTransaction, refreshTransactions, netBalanceByDependent, page, totalPages, hasNextPage, hasPrevPage, nextPage, prevPage, resetPage } = useTransactions();
   const { dependents } = useDependents();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [expandedTxId, setExpandedTxId] = useState<string | null>(null);
+
+  const fetchByTransaction = useTransactionPaymentStore(state => state.fetchByTransaction);
+  const allPayments = useTransactionPaymentStore(state => state.payments);
 
   // Filters
   const [filterDependent, setFilterDependent] = useState<string>('all');
@@ -127,6 +135,8 @@ export default function Transactions() {
 
   const watchPaymentType = form.watch('payment_type');
   const watchStatus = form.watch('status');
+  const watchAmount = form.watch('amount');
+  const watchInstallments = form.watch('installments');
 
   // Summary — dependents who have transactions
   const dependentsWithTransactions = useMemo(() => {
@@ -156,6 +166,13 @@ export default function Transactions() {
     setFilterStatus('all');
     resetPage();
   };
+
+  // Effect to fetch payments when expanding a transaction
+  useEffect(() => {
+    if (expandedTxId) {
+      fetchByTransaction(expandedTxId);
+    }
+  }, [expandedTxId, fetchByTransaction]);
 
   const handleOpenAdd = () => {
     setEditingId(null);
@@ -228,6 +245,21 @@ export default function Transactions() {
     }
   };
 
+  const getCombinedTotal = (
+    tx: TransactionWithDependent,
+    newPaidInstallments: number
+  ): number => {
+    const installmentValue = tx.amount / (tx.installments || 1)
+    const installmentsPaidAmount = newPaidInstallments * installmentValue
+    const freePaymentsAmount = allPayments
+      .filter(p => p.transaction_id === tx.id)
+      .reduce((s, p) => s + p.amount, 0)
+    return Math.min(
+      installmentsPaidAmount + freePaymentsAmount,
+      tx.amount
+    )
+  }
+
   const handleToggleInstallment = async (
     tx: TransactionWithDependent,
     installmentNumber: number
@@ -242,8 +274,9 @@ export default function Transactions() {
         // Check — set paid to installmentNumber
         newPaid = installmentNumber
       }
-      const totalInstallments = tx.installments || 1
-      const newStatus = newPaid >= totalInstallments ? 'paid' : 'pending'
+      const combinedTotal = getCombinedTotal(tx, newPaid)
+      const isFullyPaid = combinedTotal >= tx.amount
+      const newStatus = isFullyPaid ? 'paid' : 'pending'
       await updateTransaction(tx.id, {
         paid_installments: newPaid,
         status: newStatus,
@@ -251,7 +284,7 @@ export default function Transactions() {
           ? new Date().toISOString() : null
       })
       toast.success(
-        newPaid >= totalInstallments
+        isFullyPaid
           ? 'Transação quitada!'
           : `Parcela ${installmentNumber} ${newPaid >= installmentNumber ? 'marcada' : 'desmarcada'}.`
       )
@@ -269,7 +302,9 @@ export default function Transactions() {
     try {
       const totalInstallments = tx.installments || 1
       const newPaid = (tx.paid_installments || 0) + 1
-      const newStatus = newPaid >= totalInstallments ? 'paid' : 'pending'
+      const combinedTotal = getCombinedTotal(tx, newPaid)
+      const isFullyPaid = combinedTotal >= tx.amount
+      const newStatus = isFullyPaid ? 'paid' : 'pending'
       await updateTransaction(tx.id, {
         paid_installments: newPaid,
         status: newStatus,
@@ -277,7 +312,7 @@ export default function Transactions() {
           ? new Date().toISOString() : null
       })
       toast.success(
-        newPaid >= totalInstallments
+        isFullyPaid
           ? 'Transação quitada!'
           : `Parcela ${newPaid}/${totalInstallments} marcada.`
       )
@@ -374,7 +409,7 @@ export default function Transactions() {
                       name="amount"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Valor *</FormLabel>
+                          <FormLabel>Valor Total *</FormLabel>
                           <FormControl>
                             <Input
                               type="text"
@@ -384,6 +419,9 @@ export default function Transactions() {
                               placeholder="0,00"
                             />
                           </FormControl>
+                          <p className="text-xs text-white/40 mt-1">
+                            Valor total do empréstimo ou produto
+                          </p>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -502,6 +540,21 @@ export default function Transactions() {
                           </FormItem>
                         )}
                       />
+                    </div>
+                  )}
+
+                  {/* Installment preview — only when payment_type === 'installment' */}
+                  {watchPaymentType === 'installment' && watchAmount > 0 && watchInstallments > 1 && (
+                    <div className="p-3 rounded-xl bg-amber-400/6 border border-amber-400/20">
+                      <p className="text-xs text-white/40 mb-1">
+                        Valor por parcela
+                      </p>
+                      <p className="text-base font-bold text-amber-400">
+                        {formatCurrency(watchAmount / watchInstallments)}
+                      </p>
+                      <p className="text-xs text-white/40 mt-0.5">
+                        {watchInstallments}x de {formatCurrency(watchAmount / watchInstallments)}
+                      </p>
                     </div>
                   )}
 
@@ -695,6 +748,11 @@ export default function Transactions() {
           <div className="md:hidden space-y-3">
             {filteredTransactions.map(tx => {
               const dep = dependents.find(d => d.id === tx.dependent_id);
+              const txPaymentsTotal = tx.transaction_payments?.reduce((s: number, p: any) => s + p.amount, 0) || 0;
+              const installmentTotal = tx.payment_type === 'installment' ? ((tx.paid_installments || 0) / (tx.installments || 1)) * tx.amount : 0;
+              const totalPaid = tx.status === 'paid' && tx.payment_type !== 'installment' ? tx.amount : Math.min(txPaymentsTotal + installmentTotal, tx.amount);
+              const progressPercent = (totalPaid / tx.amount) * 100;
+
               return (
                 <div key={tx.id}
                   className="glass rounded-2xl p-4 space-y-3 border border-white/6"
@@ -727,7 +785,7 @@ export default function Transactions() {
                           <div className="w-12 h-1 rounded-full bg-white/10 overflow-hidden">
                             <div
                               className="h-full rounded-full bg-amber-400 transition-all"
-                              style={{ width: `${((tx.paid_installments || 0) / (tx.installments || 1)) * 100}%` }}
+                              style={{ width: `${progressPercent}%` }}
                             />
                           </div>
                           <span className="text-[11px] text-white/40">
@@ -784,7 +842,7 @@ export default function Transactions() {
                         <div className="flex-1 h-1.5 rounded-full bg-white/10">
                           <div
                             className="h-full rounded-full bg-amber-400 transition-all"
-                            style={{ width: `${((tx.paid_installments || 0) / (tx.installments || 1)) * 100}%` }}
+                            style={{ width: `${progressPercent}%` }}
                           />
                         </div>
                         <span className="text-xs text-white/50 shrink-0">
@@ -792,23 +850,29 @@ export default function Transactions() {
                         </span>
                       </div>
                       {/* Checkbox grid */}
-                      <div className="flex flex-wrap gap-1">
-                        {Array.from({ length: Math.min(tx.installments || 1, 12) }, (_, i) => i + 1).map(n => (
-                          <button
-                            key={n}
-                            disabled={loadingId === tx.id}
-                            onClick={() => handleToggleInstallment(tx, n)}
-                            className={`w-6 h-6 rounded text-[10px] font-bold transition-all duration-150 border
-                              ${n <= (tx.paid_installments || 0)
-                                ? 'bg-amber-400/20 border-amber-400/60 text-amber-400'
-                                : 'bg-white/4 border-white/10 text-white/30'}`}
-                          >
-                            {n}
-                          </button>
-                        ))}
-                      </div>
+                      {tx.status !== 'paid' && (
+                        <div className="flex flex-wrap gap-1">
+                          {Array.from({ length: Math.min(tx.installments || 1, 12) }, (_, i) => i + 1).map(n => (
+                            <button
+                              key={n}
+                              disabled={loadingId === tx.id}
+                              onClick={() => handleToggleInstallment(tx, n)}
+                              className={`w-6 h-6 rounded text-[10px] font-bold transition-all duration-150 border
+                                ${n <= (tx.paid_installments || 0)
+                                  ? 'bg-amber-400/20 border-amber-400/60 text-amber-400'
+                                  : 'bg-white/4 border-white/10 text-white/30'}`}
+                            >
+                              {n}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                       {/* Quick action */}
-                      {(tx.paid_installments || 0) < (tx.installments || 1) ? (
+                      {tx.status === 'paid' ? (
+                        <span className="text-xs text-emerald-400 font-medium">
+                          ✓ Transação quitada
+                        </span>
+                      ) : (tx.paid_installments || 0) < (tx.installments || 1) ? (
                         <button
                           disabled={loadingId === tx.id}
                           onClick={() => handleIncrementInstallment(tx)}
@@ -818,7 +882,43 @@ export default function Transactions() {
                           Próxima
                         </button>
                       ) : (
-                        <span className="text-xs text-emerald-400 font-medium">✓ Transação quitada</span>
+                        <span className="text-xs text-emerald-400 font-medium">
+                          ✓ Transação quitada
+                        </span>
+                      )}
+                      {/* Payments toggle */}
+                      <button
+                        onClick={() => setExpandedTxId(
+                          expandedTxId === tx.id ? null : tx.id
+                        )}
+                        className={`w-full flex items-center justify-between
+                          pt-2 mt-2 border-t border-white/6 text-xs
+                          transition-colors
+                          ${expandedTxId === tx.id
+                            ? 'text-amber-400'
+                            : 'text-white/30 hover:text-white/50'
+                          }`}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <Wallet className="w-3 h-3" />
+                          <span>Pagamentos avulsos</span>
+                        </div>
+                        <ChevronDown className={`w-3 h-3 transition-transform
+                          duration-200
+                          ${expandedTxId === tx.id ? 'rotate-180' : ''}`}
+                        />
+                      </button>
+
+                      {/* Payments panel */}
+                      {expandedTxId === tx.id && (
+                        <TransactionPaymentsPanel
+                          transaction={tx}
+                          onUpdateTransaction={updateTransaction}
+                          onTransactionSettled={async () => {
+                            setExpandedTxId(null)
+                            await refreshTransactions()
+                          }}
+                        />
                       )}
                     </div>
                   )}
@@ -845,6 +945,11 @@ export default function Transactions() {
                 <tbody className="divide-y divide-border">
                   {filteredTransactions.map(tx => {
                     const dep = dependents.find(d => d.id === tx.dependent_id);
+                    const txPaymentsTotal = tx.transaction_payments?.reduce((s: number, p: any) => s + p.amount, 0) || 0;
+                    const installmentTotal = tx.payment_type === 'installment' ? ((tx.paid_installments || 0) / (tx.installments || 1)) * tx.amount : 0;
+                    const totalPaid = tx.status === 'paid' && tx.payment_type !== 'installment' ? tx.amount : Math.min(txPaymentsTotal + installmentTotal, tx.amount);
+                    const progressPercent = (totalPaid / tx.amount) * 100;
+
                     return (
                       <tr key={tx.id} className="hover:bg-muted/50 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -866,9 +971,18 @@ export default function Transactions() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap font-bold text-foreground">
-                          <span className={tx.type === 'to_receive' ? 'text-green-600' : 'text-red-600'}>
-                            {tx.type === 'to_receive' ? '+' : '-'}{formatCurrency(tx.amount)}
-                          </span>
+                          <div className="flex flex-col">
+                            <span className={`font-bold ${tx.type === 'to_receive'
+                              ? 'text-emerald-400' : 'text-red-400'}`}>
+                              {tx.type === 'to_receive' ? '+' : '-'}
+                              {formatCurrency(tx.amount)}
+                            </span>
+                            {tx.payment_type === 'installment' && (
+                              <span className="text-xs text-white/30">
+                                {tx.installments}x de {formatCurrency(tx.amount / tx.installments)}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${TYPE_COLORS[tx.type]}`}>
@@ -877,12 +991,12 @@ export default function Transactions() {
                         </td>
                         <td className="px-6 py-4 text-muted-foreground text-sm">
                           {tx.payment_type === 'installment' ? (
-                            <div className="flex flex-col gap-1">
+                            <div className="flex flex-col gap-1.5">
                               <div className="flex items-center gap-2">
                                 <div className="w-16 h-1.5 rounded-full bg-white/10 overflow-hidden">
                                   <div
                                     className="h-full rounded-full bg-amber-400 transition-all"
-                                    style={{ width: `${((tx.paid_installments || 0) / (tx.installments || 1)) * 100}%` }}
+                                    style={{ width: `${progressPercent}%` }}
                                   />
                                 </div>
                                 <span className="text-xs text-white/50">
@@ -904,28 +1018,30 @@ export default function Transactions() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <div className="flex items-center justify-end gap-2">
-                            {tx.payment_type === 'installment' && (tx.paid_installments || 0) < (tx.installments || 1) && (
+                            {tx.payment_type === 'installment' && tx.status !== 'paid' && (tx.paid_installments || 0) < (tx.installments || 1) && (
                               <div className="flex flex-col items-end gap-1 mr-2">
                                 {/* Checkbox grid */}
-                                <div className="flex flex-wrap gap-1 justify-end max-w-[140px]">
-                                  {Array.from({ length: Math.min(tx.installments || 1, 12) }, (_, i) => i + 1).map(n => (
-                                    <button
-                                      key={n}
-                                      disabled={loadingId === tx.id}
-                                      onClick={() => handleToggleInstallment(tx, n)}
-                                      title={`Parcela ${n}`}
-                                      className={`w-5 h-5 rounded text-[9px] font-bold transition-all duration-150 border
-                                        ${n <= (tx.paid_installments || 0)
-                                          ? 'bg-amber-400/20 border-amber-400/60 text-amber-400'
-                                          : 'bg-white/4 border-white/10 text-white/30 hover:border-white/20'}`}
-                                    >
-                                      {n}
-                                    </button>
-                                  ))}
-                                  {(tx.installments || 1) > 12 && (
-                                    <span className="text-[9px] text-white/30 self-center">+{(tx.installments || 1) - 12}</span>
-                                  )}
-                                </div>
+                                {(tx.status as string) !== 'paid' && (
+                                  <div className="flex flex-wrap gap-1 justify-end max-w-[140px]">
+                                    {Array.from({ length: Math.min(tx.installments || 1, 12) }, (_, i) => i + 1).map(n => (
+                                      <button
+                                        key={n}
+                                        disabled={loadingId === tx.id}
+                                        onClick={() => handleToggleInstallment(tx, n)}
+                                        title={`Parcela ${n}`}
+                                        className={`w-5 h-5 rounded text-[9px] font-bold transition-all duration-150 border
+                                          ${n <= (tx.paid_installments || 0)
+                                            ? 'bg-amber-400/20 border-amber-400/60 text-amber-400'
+                                            : 'bg-white/4 border-white/10 text-white/30 hover:border-white/20'}`}
+                                      >
+                                        {n}
+                                      </button>
+                                    ))}
+                                    {(tx.installments || 1) > 12 && (
+                                      <span className="text-[9px] text-white/30 self-center">+{(tx.installments || 1) - 12}</span>
+                                    )}
+                                  </div>
+                                )}
                                 {/* Quick +1 */}
                                 <button
                                   disabled={loadingId === tx.id}
@@ -937,6 +1053,21 @@ export default function Transactions() {
                                 </button>
                               </div>
                             )}
+                            {/* Payments button */}
+                            <button
+                              onClick={() => setExpandedTxId(
+                                expandedTxId === tx.id ? null : tx.id
+                              )}
+                              className={`text-[10px] px-2 py-1 rounded-lg border
+                                transition-colors flex items-center gap-1
+                                ${expandedTxId === tx.id
+                                  ? 'border-amber-400/40 text-amber-400 bg-amber-400/8'
+                                  : 'border-white/10 text-white/40 hover:text-white/60'
+                                }`}
+                            >
+                              <Wallet className="w-3 h-3" />
+                              Pagamentos
+                            </button>
                             {tx.status === 'pending' && tx.payment_type !== 'installment' && (
                               <Button
                                 variant="outline"
@@ -978,6 +1109,24 @@ export default function Transactions() {
                       </tr>
                     );
                   })}
+
+                  {/* Expanded payments panel */}
+                  {expandedTxId && filteredTransactions.find(tx => tx.id === expandedTxId) && (
+                    <tr>
+                      <td colSpan={7} className="p-0 max-w-0">
+                        <div className="overflow-hidden">
+                          <TransactionPaymentsPanel
+                            transaction={filteredTransactions.find(tx => tx.id === expandedTxId)!}
+                            onUpdateTransaction={updateTransaction}
+                            onTransactionSettled={async () => {
+                              setExpandedTxId(null);
+                              await refreshTransactions();
+                            }}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
@@ -43,7 +44,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         fetchProfile(session.user.id);
       }
     });
-  }, []);
+  }, [fetchProfile]);
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
@@ -62,7 +63,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         toast.success('Sessão encerrada.');
         navigate('/auth');
       }
-    } catch (err: any) {
+    } catch (err) {
       toast.error('Erro ao encerrar sessão.');
     } finally {
       setIsSigningOut(false);

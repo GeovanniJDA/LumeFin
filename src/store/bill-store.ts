@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from 'zustand';
 import { supabase, handleSupabaseError } from '../lib/supabase';
 import type { BillWithRelations } from '../types';

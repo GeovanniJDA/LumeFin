@@ -62,7 +62,7 @@ const useCountUp = (target: number, duration = 1500, trigger: boolean) => {
   return count
 }
 
-const StatCard = ({ value, suffix, label, sub, trigger, delayClass }: any) => {
+const StatCard = ({ value, suffix, label, sub, trigger, delayClass }: { value: string | number, suffix: string, label: string, sub: string, trigger: boolean, delayClass?: string }) => {
   const isNumber = !isNaN(Number(value))
   const count = useCountUp(isNumber ? Number(value) : 0, 1500, trigger)
   return (
@@ -77,32 +77,32 @@ const StatCard = ({ value, suffix, label, sub, trigger, delayClass }: any) => {
   )
 }
 
-const FeatureCard = ({ children, className, style, delayClass }: any) => {
-  const tilt = useTilt()
+const FeatureCard = ({ children, className, style, delayClass }: { children: React.ReactNode, className?: string, style?: React.CSSProperties, delayClass?: string }) => {
+  const { ref, style: tiltStyle, onMouseMove, onMouseEnter, onMouseLeave } = useTilt()
   return (
     <div
-      ref={tilt.ref}
-      onMouseMove={tilt.onMouseMove}
-      onMouseEnter={tilt.onMouseEnter}
-      onMouseLeave={tilt.onMouseLeave}
+      ref={ref}
+      onMouseMove={onMouseMove}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       className={`scroll-reveal reveal ${delayClass || ''} ${className}`}
-      style={{ ...style, ...tilt.style }}
+      style={{ ...style, ...tiltStyle }}
     >
       {children}
     </div>
   )
 }
 
-const StepCard = ({ item, delayClass }: any) => {
-  const tilt = useTilt()
+const StepCard = ({ item, delayClass }: { item: { step: string, title: string, desc: string, side: string }, delayClass?: string }) => {
+  const { ref, style: tiltStyle, onMouseMove, onMouseEnter, onMouseLeave } = useTilt()
   return (
     <div
-      ref={tilt.ref}
-      onMouseMove={tilt.onMouseMove}
-      onMouseEnter={tilt.onMouseEnter}
-      onMouseLeave={tilt.onMouseLeave}
+      ref={ref}
+      onMouseMove={onMouseMove}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       className={`scroll-reveal reveal ${delayClass} relative flex items-center gap-8 mb-16 last:mb-0 ${item.side === 'right' ? 'md:flex-row-reverse' : 'md:flex-row'}`}
-      style={tilt.style}
+      style={tiltStyle}
     >
       <div className="relative shrink-0">
         <div className="w-16 h-16 rounded-full flex items-center justify-center font-syne font-bold text-xl border-2 border-amber-400/40 text-amber-400"

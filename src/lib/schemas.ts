@@ -30,6 +30,7 @@ export const billSchema = z.object({
   reference_month: z.string().regex(/^\d{4}-\d{2}$/, 'Must be YYYY-MM format'),
   notes: z.string().nullable().optional(),
   dependent_ids: z.array(z.string().uuid()).optional(),
+  is_recurring: z.boolean(),
 });
 export type BillFormValues = z.infer<typeof billSchema>;
 
@@ -109,3 +110,10 @@ export const cardPurchaseSchema = z.object({
 })
 export type CardPurchaseFormValues = z.infer<typeof cardPurchaseSchema>;
 
+export const transactionPaymentSchema = z.object({
+  amount: z.number().min(0.01, 'Valor deve ser maior que zero'),
+  payment_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  notes: z.string().optional(),
+})
+export type TransactionPaymentFormValues =
+  z.infer<typeof transactionPaymentSchema>

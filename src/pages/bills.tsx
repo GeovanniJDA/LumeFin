@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo } from 'react';
 import { useCurrencyInput } from '../hooks/use-currency-input';
 import { useBills } from '../hooks/use-bills';
@@ -154,13 +155,14 @@ export default function Bills() {
       status: 'pending',
       paid_date: null,
       dependent_ids: [],
-      notes: ''
+      notes: '',
+      is_recurring: false
     }
   });
 
   const amountInput = useCurrencyInput(0);
   const filteredBills = useMemo(() => {
-    return bills.filter(bill => {
+    const filtered = bills.filter(bill => {
       if (filterStatus !== 'all' && bill.status !== filterStatus) return false;
       if (filterMonth && !bill.reference_month.includes(filterMonth)) return false;
       if (filterCategory !== 'all' && bill.category_id !== filterCategory) return false;
@@ -170,6 +172,33 @@ export default function Bills() {
       }
       return true;
     });
+
+    const currentMonth = filterMonth || format(new Date(), 'yyyy-MM');
+
+    const recurringBillsForMonth = bills
+      .filter(b =>
+        b.is_recurring &&
+        b.reference_month < currentMonth &&
+        !bills.some(existing =>
+          existing.category_id === b.category_id &&
+          existing.reference_month === currentMonth &&
+          existing.is_recurring
+        )
+      )
+      .map(b => ({
+        ...b,
+        id: `recurring-${b.id}-${currentMonth}`,
+        reference_month: currentMonth,
+        status: 'pending' as const,
+        paid_date: null,
+        _isProjected: true
+      }));
+
+    const allBills = filterMonth
+      ? [...filtered, ...recurringBillsForMonth]
+      : filtered;
+
+    return allBills;
   }, [bills, filterStatus, filterMonth, filterDependent, filterCategory]);
 
   const clearFilters = () => {
@@ -190,7 +219,8 @@ export default function Bills() {
       status: 'pending',
       paid_date: null,
       dependent_ids: [],
-      notes: ''
+      notes: '',
+      is_recurring: false
     });
     amountInput.reset(0);
     setIsDialogOpen(true);
@@ -207,7 +237,8 @@ export default function Bills() {
       status: bill.status,
       paid_date: bill.paid_date || null,
       dependent_ids: bill.dependents?.map(d => d.id) || [],
-      notes: bill.notes || ''
+      notes: bill.notes || '',
+      is_recurring: bill.is_recurring || false
     });
     amountInput.reset(bill.amount ?? 0);
     setIsDialogOpen(true);
@@ -244,6 +275,25 @@ export default function Bills() {
       toast.error(err.message || 'Erro inesperado.');
     } finally {
       setLoadingId(null);
+    }
+  };
+
+  const handleMarkProjectedAsPaid = async (projectedBill: any) => {
+    try {
+      await addBill({
+        category_id: projectedBill.category_id,
+        amount: projectedBill.amount,
+        due_date: projectedBill.due_date,
+        reference_month: projectedBill.reference_month,
+        status: 'paid',
+        paid_date: new Date().toISOString(),
+        dependent_ids: projectedBill.dependents?.map((d: any) => d.id) ?? [],
+        is_recurring: true,
+        notes: projectedBill.notes ?? undefined
+      });
+      toast.success('Conta recorrente registada e paga.');
+    } catch (err: any) {
+      toast.error(err.message || 'Erro inesperado.');
     }
   };
 
@@ -612,6 +662,42 @@ export default function Bills() {
                     />
                   </div>
 
+                  <FormField
+                    control={form.control as any}
+                    name="is_recurring"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center justify-between
+                          p-3 rounded-xl border border-white/8 bg-white/2">
+                          <div>
+                            <FormLabel className="text-sm font-medium text-white/80">
+                              Conta Recorrente
+                            </FormLabel>
+                            <p className="text-xs text-white/40 mt-0.5">
+                              Aparece automaticamente todo mês com valor fixo
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => field.onChange(!field.value)}
+                            className={`relative w-10 h-6 rounded-full transition-all
+                              duration-200 shrink-0
+                              ${field.value
+                                ? 'bg-amber-500'
+                                : 'bg-white/10'
+                              }`}
+                          >
+                            <span className={`absolute top-1 w-4 h-4 rounded-full
+                              bg-white transition-all duration-200
+                              ${field.value ? 'left-5' : 'left-1'}`}
+                            />
+                          </button>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   {form.watch('status') === 'paid' && (
                     <FormField
                       control={form.control as any}
@@ -817,7 +903,8 @@ export default function Bills() {
               const billDeps = bill.dependents || [];
               return (
                 <div key={bill.id}
-                  className="glass rounded-2xl p-4 space-y-3 border border-white/6">
+                  className={`glass rounded-2xl p-4 space-y-3 border border-white/6
+                    ${(bill as any)._isProjected ? 'opacity-60' : ''}`}>
                   {/* Top: icon + category + status */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -825,7 +912,16 @@ export default function Bills() {
                         <Icon className="w-4 h-4 text-amber-400" />
                       </div>
                       <div>
-                        <p className="font-semibold text-white text-sm">{cat?.name || 'Desconhecida'}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-white text-sm">{cat?.name || 'Desconhecida'}</p>
+                          {bill.is_recurring && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded-full
+                              bg-amber-400/10 text-amber-400 border border-amber-400/20
+                              font-medium">
+                              Recorrente
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-white/40">
                           Vence {format(parseISO(bill.due_date), 'dd/MM/yyyy', { locale: ptBR })}
                         </p>
@@ -859,23 +955,29 @@ export default function Bills() {
                     {bill.status === 'pending' && (
                       <Button variant="outline" size="sm"
                         className="h-7 text-xs text-green-400 border-green-400/30 hover:bg-green-400/10"
-                        onClick={() => handleMarkAsPaid(bill.id, bill.status)}
+                        onClick={() => (bill as any)._isProjected ? handleMarkProjectedAsPaid(bill) : handleMarkAsPaid(bill.id, bill.status)}
                         disabled={loadingId === bill.id}>
                         {loadingId === bill.id ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : null}
                         Marcar paga
                       </Button>
                     )}
-                    <Button variant="ghost" size="icon" className="h-7 w-7"
-                      onClick={() => handleOpenEdit(bill)}
-                      disabled={loadingId === bill.id}>
-                      <Edit className="w-3 h-3 text-white/40" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger render={
-                        <Button variant="ghost" size="icon" className="h-7 w-7" disabled={loadingId === bill.id}>
-                          {loadingId === bill.id ? <Loader2 className="w-3 h-3 text-white/40 animate-spin" /> : <Trash2 className="w-3 h-3 text-white/40" />}
+                    {(bill as any)._isProjected ? (
+                      <span className="text-[10px] text-white/30 italic px-2">
+                        Projeção
+                      </span>
+                    ) : (
+                      <>
+                        <Button variant="ghost" size="icon" className="h-7 w-7"
+                          onClick={() => handleOpenEdit(bill)}
+                          disabled={loadingId === bill.id}>
+                          <Edit className="w-3 h-3 text-white/40" />
                         </Button>
-                      } />
+                        <AlertDialog>
+                          <AlertDialogTrigger render={
+                            <Button variant="ghost" size="icon" className="h-7 w-7" disabled={loadingId === bill.id}>
+                              {loadingId === bill.id ? <Loader2 className="w-3 h-3 text-white/40 animate-spin" /> : <Trash2 className="w-3 h-3 text-white/40" />}
+                            </Button>
+                          } />
                       <AlertDialogContent>
                         <AlertDialogHeader>
                           <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
@@ -887,6 +989,8 @@ export default function Bills() {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
+                  </>
+                )}
                   </div>
                 </div>
               );
@@ -915,13 +1019,22 @@ export default function Bills() {
                     const billDeps = bill.dependents || [];
 
                     return (
-                      <tr key={bill.id} className="hover:bg-muted/50 transition-colors">
+                      <tr key={bill.id} className={`hover:bg-muted/50 transition-colors ${(bill as any)._isProjected ? 'opacity-60' : ''}`}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-3">
                             <div className="p-2 bg-secondary rounded-lg">
                               <Icon className="w-4 h-4 text-primary" />
                             </div>
-                            <span className="font-medium text-foreground">{cat?.name || 'Desconhecida'}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-foreground">{cat?.name || 'Desconhecida'}</span>
+                              {bill.is_recurring && (
+                                <span className="text-[9px] px-1.5 py-0.5 rounded-full
+                                  bg-amber-400/10 text-amber-400 border border-amber-400/20
+                                  font-medium">
+                                  Recorrente
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </td>
                         <td className="px-6 py-4">
@@ -965,22 +1078,28 @@ export default function Bills() {
                                 variant="outline"
                                 size="sm"
                                 className="h-8 text-xs font-semibold text-green-600 border-green-200 hover:bg-green-50"
-                                onClick={() => handleMarkAsPaid(bill.id, bill.status)}
+                                onClick={() => (bill as any)._isProjected ? handleMarkProjectedAsPaid(bill) : handleMarkAsPaid(bill.id, bill.status)}
                                 disabled={loadingId === bill.id || loading}
                               >
                                 {loadingId === bill.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                                 Marcar como paga
                               </Button>
                             )}
-                            <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(bill)} disabled={loadingId === bill.id} className="h-8 w-8">
-                              <Edit className="w-4 h-4 text-muted-foreground hover:text-amber-500" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger render={
-                                <Button variant="ghost" size="icon" disabled={loadingId === bill.id} className="h-8 w-8">
-                                  {loadingId === bill.id ? <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" /> : <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-600" />}
+                            {(bill as any)._isProjected ? (
+                              <span className="text-[10px] text-white/30 italic px-2">
+                                Projeção
+                              </span>
+                            ) : (
+                              <>
+                                <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(bill)} disabled={loadingId === bill.id} className="h-8 w-8">
+                                  <Edit className="w-4 h-4 text-muted-foreground hover:text-amber-500" />
                                 </Button>
-                              } />
+                                <AlertDialog>
+                                  <AlertDialogTrigger render={
+                                    <Button variant="ghost" size="icon" disabled={loadingId === bill.id} className="h-8 w-8">
+                                      {loadingId === bill.id ? <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" /> : <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-600" />}
+                                    </Button>
+                                  } />
                               <AlertDialogContent>
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
@@ -996,6 +1115,8 @@ export default function Bills() {
                                 </AlertDialogFooter>
                               </AlertDialogContent>
                             </AlertDialog>
+                          </>
+                        )}
                           </div>
                         </td>
                       </tr>

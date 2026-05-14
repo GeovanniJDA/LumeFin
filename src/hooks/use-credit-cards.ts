@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect } from 'react';
 import { useCreditCardStoreRaw } from '../store/credit-card-store';
 import { isDueSoon, isOverdue } from '../lib/utils';

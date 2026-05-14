@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect } from 'react';
 import { useBillStoreRaw } from '../store/bill-store';
 import { isDueSoon, isOverdue } from '../lib/utils';

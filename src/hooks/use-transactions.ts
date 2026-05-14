@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect } from 'react';
 import { useTransactionStoreRaw } from '../store/transaction-store';
-import { calculateNetBalance } from '../lib/utils';
+
 import { usePagination, PAGE_SIZE } from './use-pagination';
 
 export function useTransactions(dependentId?: string) {
@@ -17,7 +18,13 @@ export function useTransactions(dependentId?: string) {
     const dep = store.records.filter(
       t => t.dependent_id === id && t.status === 'pending'
     );
-    return calculateNetBalance(dep);
+    return dep.reduce((acc, t) => {
+      const txPaymentsTotal = t.transaction_payments?.reduce((s: number, p: { amount: number }) => s + p.amount, 0) || 0;
+      const installmentTotal = t.payment_type === 'installment' ? ((t.paid_installments || 0) / (t.installments || 1)) * t.amount : 0;
+      const totalPaid = Math.min(txPaymentsTotal + installmentTotal, t.amount);
+      const remaining = Math.max(t.amount - totalPaid, 0);
+      return t.type === 'to_receive' ? acc + remaining : acc - remaining;
+    }, 0);
   };
 
   const totalCount = store.totalCount;

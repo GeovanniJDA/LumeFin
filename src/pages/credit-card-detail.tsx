@@ -81,7 +81,6 @@ export default function CreditCardDetail() {
   // Fetch card details
   useEffect(() => {
     if (!id) return
-    setCardLoading(true)
     supabase
       .from('credit_cards')
       .select('*, dependents(*)')
@@ -96,7 +95,7 @@ export default function CreditCardDetail() {
   // Fetch all purchases for this card (no month filter — filtering is client-side)
   useEffect(() => {
     if (id) fetchByCard(id)
-  }, [id])
+  }, [id, fetchByCard])
 
   // Purchases for selected month
   const monthPurchases = useMemo(

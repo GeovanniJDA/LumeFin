@@ -5,7 +5,7 @@ import { useDependents } from '../hooks/use-dependents';
 import { useCategories } from '../hooks/use-categories';
 import { PageHeader } from '../components/shared/page-header';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatCurrency } from '../lib/utils';
+import { formatCurrency, isDueSoon, isOverdue } from '../lib/utils';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
@@ -38,6 +38,7 @@ export default function Dashboard() {
     fetchCreditCards();
     fetchTransactions();
     fetchDependents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const isLoading = billsLoading || cardsLoading || txLoading || depsLoading || catsLoading;
@@ -53,11 +54,23 @@ export default function Dashboard() {
 
   const pendingToReceive = transactions
     .filter(t => t.type === 'to_receive' && t.status === 'pending')
-    .reduce((acc, t) => acc + t.amount, 0);
+    .reduce((acc, t) => {
+      const txPaymentsTotal = t.transaction_payments?.reduce((s: number, p: { amount: number }) => s + p.amount, 0) || 0;
+      const installmentTotal = t.payment_type === 'installment' ? ((t.paid_installments || 0) / (t.installments || 1)) * t.amount : 0;
+      const totalPaid = Math.min(txPaymentsTotal + installmentTotal, t.amount);
+      const remaining = Math.max(t.amount - totalPaid, 0);
+      return acc + remaining;
+    }, 0);
 
   const pendingToPay = transactions
     .filter(t => t.type === 'to_pay' && t.status === 'pending')
-    .reduce((acc, t) => acc + t.amount, 0);
+    .reduce((acc, t) => {
+      const txPaymentsTotal = t.transaction_payments?.reduce((s: number, p: { amount: number }) => s + p.amount, 0) || 0;
+      const installmentTotal = t.payment_type === 'installment' ? ((t.paid_installments || 0) / (t.installments || 1)) * t.amount : 0;
+      const totalPaid = Math.min(txPaymentsTotal + installmentTotal, t.amount);
+      const remaining = Math.max(t.amount - totalPaid, 0);
+      return acc + remaining;
+    }, 0);
 
   // Hero card derived values
   const totalPending = pendingBillsTotal + openCardsTotal;
@@ -71,10 +84,33 @@ export default function Dashboard() {
   const totalInvoiceAmount = openCardsTotal;
 
   // ── Section 2: Alerts ──
-  const overdueBills = getOverdueBills();
+  const currentMonth = format(new Date(), 'yyyy-MM');
+  const recurringProjections = bills
+    .filter(b =>
+      b.is_recurring &&
+      b.reference_month < currentMonth
+    )
+    .map(b => {
+      const [year, month] = currentMonth.split('-');
+      const day = b.due_date.split('-')[2];
+      return {
+        ...b,
+        id: `recurring-${b.id}-${currentMonth}`,
+        due_date: `${year}-${month}-${day}`,
+        reference_month: currentMonth,
+        status: 'pending' as const,
+      };
+    });
+
+  const baseOverdueBills = getOverdueBills();
+  const projectedOverdue = recurringProjections.filter(b => isOverdue(b.due_date));
+  const overdueBills = [...baseOverdueBills, ...projectedOverdue];
   const overdueCount = overdueBills.length;
   const overdueBillIds = new Set(overdueBills.map(b => b.id));
-  const dueSoonBills = getDueSoonBills().filter(b => !overdueBillIds.has(b.id));
+  
+  const baseDueSoonBills = getDueSoonBills();
+  const projectedDueSoon = recurringProjections.filter(b => isDueSoon(b.due_date));
+  const dueSoonBills = [...baseDueSoonBills, ...projectedDueSoon].filter(b => !overdueBillIds.has(b.id));
 
   const overdueCards = getOverdueCards();
   const overdueCardIds = new Set(overdueCards.map(c => c.id));

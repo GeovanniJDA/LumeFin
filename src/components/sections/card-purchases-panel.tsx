@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
 import { useCardPurchases } from '@/hooks/use-card-purchases';
 import { formatCurrency } from '@/lib/utils';

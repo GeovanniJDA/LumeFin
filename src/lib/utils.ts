@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { parseISO, differenceInDays, isPast } from 'date-fns';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -8,9 +9,6 @@ export function cn(...inputs: ClassValue[]) {
 export function formatCurrency(value: number, locale = 'pt-BR', currency = 'BRL'): string {
   return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(value)
 }
-
-import { parseISO, differenceInDays, isPast } from 'date-fns';
-
 export function isDueSoon(dueDate: string, daysThreshold = 3): boolean {
   const date = parseISO(dueDate);
   const diff = differenceInDays(date, new Date());
