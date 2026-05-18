@@ -11,6 +11,8 @@ const CreditCardDetail = lazy(() => import('./pages/credit-card-detail'));
 const Transactions = lazy(() => import('./pages/transactions'));
 const Auth = lazy(() => import('./pages/auth'));
 const Profile = lazy(() => import('./pages/profile'));
+const ForgotPassword = lazy(() => import('./pages/forgot-password'));
+const ResetPassword = lazy(() => import('./pages/reset-password'));
 import { AuthGuard } from './components/shared/auth-guard';
 import { AppLayout } from './components/shared/app-layout';
 import { Toaster } from '@/components/ui/sonner';
@@ -74,6 +76,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+          <Route path="/auth/reset-password" element={<ResetPassword />} />
 
           <Route path="/app" element={<AuthGuard><AppLayout><Dashboard /></AppLayout></AuthGuard>} />
           <Route path="/app/bills" element={<AuthGuard><AppLayout><Bills /></AppLayout></AuthGuard>} />

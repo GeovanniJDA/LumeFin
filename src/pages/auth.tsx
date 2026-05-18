@@ -258,6 +258,19 @@ export default function Auth() {
                 )}
               />
 
+              {/* Forgot password link */}
+              {isLogin && (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/auth/forgot-password')}
+                    className="text-xs text-white/40 hover:text-amber-400 transition-colors"
+                  >
+                    Esqueceu a senha?
+                  </button>
+                </div>
+              )}
+
               {/* Submit button */}
               <Button
                 type="submit"
