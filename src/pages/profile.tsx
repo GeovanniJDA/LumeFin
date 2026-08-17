@@ -100,9 +100,9 @@ export default function ProfilePage() {
       if (uploadError) throw uploadError;
 
       await updateProfile(userId, { avatar_url: filePath });
-      toast.success('Avatar actualizado.');
+      toast.success('Avatar atualizado.');
     } catch (err: any) {
-      toast.error(err.message || 'Erro ao actualizar avatar.');
+      toast.error(err.message || 'Erro ao atualizar avatar.');
     } finally {
       setIsUploadingAvatar(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -131,9 +131,9 @@ export default function ProfilePage() {
     setIsSubmittingUsername(true);
     try {
       await updateProfile(userId, { username: values.username });
-      toast.success('Nome actualizado.');
+      toast.success('Nome atualizado.');
     } catch (err: any) {
-      toast.error(err.message || 'Erro ao actualizar nome.');
+      toast.error(err.message || 'Erro ao atualizar nome.');
     } finally {
       setIsSubmittingUsername(false);
     }
@@ -146,7 +146,7 @@ export default function ProfilePage() {
       if (error) throw error;
       toast.success('Email de confirmação enviado.');
     } catch (err: any) {
-      toast.error(err.message || 'Erro ao actualizar email.');
+      toast.error(err.message || 'Erro ao atualizar email.');
     } finally {
       setIsSubmittingEmail(false);
     }
@@ -157,10 +157,10 @@ export default function ProfilePage() {
     try {
       const { error } = await supabase.auth.updateUser({ password: values.password });
       if (error) throw error;
-      toast.success('Senha actualizada.');
+      toast.success('Senha atualizada.');
       passwordForm.reset();
     } catch (err: any) {
-      toast.error(err.message || 'Erro ao actualizar senha.');
+      toast.error(err.message || 'Erro ao atualizar senha.');
     } finally {
       setIsSubmittingPassword(false);
     }
@@ -252,7 +252,7 @@ export default function ProfilePage() {
             <div>
               <h3 className="text-lg font-semibold text-white">Email</h3>
               <p className="text-sm text-[rgba(255,255,255,0.5)]">
-                Email actual: <span className="text-white font-medium">{userEmail}</span>
+                Email atual: <span className="text-white font-medium">{userEmail}</span>
               </p>
             </div>
             <Form {...emailForm}>
@@ -288,7 +288,7 @@ export default function ProfilePage() {
                 <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
                   <Button type="submit" disabled={isSubmittingEmail || !emailForm.formState.isDirty} className="w-full sm:w-auto">
                     {isSubmittingEmail && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    Actualizar Email
+                    Atualizar Email
                   </Button>
                   <p className="text-xs text-[rgba(255,165,0,0.8)]">Um email de confirmação será enviado.</p>
                 </div>
@@ -300,7 +300,7 @@ export default function ProfilePage() {
           <div className="glass p-6 rounded-2xl border border-[rgba(255,255,255,0.05)] space-y-4">
             <div>
               <h3 className="text-lg font-semibold text-white">Senha</h3>
-              <p className="text-sm text-[rgba(255,255,255,0.5)]">Actualize sua senha de acesso.</p>
+              <p className="text-sm text-[rgba(255,255,255,0.5)]">Atualize sua senha de acesso.</p>
             </div>
             <Form {...passwordForm}>
               <form onSubmit={passwordForm.handleSubmit(onSubmitPassword)} className="space-y-4">
