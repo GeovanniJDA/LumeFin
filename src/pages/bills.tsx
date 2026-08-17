@@ -175,31 +175,22 @@ export default function Bills() {
 
     const currentMonth = filterMonth || format(new Date(), 'yyyy-MM');
 
-    // For each recurring bill, check if THIS SPECIFIC BILL
-    // (by id) already has a real record for the target month.
-    // Do NOT deduplicate by category_id.
+    const seenOriginalIds = new Set<string>();
+
     const recurringBillsForMonth = bills
       .filter(b => {
         if (!b.is_recurring) return false;
-
-        // Only project bills from previous months
         if (b.reference_month >= currentMonth) return false;
 
-        // Find the most recent version of this bill
-        // (in case there are multiple months of the same recurring bill)
-        // Only project from the LATEST reference_month of this bill's id
-        const sameBillAllMonths = bills.filter(
-          x => x.id === b.id
-        );
-        const latestMonth = sameBillAllMonths.reduce(
-          (max, x) => x.reference_month > max ? x.reference_month : max,
-          b.reference_month
-        );
+        // Only keep the LATEST reference_month for each bill UUID
+        const latestMonth = bills
+          .filter(x => x.id === b.id)
+          .reduce((max, x) => x.reference_month > max
+            ? x.reference_month : max, b.reference_month);
         if (b.reference_month !== latestMonth) return false;
 
-        // Check if a real record already exists for this month
-        // Match by: same original bill id stored in notes OR
-        // same category_id + same amount + same reference_month
+        // Check if a real record already exists for this specific
+        // bill (by category + amount) in the target month
         const alreadyExistsForMonth = bills.some(existing =>
           existing.is_recurring &&
           existing.reference_month === currentMonth &&
@@ -207,20 +198,22 @@ export default function Bills() {
           existing.amount === b.amount &&
           !existing.id.startsWith('recurring-')
         );
+        if (alreadyExistsForMonth) return false;
 
-        return !alreadyExistsForMonth;
+        // DEDUP: if we already have a projection for this
+        // category+amount combination, skip
+        const projectionKey = `${b.category_id}-${b.amount}`;
+        if (seenOriginalIds.has(projectionKey)) return false;
+        seenOriginalIds.add(projectionKey);
+
+        return true;
       })
       .map(b => {
-        // Adjust due_date to the projected month
-        // Keep the same day of month, change year-month
         const originalDueDate = parseISO(b.due_date);
         const originalDay = originalDueDate.getDate();
         const [projYear, projMonth] = currentMonth.split('-').map(Number);
-
-        // Clamp day to last day of projected month
         const daysInMonth = new Date(projYear, projMonth, 0).getDate();
         const clampedDay = Math.min(originalDay, daysInMonth);
-
         const projectedDueDate = new Date(projYear, projMonth - 1, clampedDay);
         const projectedDueDateStr = format(projectedDueDate, 'yyyy-MM-dd');
 
