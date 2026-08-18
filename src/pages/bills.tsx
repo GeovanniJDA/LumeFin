@@ -48,7 +48,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { billSchema, type BillFormValues } from '../lib/schemas';
 import { DatePicker } from '@/components/shared/date-picker';
@@ -732,7 +732,7 @@ export default function Bills() {
                     )}
                   />
 
-                  {form.watch('status') === 'paid' && (
+                  {useWatch({ control: form.control, name: 'status' }) === 'paid' && (
                     <FormField
                       control={form.control as any}
                       name="paid_date"
