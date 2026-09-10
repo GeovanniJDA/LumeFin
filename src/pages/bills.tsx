@@ -288,6 +288,7 @@ export default function Bills() {
         await addBill(data);
         toast.success('Conta adicionada.');
       }
+      resetPage();
       setIsDialogOpen(false);
     } catch (err: any) {
       toast.error(err.message || 'Erro inesperado.');
@@ -304,6 +305,7 @@ export default function Bills() {
         status: 'paid',
         paid_date: new Date().toISOString()
       });
+      resetPage();
       toast.success('Conta marcada como paga.');
     } catch (err: any) {
       toast.error(err.message || 'Erro inesperado.');
@@ -325,6 +327,7 @@ export default function Bills() {
         is_recurring: true,
         notes: projectedBill.notes ?? undefined
       });
+      resetPage();
       toast.success('Conta recorrente registada e paga.');
     } catch (err: any) {
       toast.error(err.message || 'Erro inesperado.');
@@ -335,6 +338,7 @@ export default function Bills() {
     setLoadingId(id);
     try {
       await removeBill(id);
+      resetPage();
       toast.success('Conta removida.');
     } catch (err: any) {
       toast.error(err.message || 'Erro inesperado.');
