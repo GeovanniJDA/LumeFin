@@ -119,7 +119,7 @@ const STATUS_COLORS: Record<BillStatus, string> = {
 };
 
 export default function Bills() {
-  const { bills, loading, error, addBill, updateBill, removeBill, page, totalPages, hasNextPage, hasPrevPage, nextPage, prevPage, resetPage } = useBills();
+  const { bills, loading, error, addBill, updateBill, removeBill, page, totalPages, hasNextPage, hasPrevPage, nextPage, prevPage, resetPage, refreshBills } = useBills();
   const { categories, systemCategories, userCategories, loading: categoriesLoading, addCategory, removeCategory } = useCategories();
   const { dependents } = useDependents();
 
@@ -288,7 +288,7 @@ export default function Bills() {
         await addBill(data);
         toast.success('Conta adicionada.');
       }
-      resetPage();
+      refreshBills();
       setIsDialogOpen(false);
     } catch (err: any) {
       toast.error(err.message || 'Erro inesperado.');
@@ -305,7 +305,7 @@ export default function Bills() {
         status: 'paid',
         paid_date: new Date().toISOString()
       });
-      resetPage();
+      refreshBills();
       toast.success('Conta marcada como paga.');
     } catch (err: any) {
       toast.error(err.message || 'Erro inesperado.');
@@ -327,7 +327,7 @@ export default function Bills() {
         is_recurring: true,
         notes: projectedBill.notes ?? undefined
       });
-      resetPage();
+      refreshBills();
       toast.success('Conta recorrente registada e paga.');
     } catch (err: any) {
       toast.error(err.message || 'Erro inesperado.');
@@ -338,7 +338,7 @@ export default function Bills() {
     setLoadingId(id);
     try {
       await removeBill(id);
-      resetPage();
+      refreshBills();
       toast.success('Conta removida.');
     } catch (err: any) {
       toast.error(err.message || 'Erro inesperado.');
