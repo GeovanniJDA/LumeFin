@@ -223,8 +223,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </main>
 
-      {/* Bottom Nav - Mobile */}
-      <nav className="md:hidden fixed bottom-0 w-full flex justify-around p-2 z-50 rounded-t-xl glass" style={{ background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(20px)' }}>
+      {/* Mobile Navigation */}
+      <nav className="md:hidden fixed bottom-0 w-full flex justify-around p-2 z-50 rounded-t-xl glass" style={{ background: 'rgba(0,0,0,0.9)' }}>
         {navigation.map((item) => {
           const isActive = location.pathname === item.href;
           return (
