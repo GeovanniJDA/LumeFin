@@ -17,7 +17,7 @@ interface BillStore {
   reset: () => void;
 }
 
-export const useBillStoreRaw = create<BillStore>((set, get) => ({
+export const useBillStoreRaw = create<BillStore>((set) => ({
   records: [],
   totalCount: 0,
   loading: false,
