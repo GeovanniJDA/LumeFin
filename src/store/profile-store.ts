@@ -41,7 +41,8 @@ export const useProfileStore = create<ProfileStore>((set) => ({
 
     let avatarUrl = data.avatar_url
     if (avatarUrl && !avatarUrl.startsWith('http')) {
-      avatarUrl = await getSignedAvatarUrl(avatarUrl)
+      const signed = await getSignedAvatarUrl(avatarUrl)
+      avatarUrl = signed ?? null
     }
 
     set({ 
@@ -66,7 +67,8 @@ export const useProfileStore = create<ProfileStore>((set) => ({
 
     let avatarUrl = data.avatar_url
     if (avatarUrl && !avatarUrl.startsWith('http')) {
-      avatarUrl = await getSignedAvatarUrl(avatarUrl)
+      const signed = await getSignedAvatarUrl(avatarUrl)
+      avatarUrl = signed ?? null
     }
 
     set({ 
