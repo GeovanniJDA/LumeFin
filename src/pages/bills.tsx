@@ -166,6 +166,10 @@ export default function Bills() {
     // When filterMonth is set, the server already filtered by month,
     // so we only need to apply status, category, and dependent filters client-side.
     const filtered = bills.filter(bill => {
+      // Exclude previous months' recurring bills from the direct list
+      // They will be handled by the projections logic below
+      if (filterMonth && bill.reference_month !== filterMonth) return false;
+
       if (filterStatus !== 'all' && bill.status !== filterStatus) return false;
       if (filterCategory !== 'all' && bill.category_id !== filterCategory) return false;
       if (filterDependent !== 'all') {
@@ -197,6 +201,14 @@ export default function Bills() {
           !existing.id.startsWith('recurring-')
         );
         if (alreadyExistsForMonth) return false;
+
+        // Apply filters to projected bills
+        if (filterStatus !== 'all' && 'pending' !== filterStatus) return false;
+        if (filterCategory !== 'all' && b.category_id !== filterCategory) return false;
+        if (filterDependent !== 'all') {
+          const hasDep = b.dependents?.some(d => d.id === filterDependent);
+          if (!hasDep) return false;
+        }
 
         // DEDUP: if we already have a projection for this
         // category+amount combination, skip

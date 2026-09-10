@@ -38,8 +38,8 @@ export const useBillStoreRaw = create<BillStore>((set, get) => ({
       .order('due_date', { ascending: true });
 
     if (options?.month) {
-      // Server-side month filter — fetch ALL records for that month (no range limit)
-      query = query.eq('reference_month', options.month);
+      // Server-side month filter — fetch ALL records for that month AND all previous recurring bills
+      query = query.or(`reference_month.eq.${options.month},and(is_recurring.eq.true,reference_month.lte.${options.month})`);
     } else {
       // Paginated fetch without month filter
       const from = options?.range?.from ?? 0;
