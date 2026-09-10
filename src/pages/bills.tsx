@@ -119,7 +119,15 @@ const STATUS_COLORS: Record<BillStatus, string> = {
 };
 
 export default function Bills() {
-  const { bills, loading, error, addBill, updateBill, removeBill, page, totalPages, hasNextPage, hasPrevPage, nextPage, prevPage, resetPage, refreshBills } = useBills();
+  // Filters State — declared before useBills so we can pass filterMonth
+  const currentMonthStr = format(new Date(), 'yyyy-MM');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterMonth, setFilterMonth] = useState<string>('');
+  const [filterDependent, setFilterDependent] = useState<string>('all');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+
+  // Pass filterMonth to the hook so it fetches server-side when a month is selected
+  const { bills, loading, error, addBill, updateBill, removeBill, page, totalPages, hasNextPage, hasPrevPage, nextPage, prevPage, resetPage, refreshBills } = useBills(filterMonth || undefined);
   const { categories, systemCategories, userCategories, loading: categoriesLoading, addCategory, removeCategory } = useCategories();
   const { dependents } = useDependents();
 
@@ -138,13 +146,6 @@ export default function Bills() {
   const [isNewCategoryDialogOpen, setIsNewCategoryDialogOpen] = useState(false);
   const [isSavingCategory, setIsSavingCategory] = useState(false);
 
-  // Filters State
-  const currentMonthStr = format(new Date(), 'yyyy-MM');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [filterMonth, setFilterMonth] = useState<string>('');
-  const [filterDependent, setFilterDependent] = useState<string>('all');
-  const [filterCategory, setFilterCategory] = useState<string>('all');
-
   const form = useForm<BillFormValues>({
     resolver: zodResolver(billSchema),
     defaultValues: {
@@ -162,9 +163,10 @@ export default function Bills() {
 
   const amountInput = useCurrencyInput(0);
   const filteredBills = useMemo(() => {
+    // When filterMonth is set, the server already filtered by month,
+    // so we only need to apply status, category, and dependent filters client-side.
     const filtered = bills.filter(bill => {
       if (filterStatus !== 'all' && bill.status !== filterStatus) return false;
-      if (filterMonth && !bill.reference_month.includes(filterMonth)) return false;
       if (filterCategory !== 'all' && bill.category_id !== filterCategory) return false;
       if (filterDependent !== 'all') {
         const hasDep = bill.dependents?.some(d => d.id === filterDependent);
@@ -173,21 +175,17 @@ export default function Bills() {
       return true;
     });
 
-    const currentMonth = filterMonth || format(new Date(), 'yyyy-MM');
+    // Recurring projections: only generated when a specific month is selected
+    if (!filterMonth) return filtered;
 
+    const currentMonth = filterMonth;
     const seenOriginalIds = new Set<string>();
 
     const recurringBillsForMonth = bills
       .filter(b => {
         if (!b.is_recurring) return false;
-        if (b.reference_month >= currentMonth) return false;
-
-        // Only keep the LATEST reference_month for each bill UUID
-        const latestMonth = bills
-          .filter(x => x.id === b.id)
-          .reduce((max, x) => x.reference_month > max
-            ? x.reference_month : max, b.reference_month);
-        if (b.reference_month !== latestMonth) return false;
+        // Skip bills already in that month (server returned them)
+        if (b.reference_month === currentMonth) return false;
 
         // Check if a real record already exists for this specific
         // bill (by category + amount) in the target month
@@ -228,11 +226,7 @@ export default function Bills() {
         };
       });
 
-    const allBills = filterMonth
-      ? [...filtered, ...recurringBillsForMonth]
-      : filtered;
-
-    return allBills;
+    return [...filtered, ...recurringBillsForMonth];
   }, [bills, filterStatus, filterMonth, filterDependent, filterCategory]);
 
   const clearFilters = () => {

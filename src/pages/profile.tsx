@@ -7,7 +7,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../components/ui/form';
 import { toast } from 'sonner';
-import { Loader2, Camera, Trash2 } from 'lucide-react';
+import { Loader2, Camera, Trash2, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { PageHeader } from '../components/shared/page-header';
 import { useProfileStore } from '@/store/profile-store';
 import { 
@@ -34,6 +34,9 @@ export default function ProfilePage() {
   const [isSubmittingUsername, setIsSubmittingUsername] = useState(false);
   const [isSubmittingEmail, setIsSubmittingEmail] = useState(false);
   const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordChanged, setPasswordChanged] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -157,14 +160,32 @@ export default function ProfilePage() {
     try {
       const { error } = await supabase.auth.updateUser({ password: values.password });
       if (error) throw error;
-      toast.success('Senha atualizada.');
+      toast.success('Senha actualizada com sucesso!');
       passwordForm.reset();
+      setPasswordChanged(true);
+      setTimeout(() => setPasswordChanged(false), 4000);
     } catch (err: any) {
-      toast.error(err.message || 'Erro ao atualizar senha.');
+      toast.error(err.message || 'Erro ao actualizar senha.');
     } finally {
       setIsSubmittingPassword(false);
     }
   };
+
+  const watchedPassword = passwordForm.watch('password') ?? '';
+
+  const getPasswordStrength = (pwd: string): { score: number; label: string; color: string } => {
+    if (!pwd) return { score: 0, label: '', color: '' };
+    let score = 0;
+    if (pwd.length >= 8) score++;
+    if (pwd.length >= 10 && /\d/.test(pwd)) score++;
+    if (pwd.length >= 12 && /[^a-zA-Z0-9]/.test(pwd)) score++;
+    if (pwd.length >= 14) score++;
+    const labels = ['Fraca', 'Razoável', 'Boa', 'Forte'];
+    const colors = ['#EF4444', '#F97316', '#F59E0B', '#10B981'];
+    return { score, label: labels[score - 1] ?? '', color: colors[score - 1] ?? '' };
+  };
+
+  const pwdStrength = getPasswordStrength(watchedPassword);
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
@@ -297,47 +318,143 @@ export default function ProfilePage() {
           </div>
 
           {/* Form C - Password */}
-          <div className="glass p-6 rounded-2xl border border-[rgba(255,255,255,0.05)] space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold text-white">Senha</h3>
-              <p className="text-sm text-[rgba(255,255,255,0.5)]">Atualize sua senha de acesso.</p>
+          <div
+            className="rounded-2xl border space-y-5 overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, rgba(245,158,11,0.04) 0%, rgba(0,0,0,0) 60%)',
+              borderColor: 'rgba(245,158,11,0.25)',
+              boxShadow: '0 0 32px rgba(245,158,11,0.06)'
+            }}
+          >
+            {/* Header */}
+            <div className="px-6 pt-6 pb-4 border-b" style={{ borderColor: 'rgba(245,158,11,0.15)' }}>
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)' }}
+                >
+                  <Lock className="w-5 h-5" style={{ color: '#F59E0B' }} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Mudar Senha</h3>
+                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>Escolha uma senha forte para proteger sua conta.</p>
+                </div>
+              </div>
             </div>
-            <Form {...passwordForm}>
-              <form onSubmit={passwordForm.handleSubmit(onSubmitPassword)} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div className="px-6 pb-6">
+              {passwordChanged && (
+                <div
+                  className="flex items-center gap-2 p-3 rounded-xl mb-4"
+                  style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)' }}
+                >
+                  <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <p className="text-sm text-emerald-400 font-medium">Senha alterada com sucesso!</p>
+                </div>
+              )}
+
+              <Form {...passwordForm}>
+                <form onSubmit={passwordForm.handleSubmit(onSubmitPassword)} className="space-y-4">
                   <FormField
                     control={passwordForm.control}
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Nova Senha</FormLabel>
+                        <FormLabel className="text-white/70">Nova Senha</FormLabel>
                         <FormControl>
-                          <Input type="password" placeholder="••••••••" {...field} className="glass-input" />
+                          <div className="relative">
+                            <Input
+                              type={showNewPassword ? 'text' : 'password'}
+                              placeholder="••••••••"
+                              {...field}
+                              className="glass-input pr-10"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowNewPassword(v => !v)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/70 transition-colors"
+                            >
+                              {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
                         </FormControl>
+                        {/* Strength indicator */}
+                        {watchedPassword.length > 0 && (
+                          <div className="space-y-1.5 pt-1">
+                            <div className="flex gap-1">
+                              {[1, 2, 3, 4].map(bar => (
+                                <div
+                                  key={bar}
+                                  className="flex-1 h-1 rounded-full transition-all duration-300"
+                                  style={{
+                                    backgroundColor: bar <= pwdStrength.score
+                                      ? pwdStrength.color
+                                      : 'rgba(255,255,255,0.08)'
+                                  }}
+                                />
+                              ))}
+                            </div>
+                            {pwdStrength.score > 0 && (
+                              <p className="text-xs" style={{ color: pwdStrength.color }}>
+                                Senha {pwdStrength.label}
+                              </p>
+                            )}
+                          </div>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={passwordForm.control}
                     name="confirmPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Confirmar Nova Senha</FormLabel>
+                        <FormLabel className="text-white/70">Confirmar Nova Senha</FormLabel>
                         <FormControl>
-                          <Input type="password" placeholder="••••••••" {...field} className="glass-input" />
+                          <div className="relative">
+                            <Input
+                              type={showConfirmPassword ? 'text' : 'password'}
+                              placeholder="••••••••"
+                              {...field}
+                              className="glass-input pr-10"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPassword(v => !v)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/70 transition-colors"
+                            >
+                              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </div>
-                <Button type="submit" disabled={isSubmittingPassword || !passwordForm.formState.isDirty} className="w-full sm:w-auto">
-                  {isSubmittingPassword && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Mudar Senha
-                </Button>
-              </form>
-            </Form>
+
+                  <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center pt-2">
+                    <Button
+                      type="submit"
+                      disabled={isSubmittingPassword || !passwordForm.formState.isDirty}
+                      className="w-full sm:w-auto font-bold"
+                      style={{
+                        background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+                        color: '#000',
+                        opacity: (!passwordForm.formState.isDirty || isSubmittingPassword) ? 0.5 : 1
+                      }}
+                    >
+                      {isSubmittingPassword && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      Salvar Nova Senha
+                    </Button>
+                    <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                      Mínimo 6 caracteres
+                    </p>
+                  </div>
+                </form>
+              </Form>
+            </div>
           </div>
 
         </div>

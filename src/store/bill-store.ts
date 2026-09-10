@@ -5,33 +5,49 @@ import type { BillWithRelations } from '../types';
 import type { BillFormValues } from '../lib/schemas';
 import { PAGE_SIZE } from '../hooks/use-pagination';
 
+interface FetchOptions {
+  range?: { from: number; to: number };
+  month?: string; // 'YYYY-MM' — when set, fetches ALL records for that month (no pagination)
+}
+
 interface BillStore {
   records: BillWithRelations[];
   totalCount: number;
   loading: boolean;
   error: string | null;
-  fetch: (range?: { from: number; to: number }) => Promise<void>;
+  lastFetchOptions?: FetchOptions;
+  fetch: (options?: FetchOptions) => Promise<void>;
   add: (data: BillFormValues) => Promise<void>;
   update: (id: string, data: Partial<BillFormValues>) => Promise<void>;
   remove: (id: string) => Promise<void>;
   reset: () => void;
 }
 
-export const useBillStoreRaw = create<BillStore>((set) => ({
+export const useBillStoreRaw = create<BillStore>((set, get) => ({
   records: [],
   totalCount: 0,
   loading: false,
   error: null,
-  fetch: async (range?: { from: number; to: number }) => {
-    set({ loading: true, error: null });
-    const from = range?.from ?? 0;
-    const to = range?.to ?? PAGE_SIZE - 1;
+  lastFetchOptions: undefined,
+  fetch: async (options?: FetchOptions) => {
+    set({ loading: true, error: null, lastFetchOptions: options });
 
-    const { data, error, count } = await supabase
+    let query = supabase
       .from('bills')
       .select('*, bill_categories(*), bill_dependents(dependent_id, dependents(*))', { count: 'exact' })
-      .order('due_date', { ascending: true })
-      .range(from, to);
+      .order('due_date', { ascending: true });
+
+    if (options?.month) {
+      // Server-side month filter — fetch ALL records for that month (no range limit)
+      query = query.eq('reference_month', options.month);
+    } else {
+      // Paginated fetch without month filter
+      const from = options?.range?.from ?? 0;
+      const to = options?.range?.to ?? PAGE_SIZE - 1;
+      query = query.range(from, to);
+    }
+
+    const { data, error, count } = await query;
 
     if (error) {
       if (handleSupabaseError(error)) return;
@@ -96,7 +112,8 @@ export const useBillStoreRaw = create<BillStore>((set) => ({
         }
       }
     }
-    set({ loading: false });
+    // Re-fetch with the same options as last time so UI reflects server state
+    await get().fetch(get().lastFetchOptions);
   },
   remove: async (id) => {
     set({ loading: true, error: null });
