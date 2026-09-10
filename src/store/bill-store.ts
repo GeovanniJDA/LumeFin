@@ -68,7 +68,7 @@ export const useBillStoreRaw = create<BillStore>((set, get) => ({
       }
     }
     
-    await get().fetch();
+    set({ loading: false });
   },
   update: async (id, data) => {
     set({ loading: true, error: null });
@@ -96,7 +96,7 @@ export const useBillStoreRaw = create<BillStore>((set, get) => ({
         }
       }
     }
-    await get().fetch();
+    set({ loading: false });
   },
   remove: async (id) => {
     set({ loading: true, error: null });
@@ -105,7 +105,7 @@ export const useBillStoreRaw = create<BillStore>((set, get) => ({
       if (handleSupabaseError(error)) return;
       set({ error: error.message, loading: false }); throw new Error(error.message); 
     }
-    else await get().fetch();
+    else set({ loading: false });
   },
   reset: () => set({ records: [], totalCount: 0, loading: false, error: null })
 }));
