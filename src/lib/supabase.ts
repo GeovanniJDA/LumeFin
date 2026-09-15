@@ -52,12 +52,30 @@ export interface Database {
 }
 
 import { env } from './env';
+import { Preferences } from '@capacitor/preferences'
+import { Capacitor } from '@capacitor/core'
+
+const capacitorStorageAdapter = {
+  getItem: async (key: string) => {
+    const { value } = await Preferences.get({ key })
+    return value
+  },
+  setItem: async (key: string, value: string) => {
+    await Preferences.set({ key, value })
+  },
+  removeItem: async (key: string) => {
+    await Preferences.remove({ key })
+  },
+}
 
 export const supabase = createClient<any>(env.supabaseUrl, env.supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true,
+    detectSessionInUrl: !Capacitor.isNativePlatform(),
+    storage: Capacitor.isNativePlatform()
+      ? capacitorStorageAdapter
+      : undefined, // undefined = use default localStorage on web
   }
 });
 

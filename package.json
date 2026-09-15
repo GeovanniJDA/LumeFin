@@ -17,6 +17,7 @@
     "@capacitor/android": "^8.5.2",
     "@capacitor/cli": "^8.5.2",
     "@capacitor/core": "^8.5.2",
+    "@capacitor/preferences": "^8.0.1",
     "@capacitor/splash-screen": "^8.0.2",
     "@fontsource-variable/geist": "^5.3.0",
     "@hookform/resolvers": "^5.9.0",

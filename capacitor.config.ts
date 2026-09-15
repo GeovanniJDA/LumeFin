@@ -4,6 +4,10 @@ const config: CapacitorConfig = {
   appId: 'app.lumefin.android',
   appName: 'Lumefin',
   webDir: 'dist',
+  server: {
+    androidScheme: 'https',
+    hostname: 'app.lumefin.android'
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 1500,

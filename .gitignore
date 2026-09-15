@@ -24,3 +24,17 @@ dist-ssr
 *.sln
 *.sw?
 lumefin-release.keystore
+
+# Android / Capacitor
+android/local.properties
+android/app/build/
+android/build/
+android/.gradle/
+android/captures/
+android/*.iml
+android/app/*.iml
+android/.idea/workspace.xml
+android/.idea/tasks.xml
+*.keystore
+*.jks
+key.properties
