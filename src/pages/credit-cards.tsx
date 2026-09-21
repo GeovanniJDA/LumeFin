@@ -458,7 +458,7 @@ export default function CreditCards() {
           description="Você ainda não adicionou nenhum cartão de crédito. Clique no botão acima para começar."
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
           {creditCards.map(card => (
             <div
               key={card.id}
