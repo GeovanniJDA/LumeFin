@@ -158,12 +158,10 @@ export default function CreditCards() {
       const card = creditCards.find(c => c.id === id);
       if (!card) throw new Error('Cartão não encontrado.');
 
-      // Calculate next reference_month
       const [year, month] = card.reference_month.split('-').map(Number);
-      const nextDate = new Date(year, month, 1); // month is already 0-indexed+1 trick
+      const nextDate = new Date(year, month, 1);
       const nextReferenceMonth = format(nextDate, 'yyyy-MM');
 
-      // Calculate next due_date (same day, next month)
       const currentDueDate = parseISO(card.due_date);
       const dueDay = currentDueDate.getDate();
       const daysInNextMonth = new Date(nextDate.getFullYear(), nextDate.getMonth() + 1, 0).getDate();
@@ -171,16 +169,20 @@ export default function CreditCards() {
       const nextDueDate = new Date(nextDate.getFullYear(), nextDate.getMonth(), clampedDay);
       const nextDueDateStr = format(nextDueDate, 'yyyy-MM-dd');
 
-      // Roll forward purchases for this card before updating the card itself
-      await rollForwardCardPurchases(id, card.reference_month, nextReferenceMonth);
-
-      // Advance the card to next month, reopen it
+      // STEP 1 — Update card month/date/status first (no invoice_amount touched)
       await updateCreditCard(id, {
         reference_month: nextReferenceMonth,
         due_date: nextDueDateStr,
         status: 'open',
         paid_date: null
       });
+
+      // STEP 2 — Roll purchases forward; this is the LAST write to invoice_amount
+      await rollForwardCardPurchases(id, card.reference_month, nextReferenceMonth);
+
+      // STEP 3 — Force a final fetch so the UI reflects the value
+      // rollForwardCardPurchases just wrote (bypassed the store)
+      await refreshCreditCards();
 
       toast.success('Fatura paga! Próxima fatura já está aberta.');
     } catch (err: any) {
