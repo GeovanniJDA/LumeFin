@@ -122,7 +122,7 @@ export default function Bills() {
   // Filters State — declared before useBills so we can pass filterMonth
   const currentMonthStr = format(new Date(), 'yyyy-MM');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [filterMonth, setFilterMonth] = useState<string>('');
+  const [filterMonth, setFilterMonth] = useState<string>(currentMonthStr);
   const [filterDependent, setFilterDependent] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
 
@@ -243,7 +243,7 @@ export default function Bills() {
 
   const clearFilters = () => {
     setFilterStatus('all');
-    setFilterMonth('');
+    setFilterMonth(currentMonthStr);
     setFilterDependent('all');
     setFilterCategory('all');
     resetPage();
