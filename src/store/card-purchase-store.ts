@@ -87,6 +87,61 @@ export const useCardPurchaseStore = create<CardPurchaseStore>((set, get) => ({
   reset: () => set({ purchases: [], loading: false, error: null })
 }))
 
+// Roll forward active purchases from one month to the next
+export async function rollForwardCardPurchases(
+  cardId: string,
+  fromMonth: string,
+  toMonth: string
+) {
+  const { data: purchases, error } = await supabase
+    .from('card_purchases')
+    .select('*')
+    .eq('credit_card_id', cardId)
+    .eq('reference_month', fromMonth);
+
+  if (error) throw new Error(error.message);
+  if (!purchases || purchases.length === 0) {
+    // Nothing to roll forward, but still recalc (will be 0)
+    await recalculateInvoice(cardId, toMonth);
+    return;
+  }
+
+  for (const p of purchases) {
+    if (p.type === 'cash') {
+      // Cash purchases do not repeat — leave them in the old month
+      continue;
+    }
+
+    if (p.type === 'recurring') {
+      // Recurring purchases move forward as-is, same amount
+      const { error: updError } = await supabase
+        .from('card_purchases')
+        .update({ reference_month: toMonth })
+        .eq('id', p.id);
+      if (updError) throw new Error(updError.message);
+      continue;
+    }
+
+    if (p.type === 'installment') {
+      const nextInstallment = (p.current_installment || 1) + 1;
+      if (nextInstallment > p.installments) {
+        // Fully paid off — do not carry forward
+        continue;
+      }
+      const { error: updError } = await supabase
+        .from('card_purchases')
+        .update({
+          reference_month: toMonth,
+          current_installment: nextInstallment
+        })
+        .eq('id', p.id);
+      if (updError) throw new Error(updError.message);
+    }
+  }
+
+  await recalculateInvoice(cardId, toMonth);
+}
+
 // Recalculate and update invoice_amount on the credit card
 async function recalculateInvoice(cardId: string, referenceMonth: string) {
   const { data } = await supabase

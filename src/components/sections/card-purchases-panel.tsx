@@ -36,7 +36,7 @@ export function CardPurchasesPanel({ cardId, referenceMonth, onInvoiceUpdated }:
 
   useEffect(() => {
     fetchByCard(cardId);
-  }, [cardId, fetchByCard]);
+  }, [cardId, referenceMonth, fetchByCard]);
 
   const form = useForm<CardPurchaseFormValues>({
     resolver: zodResolver(cardPurchaseSchema) as any,

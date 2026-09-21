@@ -11,7 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { CreditCard, Plus, Trash2, Edit, Loader2, ChevronDown, ChevronRight } from 'lucide-react';
 import { CardPurchasesPanel } from '@/components/sections/card-purchases-panel';
-import { useCardPurchaseStore } from '@/store/card-purchase-store';
+import { useCardPurchaseStore, rollForwardCardPurchases } from '@/store/card-purchase-store';
 import type { CreditCardWithDependent, CardStatus } from '../types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -155,11 +155,35 @@ export default function CreditCards() {
     if (currentStatus !== 'closed') return;
     setLoadingId(id);
     try {
+      const card = creditCards.find(c => c.id === id);
+      if (!card) throw new Error('Cartão não encontrado.');
+
+      // Calculate next reference_month
+      const [year, month] = card.reference_month.split('-').map(Number);
+      const nextDate = new Date(year, month, 1); // month is already 0-indexed+1 trick
+      const nextReferenceMonth = format(nextDate, 'yyyy-MM');
+
+      // Calculate next due_date (same day, next month)
+      const currentDueDate = parseISO(card.due_date);
+      const dueDay = currentDueDate.getDate();
+      const daysInNextMonth = new Date(nextDate.getFullYear(), nextDate.getMonth() + 1, 0).getDate();
+      const clampedDay = Math.min(dueDay, daysInNextMonth);
+      const nextDueDate = new Date(nextDate.getFullYear(), nextDate.getMonth(), clampedDay);
+      const nextDueDateStr = format(nextDueDate, 'yyyy-MM-dd');
+
+      // Roll forward purchases for this card before updating the card itself
+      await rollForwardCardPurchases(id, card.reference_month, nextReferenceMonth);
+
+      // Advance the card to next month, reopen it
       await updateCreditCard(id, {
-        status: 'paid',
-        paid_date: new Date().toISOString()
+        reference_month: nextReferenceMonth,
+        due_date: nextDueDateStr,
+        status: 'open',
+        paid_date: null,
+        invoice_amount: 0 // will be recalculated by rollForwardCardPurchases
       });
-      toast.success('Status actualizado.');
+
+      toast.success('Fatura paga! Próxima fatura já está aberta.');
     } catch (err: any) {
       toast.error(err.message || 'Erro inesperado.');
     } finally {
