@@ -179,8 +179,7 @@ export default function CreditCards() {
         reference_month: nextReferenceMonth,
         due_date: nextDueDateStr,
         status: 'open',
-        paid_date: null,
-        invoice_amount: 0 // will be recalculated by rollForwardCardPurchases
+        paid_date: null
       });
 
       toast.success('Fatura paga! Próxima fatura já está aberta.');
