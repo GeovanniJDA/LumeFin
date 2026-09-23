@@ -84,7 +84,7 @@ export default function CreditCardDetail() {
     if (!id) return
     supabase
       .from('credit_cards')
-      .select('*, dependents(*), credit_card_dependents(dependents(*))')
+      .select('*, legacy_dependent:dependents!credit_cards_dependent_id_fkey(*), credit_card_dependents(dependents(*))')
       .eq('id', id)
       .single()
       .then(({ data }) => {
@@ -94,7 +94,7 @@ export default function CreditCardDetail() {
             .filter((dependent: Dependent | null): dependent is Dependent => dependent !== null) ?? []
           setCard({ ...data, dependents: linkedDependents.length
             ? linkedDependents
-            : data.dependents ? [data.dependents as Dependent] : [] })
+            : data.legacy_dependent ? [data.legacy_dependent as Dependent] : [] })
         }
         setCardLoading(false)
       })
