@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useCurrencyInput } from '../hooks/use-currency-input';
 import { useCreditCards } from '../hooks/use-credit-cards';
 import { useDependents } from '../hooks/use-dependents';
@@ -55,12 +55,15 @@ export default function CreditCards() {
   const { creditCards, loading, error, addCreditCard, updateCreditCard, removeCreditCard, refreshCreditCards } = useCreditCards();
   const { dependents } = useDependents();
   const navigate = useNavigate();
+  const location = useLocation();
+  const purchaseNavigation = location.state as { addPurchaseTo?: string; returnTo?: string } | null;
+  const returnTo = purchaseNavigation?.returnTo;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
-  const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
+  const [expandedCardId, setExpandedCardId] = useState<string | null>(purchaseNavigation?.addPurchaseTo ?? null);
   const purchases = useCardPurchaseStore(s => s.purchases);
 
   useEffect(() => {
@@ -589,6 +592,10 @@ export default function CreditCards() {
                   <CardPurchasesPanel
                     cardId={card.id}
                     referenceMonth={card.reference_month}
+                    openOnMount={purchaseNavigation?.addPurchaseTo === card.id}
+                    onPurchaseSaved={returnTo
+                      ? () => navigate(returnTo, { replace: true })
+                      : undefined}
                     onInvoiceUpdated={() => {
                       refreshCreditCards()
                     }}

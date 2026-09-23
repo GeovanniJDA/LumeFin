@@ -24,12 +24,14 @@ import type { CardPurchase, PurchaseType } from '@/types';
 interface CardPurchasesPanelProps {
   cardId: string;
   referenceMonth: string;
+  openOnMount?: boolean;
+  onPurchaseSaved?: () => void;
   onInvoiceUpdated: () => void;
 }
 
-export function CardPurchasesPanel({ cardId, referenceMonth, onInvoiceUpdated }: CardPurchasesPanelProps) {
+export function CardPurchasesPanel({ cardId, referenceMonth, openOnMount = false, onPurchaseSaved, onInvoiceUpdated }: CardPurchasesPanelProps) {
   const { purchases, loading, totalByType, fetchByCard, add, update, remove } = useCardPurchases(cardId);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(openOnMount);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -96,6 +98,7 @@ export function CardPurchasesPanel({ cardId, referenceMonth, onInvoiceUpdated }:
       }
       onInvoiceUpdated();
       setIsDialogOpen(false);
+      onPurchaseSaved?.();
     } catch (err: any) {
       toast.error(err.message || 'Erro inesperado.');
     } finally {

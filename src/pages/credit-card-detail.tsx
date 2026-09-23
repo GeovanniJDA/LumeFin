@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { format, addMonths, subMonths, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight, ArrowLeft, CreditCard, Plus } from 'lucide-react'
@@ -62,6 +62,7 @@ function getTotalForMonth(purchases: CardPurchase[], month: string): number {
 export default function CreditCardDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const { purchases, loading, fetchByCard } = useCardPurchaseStore()
   const [card, setCard] = useState<CreditCardWithDependent | null>(null)
   const [cardLoading, setCardLoading] = useState(true)
@@ -253,7 +254,9 @@ export default function CreditCardDetail() {
         <div className="flex items-center justify-between p-4 border-b border-white/6">
           <p className="text-sm font-semibold text-white/70">Compras deste mês</p>
           <button
-            onClick={() => navigate('/app/credit-cards')}
+            onClick={() => navigate('/app/credit-cards', {
+              state: { addPurchaseTo: id, returnTo: location.pathname }
+            })}
             className="flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 transition-colors"
           >
             <Plus className="w-3 h-3" />
