@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, ArrowLeft, CreditCard, Plus } from 'lucide-r
 import { supabase } from '@/lib/supabase'
 import { useCardPurchaseStore } from '@/store/card-purchase-store'
 import { formatCurrency } from '@/lib/utils'
-import type { CreditCardWithDependent, CardPurchase } from '@/types'
+import type { CreditCardWithDependents, CardPurchase, Dependent } from '@/types'
 
 // ─── Pure helper functions ────────────────────────────────────────────────────
 
@@ -64,7 +64,7 @@ export default function CreditCardDetail() {
   const navigate = useNavigate()
   const location = useLocation()
   const { purchases, loading, fetchByCard } = useCardPurchaseStore()
-  const [card, setCard] = useState<CreditCardWithDependent | null>(null)
+  const [card, setCard] = useState<CreditCardWithDependents | null>(null)
   const [cardLoading, setCardLoading] = useState(true)
 
   // Current selected month — defaults to today
@@ -84,11 +84,18 @@ export default function CreditCardDetail() {
     if (!id) return
     supabase
       .from('credit_cards')
-      .select('*, dependents(*)')
+      .select('*, dependents(*), credit_card_dependents(dependents(*))')
       .eq('id', id)
       .single()
       .then(({ data }) => {
-        setCard(data)
+        if (data) {
+          const linkedDependents = data.credit_card_dependents
+            ?.map((link: { dependents: Dependent | null }) => link.dependents)
+            .filter((dependent: Dependent | null): dependent is Dependent => dependent !== null) ?? []
+          setCard({ ...data, dependents: linkedDependents.length
+            ? linkedDependents
+            : data.dependents ? [data.dependents as Dependent] : [] })
+        }
         setCardLoading(false)
       })
   }, [id])
@@ -163,8 +170,8 @@ export default function CreditCardDetail() {
               <div className="w-3 h-3 rounded-full" style={{ background: card.color ?? '#6B7280' }} />
               <h1 className="text-2xl font-black text-white">{card.name}</h1>
             </div>
-            {card.dependents && (
-              <p className="text-white/40 text-sm">{card.dependents.name}</p>
+            {card.dependents?.length > 0 && (
+              <p className="text-white/40 text-sm">{card.dependents.map(dependent => dependent.name).join(', ')}</p>
             )}
           </div>
           <div className="text-right">

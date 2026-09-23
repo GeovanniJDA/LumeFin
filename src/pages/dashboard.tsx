@@ -128,9 +128,15 @@ export default function Dashboard() {
       b.dependents?.some(d => d.id === dep.id)
     );
     const depCards = creditCards.filter(c =>
-      c.dependent_id === dep.id && (c.status === 'open' || c.status === 'closed')
+      c.dependents.some(cardDependent => cardDependent.id === dep.id) && (c.status === 'open' || c.status === 'closed')
     );
-    const depCardsTotal = depCards.reduce((acc, c) => acc + c.invoice_amount, 0);
+    const depCardsTotal = depCards.reduce((totalCents, card) => {
+      const dependentIds = card.dependents.map(cardDependent => cardDependent.id).sort();
+      const dependentIndex = dependentIds.indexOf(dep.id);
+      const amountCents = Math.round(card.invoice_amount * 100);
+      return totalCents + Math.floor(amountCents / dependentIds.length)
+        + (dependentIndex < amountCents % dependentIds.length ? 1 : 0);
+    }, 0) / 100;
     const balance = netBalanceByDependent(dep.id);
 
     return {
@@ -366,7 +372,9 @@ export default function Dashboard() {
                     <div className="text-lg font-bold text-white">{dep.pendingCardsCount}</div>
                     <p className="text-[10px] text-[rgba(255,255,255,0.4)]">Cartões</p>
                     {dep.pendingCardsTotal > 0 && (
-                      <p className="text-[10px] text-[rgba(255,255,255,0.3)]">{formatCurrency(dep.pendingCardsTotal)}</p>
+                      <p className="text-[10px] text-[rgba(255,255,255,0.3)]" title="Faturas divididas igualmente entre dependentes vinculados.">
+                        Sua parte: {formatCurrency(dep.pendingCardsTotal)}
+                      </p>
                     )}
                   </div>
                   <div className={`rounded-xl p-3 ${dep.balance > 0

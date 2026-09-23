@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { CreditCard, Plus, Trash2, Edit, Loader2, ChevronDown, ChevronRight } from 'lucide-react';
 import { CardPurchasesPanel } from '@/components/sections/card-purchases-panel';
 import { useCardPurchaseStore, rollForwardCardPurchases } from '@/store/card-purchase-store';
-import type { CreditCardWithDependent, CardStatus } from '../types';
+import type { CreditCardWithDependents, CardStatus } from '../types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useForm, type SubmitHandler } from 'react-hook-form';
@@ -23,6 +23,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { formatCurrency } from '../lib/utils';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -76,7 +77,7 @@ export default function CreditCards() {
     resolver: zodResolver(creditCardSchema),
     defaultValues: {
       name: '',
-      dependent_id: null,
+      dependent_ids: [],
       due_date: new Date().toISOString().split('T')[0],
       closing_day: 1,
       invoice_amount: 0,
@@ -93,7 +94,7 @@ export default function CreditCards() {
     setEditingId(null);
     form.reset({
       name: '',
-      dependent_id: null,
+      dependent_ids: [],
       due_date: new Date().toISOString().split('T')[0],
       closing_day: 1,
       invoice_amount: 0,
@@ -106,11 +107,11 @@ export default function CreditCards() {
     setIsDialogOpen(true);
   };
 
-  const handleOpenEdit = (card: CreditCardWithDependent) => {
+  const handleOpenEdit = (card: CreditCardWithDependents) => {
     setEditingId(card.id);
     form.reset({
       name: card.name,
-      dependent_id: card.dependent_id || null,
+      dependent_ids: card.dependents.map(dependent => dependent.id),
       due_date: card.due_date,
       closing_day: card.closing_day,
       invoice_amount: card.invoice_amount,
@@ -269,32 +270,26 @@ export default function CreditCards() {
 
                   <FormField
                     control={form.control as any}
-                    name="dependent_id"
-                    render={({ field }) => (
+                    name="dependent_ids"
+                    render={() => (
                       <FormItem>
-                        <FormLabel>DependenNenhumte (Opcional)</FormLabel>
-                        <Select
-                          value={field.value || "Selecione"}
-                          onValueChange={(val) => field.onChange(val === "none" ? null : val)}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione...">
-                                {field.value && field.value !== "none"
-                                  ? dependents.find(d => d.id === field.value)?.name
-                                  : field.value === "none"
-                                    ? "Nenhum — cartão próprio"
-                                    : undefined}
-                              </SelectValue>
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="none">Nenhum — cartão próprio</SelectItem>
-                            {dependents.map(dep => (
-                              <SelectItem key={dep.id} value={dep.id}>{dep.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormLabel>Dependentes (opcional)</FormLabel>
+                        <div className="space-y-2 border rounded-md p-3 max-h-40 overflow-y-auto bg-card">
+                          {dependents.length ? dependents.map(dependent => (
+                            <FormField key={dependent.id} control={form.control} name="dependent_ids" render={({ field }) => (
+                              <div className="flex items-center gap-2">
+                                <Checkbox
+                                  id={`card-dependent-${dependent.id}`}
+                                  checked={field.value?.includes(dependent.id) ?? false}
+                                  onCheckedChange={checked => field.onChange(checked
+                                    ? [...(field.value ?? []), dependent.id]
+                                    : (field.value ?? []).filter(id => id !== dependent.id))}
+                                />
+                                <label htmlFor={`card-dependent-${dependent.id}`} className="text-sm">{dependent.name}</label>
+                              </div>
+                            )} />
+                          )) : <span className="text-sm text-muted-foreground">Nenhum dependente cadastrado.</span>}
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -488,8 +483,8 @@ export default function CreditCards() {
                     <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: card.color ?? '#6B7280' }} />
                     <h3 className="font-bold text-white text-lg leading-tight truncate">{card.name}</h3>
                   </div>
-                  {card.dependents && (
-                    <p className="text-xs text-white/40">{card.dependents.name}</p>
+                  {card.dependents.length > 0 && (
+                    <p className="text-xs text-white/40">{card.dependents.map(dependent => dependent.name).join(', ')}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">

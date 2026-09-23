@@ -35,7 +35,7 @@ export const billSchema = z.object({
 export type BillFormValues = z.infer<typeof billSchema>;
 
 export const creditCardSchema = z.object({
-  dependent_id: z.string().uuid().nullable().optional(),
+  dependent_ids: z.array(z.string().uuid()).optional(),
   name: z.string().min(1, 'Name is required'),
   due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD format'),
   closing_day: z.number().min(1).max(31),

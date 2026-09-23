@@ -108,8 +108,8 @@ export interface BillWithRelations extends Bill {
   dependents: Dependent[]
 }
 
-export interface CreditCardWithDependent extends CreditCard {
-  dependents: Dependent | null
+export interface CreditCardWithDependents extends CreditCard {
+  dependents: Dependent[]
 }
 
 export interface TransactionWithDependent extends DependentTransaction {
