@@ -54,6 +54,8 @@ export function CardPurchasesPanel({ cardId, referenceMonth, openOnMount = false
   });
 
   const watchType = form.watch('type');
+  const watchAmount = form.watch('amount');
+  const watchInstallments = form.watch('installments');
   const amountInput = useCurrencyInput(0);
 
   const handleOpenAdd = () => {
@@ -75,25 +77,33 @@ export function CardPurchasesPanel({ cardId, referenceMonth, openOnMount = false
     setEditingId(purchase.id);
     form.reset({
       description: purchase.description,
-      amount: purchase.amount,
+      amount: purchase.type === 'installment' ? purchase.amount / purchase.installments : purchase.amount,
       purchase_date: purchase.purchase_date,
       type: purchase.type,
       installments: purchase.installments,
       reference_month: purchase.reference_month,
       notes: purchase.notes || ''
     });
-    amountInput.reset(purchase.amount);
+    amountInput.reset(purchase.type === 'installment' ? purchase.amount / purchase.installments : purchase.amount);
     setIsDialogOpen(true);
   };
 
   const onSubmit: SubmitHandler<CardPurchaseFormValues> = async (formData) => {
     setIsSubmitting(true);
     try {
+      const data = {
+        ...formData,
+        amount: formData.type === 'installment'
+          ? Math.round(formData.amount * formData.installments * 100) / 100
+          : formData.amount,
+        notes: formData.notes || null,
+        current_installment: formData.current_installment ?? 1
+      };
       if (editingId) {
-        await update(editingId, { ...formData, notes: formData.notes || null, current_installment: formData.current_installment ?? 1 });
+        await update(editingId, data);
         toast.success('Compra atualizada.');
       } else {
-        await add(cardId, { ...formData, notes: formData.notes || null, current_installment: formData.current_installment ?? 1 });
+        await add(cardId, data);
         toast.success('Compra adicionada.');
       }
       onInvoiceUpdated();
@@ -180,7 +190,7 @@ export function CardPurchasesPanel({ cardId, referenceMonth, openOnMount = false
                     name="amount"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Valor *</FormLabel>
+                        <FormLabel>{watchType === 'installment' ? 'Valor da parcela *' : 'Valor *'}</FormLabel>
                         <FormControl>
                           <Input
                             type="text"
@@ -221,7 +231,20 @@ export function CardPurchasesPanel({ cardId, referenceMonth, openOnMount = false
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Tipo *</FormLabel>
-                        <Select value={field.value} onValueChange={field.onChange}>
+                        <Select value={field.value} onValueChange={(value) => {
+                          if (!value) return;
+                          const nextType = value as PurchaseType;
+                          const amount = form.getValues('amount');
+                          const installments = form.getValues('installments') || 1;
+                          if (field.value === 'installment' && nextType !== 'installment') {
+                            form.setValue('amount', amount * installments);
+                            amountInput.reset(amount * installments);
+                          } else if (field.value !== 'installment' && nextType === 'installment') {
+                            form.setValue('amount', amount / installments);
+                            amountInput.reset(amount / installments);
+                          }
+                          field.onChange(nextType);
+                        }}>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione o tipo">
                               {field.value === 'cash' ? 'À Vista'
@@ -283,6 +306,9 @@ export function CardPurchasesPanel({ cardId, referenceMonth, openOnMount = false
                         </FormItem>
                       )}
                     />
+                    <p className="mt-3 text-sm text-white/50">
+                      Total da compra: {formatCurrency(Math.round(watchAmount * watchInstallments * 100) / 100)}
+                    </p>
                   </div>
                 )}
 
