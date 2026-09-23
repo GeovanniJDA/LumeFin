@@ -85,6 +85,10 @@ export interface CardPurchase {
   created_at: string
 }
 
+export interface CardPurchaseWithDependents extends CardPurchase {
+  dependents: Dependent[]
+}
+
 export interface DependentTransaction {
   id: string
   user_id: string

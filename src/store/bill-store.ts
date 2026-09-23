@@ -50,8 +50,9 @@ export const useBillStoreRaw = create<BillStore>((set, get) => ({
     const { data, error, count } = await query;
 
     if (error) {
-      if (handleSupabaseError(error)) return;
-      set({ error: error.message, loading: false });
+      const authError = handleSupabaseError(error);
+      set({ records: [], totalCount: 0, error: error.message, loading: false });
+      if (authError) return;
       return;
     }
 

@@ -101,6 +101,7 @@ export type PasswordFormValues = z.infer<typeof passwordSchema>;
 export const cardPurchaseSchema = z.object({
   description: z.string().min(2, 'Descrição deve ter pelo menos 2 caracteres'),
   amount: z.number().min(0.01, 'Valor deve ser maior que zero'),
+  dependent_ids: z.array(z.string().uuid()).optional(),
   purchase_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD format'),
   type: z.enum(['cash', 'installment', 'recurring']),
   installments: z.number().int().min(1).default(1),

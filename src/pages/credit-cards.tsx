@@ -587,6 +587,7 @@ export default function CreditCards() {
                   <CardPurchasesPanel
                     cardId={card.id}
                     referenceMonth={card.reference_month}
+                    dependents={dependents}
                     openOnMount={purchaseNavigation?.addPurchaseTo === card.id}
                     onPurchaseSaved={returnTo
                       ? () => navigate(returnTo, { replace: true })

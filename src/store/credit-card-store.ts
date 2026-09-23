@@ -22,17 +22,16 @@ export const useCreditCardStoreRaw = create<CreditCardStore>((set, get) => ({
   fetch: async () => {
     set({ loading: true, error: null });
     const { data, error } = await supabase.from('credit_cards')
-      .select('*, legacy_dependent:dependents!credit_cards_dependent_id_fkey(*), credit_card_dependents(dependents(*))')
+      .select('*, credit_card_dependents(dependents(*))')
       .order('created_at', { ascending: false });
-    if (error) { 
-      if (handleSupabaseError(error)) return;
-      set({ error: error.message, loading: false }); 
+    if (error) {
+      const authError = handleSupabaseError(error);
+      set({ records: [], error: error.message, loading: false });
+      if (authError) return;
     }
     else set({ records: data?.map((card: any) => ({
       ...card,
-      dependents: card.credit_card_dependents?.length
-        ? card.credit_card_dependents.map((link: any) => link.dependents).filter(Boolean)
-        : card.legacy_dependent ? [card.legacy_dependent] : []
+      dependents: card.credit_card_dependents?.map((link: any) => link.dependents).filter(Boolean) ?? []
     })) as CreditCardWithDependents[] ?? [], loading: false });
   },
   add: async (data) => {

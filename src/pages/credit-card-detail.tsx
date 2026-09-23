@@ -6,14 +6,14 @@ import { ChevronLeft, ChevronRight, ArrowLeft, CreditCard, Plus } from 'lucide-r
 import { supabase } from '@/lib/supabase'
 import { useCardPurchaseStore } from '@/store/card-purchase-store'
 import { formatCurrency } from '@/lib/utils'
-import type { CreditCardWithDependents, CardPurchase, Dependent } from '@/types'
+import type { CreditCardWithDependents, CardPurchaseWithDependents, Dependent } from '@/types'
 
 // ─── Pure helper functions ────────────────────────────────────────────────────
 
 function getPurchasesForMonth(
-  purchases: CardPurchase[],
+  purchases: CardPurchaseWithDependents[],
   targetMonth: string // 'YYYY-MM'
-): Array<CardPurchase & { installmentLabel?: string; monthlyAmount: number }> {
+): Array<CardPurchaseWithDependents & { installmentLabel?: string; monthlyAmount: number }> {
   return purchases
     .map(p => {
       if (p.type === 'cash') {
@@ -50,10 +50,10 @@ function getPurchasesForMonth(
 
       return null
     })
-    .filter(Boolean) as Array<CardPurchase & { installmentLabel?: string; monthlyAmount: number }>
+    .filter(Boolean) as Array<CardPurchaseWithDependents & { installmentLabel?: string; monthlyAmount: number }>
 }
 
-function getTotalForMonth(purchases: CardPurchase[], month: string): number {
+function getTotalForMonth(purchases: CardPurchaseWithDependents[], month: string): number {
   return getPurchasesForMonth(purchases, month).reduce((sum, p) => sum + p.monthlyAmount, 0)
 }
 
@@ -84,18 +84,16 @@ export default function CreditCardDetail() {
     if (!id) return
     supabase
       .from('credit_cards')
-      .select('*, legacy_dependent:dependents!credit_cards_dependent_id_fkey(*), credit_card_dependents(dependents(*))')
+      .select('*, credit_card_dependents(dependents(*))')
       .eq('id', id)
       .single()
       .then(({ data }) => {
-        if (data) {
-          const linkedDependents = data.credit_card_dependents
+        if (data) setCard({
+          ...data,
+          dependents: data.credit_card_dependents
             ?.map((link: { dependents: Dependent | null }) => link.dependents)
             .filter((dependent: Dependent | null): dependent is Dependent => dependent !== null) ?? []
-          setCard({ ...data, dependents: linkedDependents.length
-            ? linkedDependents
-            : data.legacy_dependent ? [data.legacy_dependent as Dependent] : [] })
-        }
+        })
         setCardLoading(false)
       })
   }, [id])
@@ -310,6 +308,7 @@ export default function CreditCardDetail() {
                           : `Parcela ${p.installmentLabel}`}
                       {' · '}
                       {format(parseISO(p.purchase_date), 'dd/MM', { locale: ptBR })}
+                      {p.dependents.length > 0 && ` · ${p.dependents.map(dependent => dependent.name).join(', ')}`}
                     </p>
                   </div>
                 </div>

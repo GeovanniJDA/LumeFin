@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/shared/date-picker';
@@ -19,18 +20,19 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { cardPurchaseSchema, type CardPurchaseFormValues } from '@/lib/schemas';
 import { useCurrencyInput } from '@/hooks/use-currency-input';
 import { toast } from 'sonner';
-import type { CardPurchase, PurchaseType } from '@/types';
+import type { CardPurchaseWithDependents, Dependent, PurchaseType } from '@/types';
 
 interface CardPurchasesPanelProps {
   cardId: string;
   referenceMonth: string;
+  dependents: Dependent[];
   openOnMount?: boolean;
   onPurchaseSaved?: () => void;
   onInvoiceUpdated: () => void;
 }
 
-export function CardPurchasesPanel({ cardId, referenceMonth, openOnMount = false, onPurchaseSaved, onInvoiceUpdated }: CardPurchasesPanelProps) {
-  const { purchases, loading, totalByType, fetchByCard, add, update, remove } = useCardPurchases(cardId);
+export function CardPurchasesPanel({ cardId, referenceMonth, dependents, openOnMount = false, onPurchaseSaved, onInvoiceUpdated }: CardPurchasesPanelProps) {
+  const { purchases, loading, error, totalByType, fetchByCard, add, update, remove } = useCardPurchases(cardId);
   const [isDialogOpen, setIsDialogOpen] = useState(openOnMount);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,6 +51,7 @@ export function CardPurchasesPanel({ cardId, referenceMonth, openOnMount = false
       type: 'cash',
       installments: 1,
       reference_month: referenceMonth,
+      dependent_ids: [],
       notes: ''
     }
   });
@@ -67,13 +70,14 @@ export function CardPurchasesPanel({ cardId, referenceMonth, openOnMount = false
       type: 'cash',
       installments: 1,
       reference_month: referenceMonth,
+      dependent_ids: [],
       notes: ''
     });
     amountInput.reset(0);
     setIsDialogOpen(true);
   };
 
-  const handleOpenEdit = (purchase: CardPurchase) => {
+  const handleOpenEdit = (purchase: CardPurchaseWithDependents) => {
     setEditingId(purchase.id);
     form.reset({
       description: purchase.description,
@@ -82,6 +86,7 @@ export function CardPurchasesPanel({ cardId, referenceMonth, openOnMount = false
       type: purchase.type,
       installments: purchase.installments,
       reference_month: purchase.reference_month,
+      dependent_ids: purchase.dependents.map(dependent => dependent.id),
       notes: purchase.notes || ''
     });
     amountInput.reset(purchase.type === 'installment' ? purchase.amount / purchase.installments : purchase.amount);
@@ -314,6 +319,31 @@ export function CardPurchasesPanel({ cardId, referenceMonth, openOnMount = false
 
                 <FormField
                   control={form.control as any}
+                  name="dependent_ids"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Dependentes (opcional)</FormLabel>
+                      <div className="space-y-2 border rounded-md p-3 max-h-40 overflow-y-auto bg-card">
+                        {dependents.length ? dependents.map(dependent => (
+                          <div key={dependent.id} className="flex items-center gap-2">
+                            <Checkbox
+                              id={`purchase-dependent-${dependent.id}`}
+                              checked={field.value?.includes(dependent.id) ?? false}
+                              onCheckedChange={checked => field.onChange(checked
+                                ? [...(field.value ?? []), dependent.id]
+                                : (field.value ?? []).filter((id: string) => id !== dependent.id))}
+                            />
+                            <label htmlFor={`purchase-dependent-${dependent.id}`} className="text-sm">{dependent.name}</label>
+                          </div>
+                        )) : <span className="text-sm text-muted-foreground">Nenhum dependente cadastrado.</span>}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control as any}
                   name="notes"
                   render={({ field }) => (
                     <FormItem>
@@ -347,7 +377,9 @@ export function CardPurchasesPanel({ cardId, referenceMonth, openOnMount = false
       </div>
 
       {/* List of Purchases */}
-      {loading ? (
+      {error ? (
+        <p role="alert" className="text-center py-4 text-sm text-red-400">Falha ao carregar compras: {error}</p>
+      ) : loading ? (
         <div className="flex justify-center py-4">
           <Loader2 className="w-5 h-5 text-white/20 animate-spin" />
         </div>
@@ -369,6 +401,9 @@ export function CardPurchasesPanel({ cardId, referenceMonth, openOnMount = false
                 </div>
                 <div className="flex items-center gap-2 text-[11px] text-white/40">
                   <span>{format(parseISO(purchase.purchase_date), "dd 'de' MMM", { locale: ptBR })}</span>
+                  {purchase.dependents.length > 0 && (
+                    <span className="truncate max-w-32">• {purchase.dependents.map(dependent => dependent.name).join(', ')}</span>
+                  )}
                   {purchase.type === 'installment' && (
                     <>
                       <span>•</span>

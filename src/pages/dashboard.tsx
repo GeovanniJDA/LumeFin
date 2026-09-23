@@ -3,6 +3,7 @@ import { useCreditCards } from '../hooks/use-credit-cards';
 import { useTransactions } from '../hooks/use-transactions';
 import { useDependents } from '../hooks/use-dependents';
 import { useCategories } from '../hooks/use-categories';
+import { useCardPurchaseStore } from '../store/card-purchase-store';
 import { PageHeader } from '../components/shared/page-header';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, isDueSoon, isOverdue } from '../lib/utils';
@@ -25,23 +26,35 @@ const RELATIONSHIP_LABELS: Record<string, string> = {
   irmao: 'Irmão', irma: 'Irmã', tio: 'Tio', tia: 'Tia', outro: 'Outro',
 };
 
+function splitCents(amount: number, dependentIds: string[], dependentId: string) {
+  const ids = [...dependentIds].sort();
+  const index = ids.indexOf(dependentId);
+  if (index < 0 || ids.length === 0) return 0;
+  const base = Math.floor(amount / ids.length);
+  return base + (index < amount % ids.length ? 1 : 0);
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { bills, loading: billsLoading, getOverdueBills, getDueSoonBills, refreshBills: fetchBills } = useBills();
+  const { bills, loading: billsLoading, error: billsError, getOverdueBills, getDueSoonBills, refreshBills: fetchBills } = useBills();
   const { creditCards, loading: cardsLoading, getOverdueCards, getDueSoonCards, refreshCreditCards: fetchCreditCards } = useCreditCards();
   const { transactions, loading: txLoading, netBalanceByDependent, refreshTransactions: fetchTransactions } = useTransactions();
   const { dependents, loading: depsLoading, refreshDependents: fetchDependents } = useDependents();
   const { categories, loading: catsLoading } = useCategories();
+  const purchases = useCardPurchaseStore(s => s.purchases);
+  const purchasesLoading = useCardPurchaseStore(s => s.loading);
+  const fetchPurchases = useCardPurchaseStore(s => s.fetchAll);
 
   useEffect(() => {
     fetchBills();
     fetchCreditCards();
     fetchTransactions();
     fetchDependents();
+    fetchPurchases();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const isLoading = billsLoading || cardsLoading || txLoading || depsLoading || catsLoading;
+  const isLoading = billsLoading || cardsLoading || txLoading || depsLoading || catsLoading || purchasesLoading;
 
   // ── Section 1: Summary metrics ──
   const pendingBills = bills.filter(b => b.status === 'pending');
@@ -85,11 +98,19 @@ export default function Dashboard() {
 
   // ── Section 2: Alerts ──
   const currentMonth = format(new Date(), 'yyyy-MM');
+  const currentRecurringKeys = new Set(bills
+    .filter(b => b.is_recurring && b.reference_month === currentMonth && !b.id.startsWith('recurring-'))
+    .map(b => `${b.category_id}-${b.amount}`));
+  // ponytail: recurring bills are identified by category+amount; add series IDs if identical obligations must stay separate.
+  const recurringProjectionKeys = new Set<string>();
   const recurringProjections = bills
-    .filter(b =>
-      b.is_recurring &&
-      b.reference_month < currentMonth
-    )
+    .filter(b => b.is_recurring && b.reference_month < currentMonth)
+    .filter(b => {
+      const key = `${b.category_id}-${b.amount}`;
+      if (currentRecurringKeys.has(key) || recurringProjectionKeys.has(key)) return false;
+      recurringProjectionKeys.add(key);
+      return true;
+    })
     .map(b => {
       const [year, month] = currentMonth.split('-');
       const day = b.due_date.split('-')[2];
@@ -127,15 +148,30 @@ export default function Dashboard() {
     const depBills = pendingBills.filter(b =>
       b.dependents?.some(d => d.id === dep.id)
     );
-    const depCards = creditCards.filter(c =>
-      c.dependents.some(cardDependent => cardDependent.id === dep.id) && (c.status === 'open' || c.status === 'closed')
-    );
+    const depCards = creditCards.filter(card => {
+      if (card.status !== 'open' && card.status !== 'closed') return false;
+      const monthPurchases = purchases.filter(p =>
+        p.credit_card_id === card.id && p.reference_month === card.reference_month
+      );
+      return card.dependents.some(cardDependent => cardDependent.id === dep.id) ||
+        monthPurchases.some(p => p.dependents.some(purchaseDependent => purchaseDependent.id === dep.id));
+    });
     const depCardsTotal = depCards.reduce((totalCents, card) => {
-      const dependentIds = card.dependents.map(cardDependent => cardDependent.id).sort();
-      const dependentIndex = dependentIds.indexOf(dep.id);
-      const amountCents = Math.round(card.invoice_amount * 100);
-      return totalCents + Math.floor(amountCents / dependentIds.length)
-        + (dependentIndex < amountCents % dependentIds.length ? 1 : 0);
+      const monthPurchases = purchases.filter(p =>
+        p.credit_card_id === card.id && p.reference_month === card.reference_month
+      );
+      if (monthPurchases.length === 0) {
+        return totalCents + splitCents(Math.round(card.invoice_amount * 100), card.dependents.map(d => d.id), dep.id);
+      }
+      return totalCents + monthPurchases.reduce((purchaseTotal, purchase) => {
+        const purchaseDependents = purchase.dependents.length
+          ? purchase.dependents.map(d => d.id)
+          : card.dependents.map(d => d.id);
+        const cents = purchase.type === 'installment'
+          ? Math.round(purchase.amount / Math.max(purchase.installments, 1) * 100)
+          : Math.round(purchase.amount * 100);
+        return purchaseTotal + splitCents(cents, purchaseDependents, dep.id);
+      }, 0);
     }, 0) / 100;
     const balance = netBalanceByDependent(dep.id);
 
@@ -273,6 +309,8 @@ export default function Dashboard() {
       {/* ── Section 2: Alerts ── */}
       {isLoading ? (
         <Skeleton className="h-40 w-full rounded-2xl" />
+      ) : billsError ? (
+        <p role="alert" className="text-sm text-red-400">Falha ao carregar alertas: {billsError}</p>
       ) : hasAlerts ? (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-[rgba(255,255,255,0.9)] flex items-center gap-2 border-b border-[rgba(255,255,255,0.06)] pb-2">

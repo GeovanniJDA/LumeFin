@@ -1,14 +1,24 @@
 import { create } from 'zustand'
 import { supabase, handleSupabaseError } from '@/lib/supabase'
-import type { CardPurchase } from '@/types'
+import type { CardPurchase, CardPurchaseWithDependents } from '@/types'
+
+type CardPurchaseInput = Omit<CardPurchase, 'id'|'user_id'|'credit_card_id'|'created_at'> & {
+  dependent_ids?: string[]
+}
+
+const withDependents = (purchase: any): CardPurchaseWithDependents => ({
+  ...purchase,
+  dependents: purchase.card_purchase_dependents?.map((link: any) => link.dependents).filter(Boolean) ?? []
+})
 
 interface CardPurchaseStore {
-  purchases: CardPurchase[]
+  purchases: CardPurchaseWithDependents[]
   loading: boolean
   error: string | null
+  fetchAll: () => Promise<void>
   fetchByCard: (cardId: string) => Promise<void>
-  add: (cardId: string, data: Omit<CardPurchase, 'id'|'user_id'|'credit_card_id'|'created_at'>) => Promise<void>
-  update: (id: string, data: Partial<CardPurchase>) => Promise<void>
+  add: (cardId: string, data: CardPurchaseInput) => Promise<void>
+  update: (id: string, data: Partial<CardPurchaseInput>) => Promise<void>
   remove: (id: string) => Promise<void>
   reset: () => void
 }
@@ -17,45 +27,98 @@ export const useCardPurchaseStore = create<CardPurchaseStore>((set, get) => ({
   purchases: [],
   loading: false,
   error: null,
+
+  fetchAll: async () => {
+    set({ loading: true, error: null })
+    const { data, error } = await supabase
+      .from('card_purchases')
+      .select('*, card_purchase_dependents(dependents(*))')
+      .order('purchase_date', { ascending: false })
+
+    if (error) {
+      const authError = handleSupabaseError(error)
+      set({ purchases: [], error: error.message, loading: false })
+      if (authError) return
+      return
+    }
+    set({ purchases: (data ?? []).map(withDependents), loading: false, error: null })
+  },
   
   fetchByCard: async (cardId) => {
     set({ loading: true })
     const { data, error } = await supabase
       .from('card_purchases')
-      .select('*')
+      .select('*, card_purchase_dependents(dependents(*))')
       .eq('credit_card_id', cardId)
       .order('purchase_date', { ascending: false })
       
     if (error) {
-      if (handleSupabaseError(error)) return
-      set({ error: error.message, loading: false })
+      if (handleSupabaseError(error)) {
+        set(state => ({ purchases: state.purchases.filter(p => p.credit_card_id !== cardId), loading: false }))
+        return
+      }
+      set(state => ({ purchases: state.purchases.filter(p => p.credit_card_id !== cardId), error: error.message, loading: false }))
       return
     }
-    set({ purchases: data ?? [], loading: false, error: null })
+    set(state => ({
+      purchases: [
+        ...state.purchases.filter(p => p.credit_card_id !== cardId),
+        ...(data ?? []).map(withDependents)
+      ],
+      loading: false,
+      error: null
+    }))
   },
   
   add: async (cardId, data) => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('Não autenticado')
     
-    const { error } = await supabase
+    const { dependent_ids = [], ...purchaseData } = data
+    const { data: inserted, error } = await supabase
       .from('card_purchases')
-      .insert({ ...data, credit_card_id: cardId, user_id: user.id, current_installment: 1 })
+      .insert({ ...purchaseData, credit_card_id: cardId, user_id: user.id, current_installment: 1 })
+      .select('id').single()
       
     if (error) throw new Error(error.message)
     
+    if (dependent_ids.length) {
+      const { error: linkError } = await supabase.from('card_purchase_dependents').insert(
+        dependent_ids.map(dependent_id => ({ card_purchase_id: inserted.id, dependent_id })) as any
+      )
+      if (linkError) {
+        await supabase.from('card_purchases').delete().eq('id', inserted.id)
+        throw new Error(linkError.message)
+      }
+    }
     await get().fetchByCard(cardId)
     await recalculateInvoice(cardId, data.reference_month)
   },
   
   update: async (id, data) => {
     const purchase = get().purchases.find(p => p.id === id)
+    const { dependent_ids, ...purchaseData } = data
     const { error } = await supabase
       .from('card_purchases')
-      .update(data)
+      .update(purchaseData)
       .eq('id', id)
       
     if (error) throw new Error(error.message)
+
+    if (dependent_ids !== undefined) {
+      if (dependent_ids.length) {
+        const { error: insertError } = await supabase.from('card_purchase_dependents').upsert(
+          dependent_ids.map(dependent_id => ({ card_purchase_id: id, dependent_id })) as any,
+          { onConflict: 'card_purchase_id,dependent_id', ignoreDuplicates: true }
+        )
+        if (insertError) throw new Error(insertError.message)
+      }
+      const deleteQuery = supabase.from('card_purchase_dependents').delete().eq('card_purchase_id', id)
+      const { error: deleteError } = dependent_ids.length
+        ? await deleteQuery.not('dependent_id', 'in', `(${dependent_ids.join(',')})`)
+        : await deleteQuery
+      if (deleteError) throw new Error(deleteError.message)
+    }
     
     if (purchase) {
       await get().fetchByCard(purchase.credit_card_id)
