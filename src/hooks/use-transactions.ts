@@ -3,14 +3,16 @@ import { useEffect } from 'react';
 import { useTransactionStoreRaw } from '../store/transaction-store';
 
 import { usePagination, PAGE_SIZE } from './use-pagination';
+import { getTransactionRemainingCents } from '../lib/utils';
 
-export function useTransactions(dependentId?: string) {
+export function useTransactions(dependentId?: string, fetchAllPending = false) {
   const store = useTransactionStoreRaw();
   const { page, range, nextPage, prevPage, resetPage } = usePagination();
 
   useEffect(() => {
-    store.fetch(range);
-  }, [page]);
+    if (fetchAllPending) store.fetchAllPending();
+    else store.fetch(range);
+  }, [page, fetchAllPending]);
 
   const getTransactionsByDependent = (id: string) => store.records.filter(t => t.dependent_id === id);
 
@@ -18,13 +20,11 @@ export function useTransactions(dependentId?: string) {
     const dep = store.records.filter(
       t => t.dependent_id === id && t.status === 'pending'
     );
-    return dep.reduce((acc, t) => {
-      const txPaymentsTotal = t.transaction_payments?.reduce((s: number, p: { amount: number }) => s + p.amount, 0) || 0;
-      const installmentTotal = t.payment_type === 'installment' ? ((t.paid_installments || 0) / (t.installments || 1)) * t.amount : 0;
-      const totalPaid = Math.min(txPaymentsTotal + installmentTotal, t.amount);
-      const remaining = Math.max(t.amount - totalPaid, 0);
+    const balanceCents = dep.reduce((acc, t) => {
+      const remaining = getTransactionRemainingCents(t);
       return t.type === 'to_receive' ? acc + remaining : acc - remaining;
     }, 0);
+    return balanceCents / 100;
   };
 
   const totalCount = store.totalCount;
@@ -37,7 +37,7 @@ export function useTransactions(dependentId?: string) {
     addTransaction: store.add,
     updateTransaction: store.update,
     removeTransaction: store.remove,
-    refreshTransactions: () => store.fetch(range),
+    refreshTransactions: () => fetchAllPending ? store.fetchAllPending() : store.fetch(range),
     getTransactionsByDependent,
     netBalanceByDependent,
 

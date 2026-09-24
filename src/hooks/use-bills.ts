@@ -4,18 +4,20 @@ import { useBillStoreRaw } from '../store/bill-store';
 import { isDueSoon, isOverdue } from '../lib/utils';
 import { usePagination, PAGE_SIZE } from './use-pagination';
 
-export function useBills(filterMonth?: string) {
+export function useBills(filterMonth?: string, fetchAll = false) {
   const store = useBillStoreRaw();
   const { page, range, nextPage, prevPage, resetPage } = usePagination();
 
   useEffect(() => {
-    if (filterMonth) {
+    if (fetchAll) {
+      store.fetchAll();
+    } else if (filterMonth) {
       // Server-side month filter: fetch ALL records for that month
       store.fetch({ month: filterMonth });
     } else {
       store.fetch({ range });
     }
-  }, [page, filterMonth]);
+  }, [page, filterMonth, fetchAll]);
 
   const getDueSoonBills = () => store.records.filter(b => b.status === 'pending' && isDueSoon(b.due_date));
   const getOverdueBills = () => store.records.filter(b => b.status === 'pending' && isOverdue(b.due_date));
@@ -38,9 +40,11 @@ export function useBills(filterMonth?: string) {
     addBill: store.add,
     updateBill: store.update,
     removeBill: store.remove,
-    refreshBills: () => filterMonth
-      ? store.fetch({ month: filterMonth })
-      : store.fetch({ range }),
+    refreshBills: () => fetchAll
+      ? store.fetchAll()
+      : filterMonth
+        ? store.fetch({ month: filterMonth })
+        : store.fetch({ range }),
     getDueSoonBills,
     getOverdueBills,
     billsByMonth,

@@ -99,6 +99,8 @@ export interface DependentTransaction {
   type: TransactionType
   payment_type: PaymentType
   installments: number
+  manual_paid_installments: number
+  /** Legacy counter retained for data reconciliation; new code does not write it. */
   paid_installments: number
   status: TransactionStatus
   settled_date: string | null

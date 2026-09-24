@@ -48,7 +48,7 @@ import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { transactionSchema, type TransactionFormValues } from '../lib/schemas';
 import { DatePicker } from '@/components/shared/date-picker';
-import { formatCurrency } from '../lib/utils';
+import { formatCurrency, getTransactionPaidCents } from '../lib/utils';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { TransactionWithDependent, TransactionType, TransactionStatus, PaymentType } from '../types';
@@ -124,7 +124,7 @@ export default function Transactions() {
       type: 'to_pay',
       payment_type: 'cash',
       installments: 1,
-      paid_installments: 0,
+      manual_paid_installments: 0,
       status: 'pending',
       settled_date: null,
       notes: '',
@@ -184,7 +184,7 @@ export default function Transactions() {
       type: 'to_pay',
       payment_type: 'cash',
       installments: 1,
-      paid_installments: 0,
+      manual_paid_installments: 0,
       status: 'pending',
       settled_date: null,
       notes: '',
@@ -203,7 +203,7 @@ export default function Transactions() {
       type: tx.type,
       payment_type: tx.payment_type,
       installments: tx.installments || 1,
-      paid_installments: tx.paid_installments || 0,
+      manual_paid_installments: tx.manual_paid_installments || 0,
       status: tx.status,
       settled_date: tx.settled_date || null,
       notes: tx.notes || '',
@@ -249,15 +249,11 @@ export default function Transactions() {
     tx: TransactionWithDependent,
     newPaidInstallments: number
   ): number => {
-    const installmentValue = tx.amount / (tx.installments || 1)
-    const installmentsPaidAmount = newPaidInstallments * installmentValue
-    const freePaymentsAmount = allPayments
-      .filter(p => p.transaction_id === tx.id)
-      .reduce((s, p) => s + p.amount, 0)
-    return Math.min(
-      installmentsPaidAmount + freePaymentsAmount,
-      tx.amount
-    )
+    return getTransactionPaidCents({
+      ...tx,
+      manual_paid_installments: newPaidInstallments,
+      transaction_payments: allPayments.filter(p => p.transaction_id === tx.id),
+    }) / 100;
   }
 
   const handleToggleInstallment = async (
@@ -267,7 +263,7 @@ export default function Transactions() {
     setLoadingId(tx.id)
     try {
       let newPaid: number
-      if (installmentNumber <= (tx.paid_installments || 0)) {
+      if (installmentNumber <= (tx.manual_paid_installments || 0)) {
         // Uncheck — set paid to installmentNumber - 1
         newPaid = installmentNumber - 1
       } else {
@@ -278,7 +274,7 @@ export default function Transactions() {
       const isFullyPaid = combinedTotal >= tx.amount
       const newStatus = isFullyPaid ? 'paid' : 'pending'
       await updateTransaction(tx.id, {
-        paid_installments: newPaid,
+        manual_paid_installments: newPaid,
         status: newStatus,
         settled_date: newStatus === 'paid'
           ? new Date().toISOString() : null
@@ -301,12 +297,12 @@ export default function Transactions() {
     setLoadingId(tx.id)
     try {
       const totalInstallments = tx.installments || 1
-      const newPaid = (tx.paid_installments || 0) + 1
+      const newPaid = (tx.manual_paid_installments || 0) + 1
       const combinedTotal = getCombinedTotal(tx, newPaid)
       const isFullyPaid = combinedTotal >= tx.amount
       const newStatus = isFullyPaid ? 'paid' : 'pending'
       await updateTransaction(tx.id, {
-        paid_installments: newPaid,
+        manual_paid_installments: newPaid,
         status: newStatus,
         settled_date: newStatus === 'paid'
           ? new Date().toISOString() : null
@@ -518,10 +514,10 @@ export default function Transactions() {
                       />
                       <FormField
                         control={form.control as any}
-                        name="paid_installments"
+                        name="manual_paid_installments"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Parcelas Pagas</FormLabel>
+                          <FormLabel>Parcelas Marcadas Manualmente</FormLabel>
                             <FormControl>
                               <Input
                                 type="text"
@@ -748,9 +744,7 @@ export default function Transactions() {
           <div className="md:hidden space-y-3">
             {filteredTransactions.map(tx => {
               const dep = dependents.find(d => d.id === tx.dependent_id);
-              const txPaymentsTotal = tx.transaction_payments?.reduce((s: number, p: any) => s + p.amount, 0) || 0;
-              const installmentTotal = tx.payment_type === 'installment' ? ((tx.paid_installments || 0) / (tx.installments || 1)) * tx.amount : 0;
-              const totalPaid = tx.status === 'paid' && tx.payment_type !== 'installment' ? tx.amount : Math.min(txPaymentsTotal + installmentTotal, tx.amount);
+              const totalPaid = getTransactionPaidCents(tx) / 100;
               const progressPercent = (totalPaid / tx.amount) * 100;
 
               return (
@@ -789,7 +783,7 @@ export default function Transactions() {
                             />
                           </div>
                           <span className="text-[11px] text-white/40">
-                            {tx.paid_installments || 0}/{tx.installments || 1}x
+                            {tx.manual_paid_installments || 0}/{tx.installments || 1} manuais
                           </span>
                         </div>
                       )}
@@ -846,7 +840,7 @@ export default function Transactions() {
                           />
                         </div>
                         <span className="text-xs text-white/50 shrink-0">
-                          {tx.paid_installments || 0}/{tx.installments || 1}
+                          {tx.manual_paid_installments || 0}/{tx.installments || 1} manuais
                         </span>
                       </div>
                       {/* Checkbox grid */}
@@ -858,7 +852,7 @@ export default function Transactions() {
                               disabled={loadingId === tx.id}
                               onClick={() => handleToggleInstallment(tx, n)}
                               className={`w-6 h-6 rounded text-[10px] font-bold transition-all duration-150 border
-                                ${n <= (tx.paid_installments || 0)
+                                ${n <= (tx.manual_paid_installments || 0)
                                   ? 'bg-amber-400/20 border-amber-400/60 text-amber-400'
                                   : 'bg-white/4 border-white/10 text-white/30'}`}
                             >
@@ -872,7 +866,7 @@ export default function Transactions() {
                         <span className="text-xs text-emerald-400 font-medium">
                           ✓ Transação quitada
                         </span>
-                      ) : (tx.paid_installments || 0) < (tx.installments || 1) ? (
+                      ) : (tx.manual_paid_installments || 0) < (tx.installments || 1) ? (
                         <button
                           disabled={loadingId === tx.id}
                           onClick={() => handleIncrementInstallment(tx)}
@@ -945,9 +939,7 @@ export default function Transactions() {
                 <tbody className="divide-y divide-border">
                   {filteredTransactions.map(tx => {
                     const dep = dependents.find(d => d.id === tx.dependent_id);
-                    const txPaymentsTotal = tx.transaction_payments?.reduce((s: number, p: any) => s + p.amount, 0) || 0;
-                    const installmentTotal = tx.payment_type === 'installment' ? ((tx.paid_installments || 0) / (tx.installments || 1)) * tx.amount : 0;
-                    const totalPaid = tx.status === 'paid' && tx.payment_type !== 'installment' ? tx.amount : Math.min(txPaymentsTotal + installmentTotal, tx.amount);
+                    const totalPaid = getTransactionPaidCents(tx) / 100;
                     const progressPercent = (totalPaid / tx.amount) * 100;
 
                     return (
@@ -1000,10 +992,10 @@ export default function Transactions() {
                                   />
                                 </div>
                                 <span className="text-xs text-white/50">
-                                  {tx.paid_installments || 0}/{tx.installments || 1}
+                                  {tx.manual_paid_installments || 0}/{tx.installments || 1} manuais
                                 </span>
                               </div>
-                              {(tx.paid_installments || 0) === (tx.installments || 1) && (
+                              {(tx.manual_paid_installments || 0) === (tx.installments || 1) && (
                                 <span className="text-[10px] text-emerald-400 font-medium">✓ Quitado</span>
                               )}
                             </div>
@@ -1018,7 +1010,7 @@ export default function Transactions() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <div className="flex items-center justify-end gap-2">
-                            {tx.payment_type === 'installment' && tx.status !== 'paid' && (tx.paid_installments || 0) < (tx.installments || 1) && (
+                            {tx.payment_type === 'installment' && tx.status !== 'paid' && (tx.manual_paid_installments || 0) < (tx.installments || 1) && (
                               <div className="flex flex-col items-end gap-1 mr-2">
                                 {/* Checkbox grid */}
                                 {(tx.status as string) !== 'paid' && (
@@ -1030,7 +1022,7 @@ export default function Transactions() {
                                         onClick={() => handleToggleInstallment(tx, n)}
                                         title={`Parcela ${n}`}
                                         className={`w-5 h-5 rounded text-[9px] font-bold transition-all duration-150 border
-                                          ${n <= (tx.paid_installments || 0)
+                                          ${n <= (tx.manual_paid_installments || 0)
                                             ? 'bg-amber-400/20 border-amber-400/60 text-amber-400'
                                             : 'bg-white/4 border-white/10 text-white/30 hover:border-white/20'}`}
                                       >

@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react'
 import { useTransactionPaymentStore } from '@/store/transaction-payment-store'
 import { Input } from '@/components/ui/input'
 import { DatePicker } from '@/components/shared/date-picker'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, getTransactionPaidCents, getTransactionRemainingCents } from '@/lib/utils'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Plus, Trash2, Loader2 } from 'lucide-react'
@@ -52,15 +52,8 @@ export function TransactionPaymentsPanel({
   }
 
   // Summary calculations
-  const installmentsPaid = transaction.payment_type === 'installment'
-    ? (transaction.paid_installments / transaction.installments) * transaction.amount
-    : 0
-  const freePaymentsPaid = payments.reduce((s, p) => s + p.amount, 0)
-  const totalPaid = Math.min(
-    installmentsPaid + freePaymentsPaid,
-    transaction.amount
-  )
-  const remaining = Math.max(transaction.amount - totalPaid, 0)
+  const totalPaid = getTransactionPaidCents({ ...transaction, transaction_payments: payments }) / 100
+  const remaining = getTransactionRemainingCents({ ...transaction, transaction_payments: payments }) / 100
   const progress = Math.min((totalPaid / transaction.amount) * 100, 100)
 
 
@@ -68,11 +61,8 @@ export function TransactionPaymentsPanel({
     if (amountCents === 0 || !newDate) return
 
     // Block if already fully paid
-    const currentTotal = Math.min(
-      installmentsPaid + freePaymentsPaid,
-      transaction.amount
-    )
-    if (currentTotal >= transaction.amount || isSettled) {
+    const currentTotalCents = getTransactionPaidCents({ ...transaction, transaction_payments: payments })
+    if (currentTotalCents >= Math.round(transaction.amount * 100) || isSettled) {
       toast.warning('Esta transação já está quitada.')
       return
     }
@@ -85,66 +75,16 @@ export function TransactionPaymentsPanel({
         notes: newNotes || undefined
       })
 
-      // Auto-update paid_installments based on free payments
-      if (transaction.payment_type === 'installment') {
-        const installmentValue = transaction.amount / transaction.installments
-        const newFreeTotal = payments.reduce((s, p) => s + p.amount, 0)
-          + (amountCents / 100)
+      const updatedPayments = [...payments, { amount: amountCents / 100 }]
+      const newTotalCents = getTransactionPaidCents({
+        ...transaction,
+        status: 'pending',
+        transaction_payments: updatedPayments,
+      })
 
-        // How many installments do free payments cover?
-        const installmentsCoveredByFree = Math.floor(
-          newFreeTotal / installmentValue
-        )
-
-        // Total paid_installments = max of current or newly covered
-        // (never decrease what was already manually marked)
-        const newPaidInstallments = Math.min(
-          Math.max(
-            transaction.paid_installments,
-            installmentsCoveredByFree
-          ),
-          transaction.installments
-        )
-
-        // Only update if it changed
-        if (newPaidInstallments > transaction.paid_installments) {
-          await onUpdateTransaction(transaction.id, {
-            paid_installments: newPaidInstallments
-          })
-        }
-      }
-
-      // Check auto-settle AFTER the installments update
-      const updatedPaidInstallments = transaction.payment_type === 'installment'
-        ? Math.min(
-            Math.max(
-              transaction.paid_installments,
-              Math.floor(
-                (payments.reduce((s, p) => s + p.amount, 0) + amountCents / 100)
-                / (transaction.amount / transaction.installments)
-              )
-            ),
-            transaction.installments
-          )
-        : transaction.paid_installments
-
-      const installmentsTotalUpdated = transaction.payment_type === 'installment'
-        ? (updatedPaidInstallments / transaction.installments)
-          * transaction.amount
-        : 0
-
-      const freeTotal = payments.reduce((s, p) => s + p.amount, 0)
-        + (amountCents / 100)
-
-      const newTotal = Math.min(
-        installmentsTotalUpdated + freeTotal,
-        transaction.amount
-      )
-
-      if (newTotal >= transaction.amount && !isSettled) {
+      if (newTotalCents >= Math.round(transaction.amount * 100) && !isSettled) {
         await onUpdateTransaction(transaction.id, {
           status: 'paid',
-          paid_installments: transaction.installments,
           settled_date: new Date().toISOString()
         })
         setIsSettled(true)
@@ -169,6 +109,15 @@ export function TransactionPaymentsPanel({
   const handleRemove = async (id: string) => {
     try {
       await store.remove(id, transaction.id)
+      const remainingPayments = payments.filter(payment => payment.id !== id)
+      if (transaction.status === 'paid' && getTransactionRemainingCents({
+        ...transaction,
+        status: 'pending',
+        transaction_payments: remainingPayments,
+      }) > 0) {
+        await onUpdateTransaction(transaction.id, { status: 'pending', settled_date: null })
+        setIsSettled(false)
+      }
       toast.success('Pagamento removido.')
       onTransactionSettled()
     } catch (err: any) {

@@ -56,15 +56,15 @@ export const transactionSchema = z.object({
   type: transactionTypeSchema,
   payment_type: paymentTypeSchema,
   installments: z.number().int().min(1),
-  paid_installments: z.number().int().min(0),
+  manual_paid_installments: z.number().int().min(0),
   status: transactionStatusSchema,
   settled_date: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
 }).refine(
-  (data) => data.paid_installments <= data.installments,
+  (data) => data.manual_paid_installments <= data.installments,
   {
     message: 'Parcelas pagas não podem exceder o total de parcelas.',
-    path: ['paid_installments']
+    path: ['manual_paid_installments']
   }
 );
 export type TransactionFormValues = z.infer<typeof transactionSchema>;

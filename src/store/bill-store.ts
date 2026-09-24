@@ -17,11 +17,17 @@ interface BillStore {
   error: string | null;
   lastFetchOptions?: FetchOptions;
   fetch: (options?: FetchOptions) => Promise<void>;
+  fetchAll: () => Promise<void>;
   add: (data: BillFormValues) => Promise<void>;
   update: (id: string, data: Partial<BillFormValues>) => Promise<void>;
   remove: (id: string) => Promise<void>;
   reset: () => void;
 }
+
+const mapBills = (data: any[] | null) => data?.map(b => ({
+  ...b,
+  dependents: (b.bill_dependents || []).map((bd: any) => bd.dependents).filter(Boolean)
+})) ?? [];
 
 export const useBillStoreRaw = create<BillStore>((set, get) => ({
   records: [],
@@ -56,12 +62,33 @@ export const useBillStoreRaw = create<BillStore>((set, get) => ({
       return;
     }
 
-    const mapped = data?.map(b => ({
-      ...b,
-      dependents: (b.bill_dependents || []).map((bd: any) => bd.dependents).filter(Boolean)
-    })) ?? [];
-    
-    set({ records: mapped as any as BillWithRelations[], totalCount: count ?? 0, loading: false, error: null });
+    set({ records: mapBills(data) as any as BillWithRelations[], totalCount: count ?? 0, loading: false, error: null });
+  },
+  fetchAll: async () => {
+    set({ loading: true, error: null, lastFetchOptions: undefined });
+    const records: BillWithRelations[] = [];
+    let from = 0;
+
+    while (true) {
+      const { data, error } = await supabase
+        .from('bills')
+        .select('*, bill_categories(*), bill_dependents(dependent_id, dependents(*))')
+        .or('status.eq.pending,is_recurring.eq.true')
+        .order('due_date', { ascending: true })
+        .range(from, from + 999);
+
+      if (error) {
+        handleSupabaseError(error);
+        set({ records: [], totalCount: 0, error: error.message, loading: false });
+        return;
+      }
+
+      records.push(...mapBills(data) as any as BillWithRelations[]);
+      if (data.length < 1000) break;
+      from += 1000;
+    }
+
+    set({ records, totalCount: records.length, loading: false, error: null });
   },
   add: async (data) => {
     set({ loading: true, error: null });

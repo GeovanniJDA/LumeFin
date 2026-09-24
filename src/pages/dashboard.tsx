@@ -6,7 +6,7 @@ import { useCategories } from '../hooks/use-categories';
 import { useCardPurchaseStore } from '../store/card-purchase-store';
 import { PageHeader } from '../components/shared/page-header';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatCurrency, isDueSoon, isOverdue } from '../lib/utils';
+import { formatCurrency, getTransactionRemainingCents, isDueSoon, isOverdue } from '../lib/utils';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
@@ -36,63 +36,49 @@ function splitCents(amount: number, dependentIds: string[], dependentId: string)
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { bills, loading: billsLoading, error: billsError, getOverdueBills, getDueSoonBills, refreshBills: fetchBills } = useBills();
-  const { creditCards, loading: cardsLoading, getOverdueCards, getDueSoonCards, refreshCreditCards: fetchCreditCards } = useCreditCards();
-  const { transactions, loading: txLoading, netBalanceByDependent, refreshTransactions: fetchTransactions } = useTransactions();
-  const { dependents, loading: depsLoading, refreshDependents: fetchDependents } = useDependents();
+  const { bills, loading: billsLoading, error: billsError, getOverdueBills, getDueSoonBills } = useBills(undefined, true);
+  const { creditCards, loading: cardsLoading, error: cardsError, getOverdueCards, getDueSoonCards } = useCreditCards();
+  const { transactions, loading: txLoading, error: txError, netBalanceByDependent } = useTransactions(undefined, true);
+  const { dependents, loading: depsLoading } = useDependents();
   const { categories, loading: catsLoading } = useCategories();
   const purchases = useCardPurchaseStore(s => s.purchases);
   const purchasesLoading = useCardPurchaseStore(s => s.loading);
+  const purchasesError = useCardPurchaseStore(s => s.error);
   const fetchPurchases = useCardPurchaseStore(s => s.fetchAll);
 
   useEffect(() => {
-    fetchBills();
-    fetchCreditCards();
-    fetchTransactions();
-    fetchDependents();
     fetchPurchases();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const isLoading = billsLoading || cardsLoading || txLoading || depsLoading || catsLoading || purchasesLoading;
+  const financialDataError = billsError || cardsError || txError;
 
   // ── Section 1: Summary metrics ──
   const pendingBills = bills.filter(b => b.status === 'pending');
   const pendingBillsCount = pendingBills.length;
-  const pendingBillsTotal = pendingBills.reduce((acc, b) => acc + b.amount, 0);
+  const pendingBillsCents = pendingBills.reduce((sum, bill) => sum + Math.round(bill.amount * 100), 0);
+  const pendingBillsTotal = pendingBillsCents / 100;
 
   const openCards = creditCards.filter(c => c.status === 'open' || c.status === 'closed');
   const openCardsCount = openCards.length;
-  const openCardsTotal = openCards.reduce((acc, c) => acc + c.invoice_amount, 0);
+  const openCardsCents = openCards.reduce((sum, card) => sum + Math.round(card.invoice_amount * 100), 0);
+  const openCardsTotal = openCardsCents / 100;
 
-  const pendingToReceive = transactions
+  const pendingToReceiveCents = transactions
     .filter(t => t.type === 'to_receive' && t.status === 'pending')
-    .reduce((acc, t) => {
-      const txPaymentsTotal = t.transaction_payments?.reduce((s: number, p: { amount: number }) => s + p.amount, 0) || 0;
-      const installmentTotal = t.payment_type === 'installment' ? ((t.paid_installments || 0) / (t.installments || 1)) * t.amount : 0;
-      const totalPaid = Math.min(txPaymentsTotal + installmentTotal, t.amount);
-      const remaining = Math.max(t.amount - totalPaid, 0);
-      return acc + remaining;
-    }, 0);
+    .reduce((sum, transaction) => sum + getTransactionRemainingCents(transaction), 0);
 
-  const pendingToPay = transactions
+  const pendingToPayCents = transactions
     .filter(t => t.type === 'to_pay' && t.status === 'pending')
-    .reduce((acc, t) => {
-      const txPaymentsTotal = t.transaction_payments?.reduce((s: number, p: { amount: number }) => s + p.amount, 0) || 0;
-      const installmentTotal = t.payment_type === 'installment' ? ((t.paid_installments || 0) / (t.installments || 1)) * t.amount : 0;
-      const totalPaid = Math.min(txPaymentsTotal + installmentTotal, t.amount);
-      const remaining = Math.max(t.amount - totalPaid, 0);
-      return acc + remaining;
-    }, 0);
+    .reduce((sum, transaction) => sum + getTransactionRemainingCents(transaction), 0);
 
   // Hero card derived values
-  const totalPending = pendingBillsTotal + openCardsTotal;
-  const totalToReceive = pendingToReceive;
-  const totalToPay = pendingToPay;
-  const allTransactions = transactions;
+  const totalToReceive = pendingToReceiveCents / 100;
+  const totalToPay = (pendingToPayCents + pendingBillsCents + openCardsCents) / 100;
+  const netCommitments = (pendingToReceiveCents - pendingToPayCents - pendingBillsCents - openCardsCents) / 100;
   const transactionCounts = {
-    toReceive: allTransactions.filter(t => t.type === 'to_receive' && t.status === 'pending').length,
-    toPay: allTransactions.filter(t => t.type === 'to_pay' && t.status === 'pending').length,
+    toReceive: transactions.filter(t => t.type === 'to_receive' && t.status === 'pending').length,
   };
   const totalInvoiceAmount = openCardsTotal;
 
@@ -189,7 +175,7 @@ export default function Dashboard() {
       <PageHeader title="Dashboard" description="Visão geral financeira e alertas." />
 
       {/* ── Hero Card ── */}
-      {!isLoading && (
+      {!isLoading && !financialDataError && (
         <div
           className="relative overflow-hidden rounded-2xl p-4 md:p-6 border border-amber-400/20"
           style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(245,158,11,0.05) 50%, transparent 100%)' }}
@@ -202,17 +188,19 @@ export default function Dashboard() {
             {/* Total amount — always full width */}
             <div>
               <p className="text-sm text-white/50 uppercase tracking-widest font-semibold mb-1">
-                Visão Geral — {format(new Date(), 'MMMM yyyy', { locale: ptBR })}
+                Posição líquida de compromissos
               </p>
               <p className="text-3xl md:text-5xl font-black text-white">
-                {formatCurrency(totalPending)}
+                <span className={netCommitments < 0 ? 'text-red-400' : netCommitments > 0 ? 'text-emerald-400' : 'text-white'}>
+                  {formatCurrency(netCommitments)}
+                </span>
               </p>
               <p className="text-sm text-white/50 mt-1">
-                em contas e faturas pendentes este mês
+                valores a receber menos transações, contas e faturas pendentes
               </p>
             </div>
 
-            {/* 3 metrics in a row — always horizontal but smaller on mobile */}
+            {/* Valores em aberto que compõem a posição líquida */}
             <div className="flex gap-3 md:gap-6">
               <div>
                 <p className="text-[10px] md:text-xs text-white/40 mb-0.5">
@@ -252,6 +240,8 @@ export default function Dashboard() {
             <Skeleton key={i} className="h-32 w-full rounded-2xl" />
           ))}
         </div>
+      ) : financialDataError ? (
+        <p role="alert" className="text-sm text-red-400">Falha ao calcular a posição financeira: {financialDataError}</p>
       ) : (
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {/* Contas Pendentes */}
@@ -288,7 +278,7 @@ export default function Dashboard() {
                 <TrendingUp className="w-4 h-4 text-[#10B981]" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-[#10B981] font-quicksand">{formatCurrency(pendingToReceive)}</div>
+            <div className="text-3xl font-bold text-[#10B981] font-quicksand">{formatCurrency(totalToReceive)}</div>
             <p className="text-xs text-white/40 mt-1">{transactionCounts.toReceive} transaç{transactionCounts.toReceive !== 1 ? 'ões' : 'ão'}</p>
           </div>
 
@@ -300,8 +290,8 @@ export default function Dashboard() {
                 <TrendingDown className="w-4 h-4 text-[#EF4444]" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-[#EF4444] font-quicksand">{formatCurrency(pendingToPay)}</div>
-            <p className="text-xs text-white/40 mt-1">{transactionCounts.toPay} transaç{transactionCounts.toPay !== 1 ? 'ões' : 'ão'}</p>
+            <div className="text-3xl font-bold text-[#EF4444] font-quicksand">{formatCurrency(totalToPay)}</div>
+            <p className="text-xs text-white/40 mt-1">transações, contas e faturas pendentes</p>
           </div>
         </div>
       )}
@@ -309,8 +299,8 @@ export default function Dashboard() {
       {/* ── Section 2: Alerts ── */}
       {isLoading ? (
         <Skeleton className="h-40 w-full rounded-2xl" />
-      ) : billsError ? (
-        <p role="alert" className="text-sm text-red-400">Falha ao carregar alertas: {billsError}</p>
+      ) : financialDataError ? (
+        null
       ) : hasAlerts ? (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-[rgba(255,255,255,0.9)] flex items-center gap-2 border-b border-[rgba(255,255,255,0.06)] pb-2">
@@ -386,6 +376,8 @@ export default function Dashboard() {
             <Skeleton key={i} className="h-48 w-full rounded-2xl" />
           ))}
         </div>
+      ) : financialDataError ? null : purchasesError ? (
+        <p role="alert" className="text-sm text-red-400">Falha ao calcular o rateio por dependente: {purchasesError}</p>
       ) : dependents.length > 0 ? (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-[rgba(255,255,255,0.9)] border-b border-[rgba(255,255,255,0.06)] pb-2">
