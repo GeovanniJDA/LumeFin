@@ -114,8 +114,8 @@ const STATUS_LABELS: Record<BillStatus, string> = {
 };
 
 const STATUS_COLORS: Record<BillStatus, string> = {
-  pending: 'bg-[rgba(245,158,11,0.15)] text-[#F59E0B] border-[rgba(245,158,11,0.3)]',
-  paid: 'bg-[rgba(16,185,129,0.15)] text-[#10B981] border-[rgba(16,185,129,0.3)]'
+  pending: 'bg-[rgba(245,158,11,0.15)] text-primary border-[rgba(245,158,11,0.3)]',
+  paid: 'bg-[rgba(16,185,129,0.15)] text-success border-[rgba(16,185,129,0.3)]'
 };
 
 export default function Bills() {
@@ -393,7 +393,7 @@ export default function Bills() {
                 render={
                   <Button
                     variant="outline"
-                    className="gap-2 shadow-sm font-quicksand font-bold border-white/10"
+                    className="gap-2 shadow-sm font-quicksand font-bold border-border"
                   >
                     Gerenciar Categorias
                   </Button>
@@ -431,7 +431,7 @@ export default function Bills() {
                     <Button 
                       onClick={handleAddCategory} 
                       disabled={newCategoryName.length < 2 || isCategorySubmitting}
-                      className="bg-amber-500 hover:bg-amber-600 text-white shrink-0"
+                      className="bg-amber-500 hover:bg-amber-600 text-foreground shrink-0"
                     >
                       {isCategorySubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                     </Button>
@@ -444,7 +444,7 @@ export default function Bills() {
                       userCategories.map(cat => {
                         const IconComponent = getCategoryIcon(cat.icon);
                         return (
-                          <div key={cat.id} className="flex items-center justify-between p-2 rounded-md border border-white/5 bg-white/5">
+                          <div key={cat.id} className="flex items-center justify-between p-2 rounded-md border border-border bg-muted/50">
                             <div className="flex items-center gap-3">
                               <div className="p-1.5 bg-secondary rounded-md">
                                 <IconComponent className="w-4 h-4" />
@@ -454,7 +454,7 @@ export default function Bills() {
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              className="w-8 h-8 text-muted-foreground hover:text-red-500"
+                              className="w-8 h-8 text-muted-foreground hover:text-destructive"
                               onClick={() => handleRemoveCategory(cat.id)}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -474,7 +474,7 @@ export default function Bills() {
                   <Button
                     onClick={handleOpenAdd}
                     disabled={categoriesLoading}
-                    className="bg-amber-500 hover:bg-amber-600 text-white gap-2 shadow-sm font-quicksand font-bold"
+                    className="bg-amber-500 hover:bg-amber-600 text-foreground gap-2 shadow-sm font-quicksand font-bold"
                   >
                     <Plus className="w-4 h-4" /> Adicionar Conta
                   </Button>
@@ -541,7 +541,7 @@ export default function Bills() {
                             </DialogHeader>
                             <div className="space-y-4 pt-2">
                               <div>
-                                <label className="text-sm font-medium text-white/80">
+                                <label className="text-sm font-medium text-muted-foreground">
                                   Nome da Categoria *
                                 </label>
                                 <Input
@@ -553,7 +553,7 @@ export default function Bills() {
                                 />
                               </div>
                               <div>
-                                <label className="text-sm font-medium text-white/80">
+                                <label className="text-sm font-medium text-muted-foreground">
                                   Ícone
                                 </label>
                                 <Select value={newCategoryIcon} onValueChange={v => v && setNewCategoryIcon(v)}>
@@ -712,12 +712,12 @@ export default function Bills() {
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-center justify-between
-                          p-3 rounded-xl border border-white/8 bg-white/2">
+                          p-3 rounded-xl border border-border bg-muted/50">
                           <div>
-                            <FormLabel className="text-sm font-medium text-white/80">
+                            <FormLabel className="text-sm font-medium text-muted-foreground">
                               Conta Recorrente
                             </FormLabel>
-                            <p className="text-xs text-white/40 mt-0.5">
+                            <p className="text-xs text-muted-foreground mt-0.5">
                               Aparece automaticamente todo mês com valor fixo
                             </p>
                           </div>
@@ -728,7 +728,7 @@ export default function Bills() {
                               duration-200 shrink-0
                               ${field.value
                                 ? 'bg-amber-500'
-                                : 'bg-white/10'
+                                : 'bg-muted/50'
                               }`}
                           >
                             <span className={`absolute top-1 w-4 h-4 rounded-full
@@ -831,7 +831,7 @@ export default function Bills() {
                     <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting}>
                       Cancelar
                     </Button>
-                    <Button type="submit" disabled={isSubmitting} className="bg-amber-500 hover:bg-amber-600 text-white">
+                    <Button type="submit" disabled={isSubmitting} className="bg-amber-500 hover:bg-amber-600 text-foreground">
                       {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                       {editingId ? 'Salvar' : 'Adicionar'}
                     </Button>
@@ -845,7 +845,7 @@ export default function Bills() {
       />
 
       {error && !isDialogOpen && (
-        <div className="p-4 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)] text-red-400 rounded-lg">
+        <div className="p-4 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)] text-destructive rounded-lg">
           Falha ao carregar contas: {error}
         </div>
       )}
@@ -947,26 +947,26 @@ export default function Bills() {
               const billDeps = bill.dependents || [];
               return (
                 <div key={bill.id}
-                  className={`glass rounded-2xl p-4 space-y-3 border border-white/6
+                  className={`glass rounded-2xl p-4 space-y-3 border border-border
                     ${(bill as any)._isProjected ? 'opacity-60' : ''}`}>
                   {/* Top: icon + category + status */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-white/6">
-                        <Icon className="w-4 h-4 text-amber-400" />
+                      <div className="p-2 rounded-lg bg-muted/50">
+                        <Icon className="w-4 h-4 text-primary" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="font-semibold text-white text-sm">{cat?.name || 'Desconhecida'}</p>
+                          <p className="font-semibold text-foreground text-sm">{cat?.name || 'Desconhecida'}</p>
                           {bill.is_recurring && (
                             <span className="text-[9px] px-1.5 py-0.5 rounded-full
-                              bg-amber-400/10 text-amber-400 border border-amber-400/20
+                              bg-amber-400/10 text-primary border border-amber-400/20
                               font-medium">
                               Recorrente
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-white/40">
+                        <p className="text-xs text-muted-foreground">
                           Vence {format(parseISO(bill.due_date), 'dd/MM/yyyy', { locale: ptBR })}
                         </p>
                       </div>
@@ -978,16 +978,16 @@ export default function Bills() {
 
                   {/* Amount + dependents */}
                   <div className="flex items-center justify-between">
-                    <p className="text-xl font-black text-white">{formatCurrency(bill.amount)}</p>
+                    <p className="text-xl font-black text-foreground">{formatCurrency(bill.amount)}</p>
                     <div className="flex gap-1 flex-wrap justify-end">
                       {billDeps.slice(0, 2).map(d => (
                         <span key={d.id}
-                          className="text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-white/60 font-medium">
+                          className="text-[10px] px-2 py-0.5 rounded-full bg-muted/50 text-muted-foreground font-medium">
                           {d.name}
                         </span>
                       ))}
                       {billDeps.length > 2 && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/6 text-white/40 font-medium">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted/50 text-muted-foreground font-medium">
                           +{billDeps.length - 2}
                         </span>
                       )}
@@ -995,10 +995,10 @@ export default function Bills() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/6">
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
                     {bill.status === 'pending' && (
                       <Button variant="outline" size="sm"
-                        className="h-7 text-xs text-green-400 border-green-400/30 hover:bg-green-400/10"
+                        className="h-7 text-xs text-success border-green-400/30 hover:bg-green-400/10"
                         onClick={() => (bill as any)._isProjected ? handleMarkProjectedAsPaid(bill) : handleMarkAsPaid(bill.id, bill.status)}
                         disabled={loadingId === bill.id}>
                         {loadingId === bill.id ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : null}
@@ -1006,7 +1006,7 @@ export default function Bills() {
                       </Button>
                     )}
                     {(bill as any)._isProjected ? (
-                      <span className="text-[10px] text-white/30 italic px-2">
+                      <span className="text-[10px] text-muted-foreground italic px-2">
                         Projeção
                       </span>
                     ) : (
@@ -1014,12 +1014,12 @@ export default function Bills() {
                         <Button variant="ghost" size="icon" className="h-7 w-7"
                           onClick={() => handleOpenEdit(bill)}
                           disabled={loadingId === bill.id}>
-                          <Edit className="w-3 h-3 text-white/40" />
+                          <Edit className="w-3 h-3 text-muted-foreground" />
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger render={
                             <Button variant="ghost" size="icon" className="h-7 w-7" disabled={loadingId === bill.id}>
-                              {loadingId === bill.id ? <Loader2 className="w-3 h-3 text-white/40 animate-spin" /> : <Trash2 className="w-3 h-3 text-white/40" />}
+                              {loadingId === bill.id ? <Loader2 className="w-3 h-3 text-muted-foreground animate-spin" /> : <Trash2 className="w-3 h-3 text-muted-foreground" />}
                             </Button>
                           } />
                       <AlertDialogContent>
@@ -1029,7 +1029,7 @@ export default function Bills() {
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(bill.id)} className="bg-red-600 hover:bg-red-700 text-white">Remover</AlertDialogAction>
+                          <AlertDialogAction onClick={() => handleDelete(bill.id)} className="bg-red-600 hover:bg-red-700 text-foreground">Remover</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
@@ -1045,7 +1045,7 @@ export default function Bills() {
           <div className="hidden md:block rounded-2xl overflow-hidden glass">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="text-xs uppercase" style={{ background: 'rgba(255,255,255,0.02)', color: 'rgba(255,255,255,0.4)' }}>
+                <thead className="bg-muted text-xs text-muted-foreground">
                   <tr>
                     <th scope="col" className="px-6 py-4 font-semibold">Categoria</th>
                     <th scope="col" className="px-6 py-4 font-semibold">Dependentes</th>
@@ -1073,7 +1073,7 @@ export default function Bills() {
                               <span className="font-medium text-foreground">{cat?.name || 'Desconhecida'}</span>
                               {bill.is_recurring && (
                                 <span className="text-[9px] px-1.5 py-0.5 rounded-full
-                                  bg-amber-400/10 text-amber-400 border border-amber-400/20
+                                  bg-amber-400/10 text-primary border border-amber-400/20
                                   font-medium">
                                   Recorrente
                                 </span>
@@ -1121,7 +1121,7 @@ export default function Bills() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-8 text-xs font-semibold text-green-600 border-green-200 hover:bg-green-50"
+                                className="h-8 text-xs font-semibold text-success border-green-200 hover:bg-green-50"
                                 onClick={() => (bill as any)._isProjected ? handleMarkProjectedAsPaid(bill) : handleMarkAsPaid(bill.id, bill.status)}
                                 disabled={loadingId === bill.id || loading}
                               >
@@ -1130,18 +1130,18 @@ export default function Bills() {
                               </Button>
                             )}
                             {(bill as any)._isProjected ? (
-                              <span className="text-[10px] text-white/30 italic px-2">
+                              <span className="text-[10px] text-muted-foreground italic px-2">
                                 Projeção
                               </span>
                             ) : (
                               <>
                                 <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(bill)} disabled={loadingId === bill.id} className="h-8 w-8">
-                                  <Edit className="w-4 h-4 text-muted-foreground hover:text-amber-500" />
+                                  <Edit className="w-4 h-4 text-muted-foreground hover:text-primary" />
                                 </Button>
                                 <AlertDialog>
                                   <AlertDialogTrigger render={
                                     <Button variant="ghost" size="icon" disabled={loadingId === bill.id} className="h-8 w-8">
-                                      {loadingId === bill.id ? <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" /> : <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-600" />}
+                                      {loadingId === bill.id ? <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" /> : <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />}
                                     </Button>
                                   } />
                               <AlertDialogContent>
@@ -1153,7 +1153,7 @@ export default function Bills() {
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDelete(bill.id)} className="bg-red-600 hover:bg-red-700 text-white">
+                                  <AlertDialogAction onClick={() => handleDelete(bill.id)} className="bg-red-600 hover:bg-red-700 text-foreground">
                                     Remover
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
@@ -1170,8 +1170,8 @@ export default function Bills() {
               </table>
             </div>
             {totalPages > 0 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-white/8">
-                <span className="text-sm text-white/40">
+              <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+                <span className="text-sm text-muted-foreground">
                   Página {page + 1} de {totalPages || 1}
                 </span>
                 <div className="flex gap-2">

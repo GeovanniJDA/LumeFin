@@ -197,11 +197,11 @@ export default function ProfilePage() {
       <div className="flex flex-col md:flex-row gap-8">
         {/* Avatar Section */}
         <div className="w-full md:w-1/3 flex flex-col items-center space-y-4">
-          <div className="relative group rounded-full overflow-hidden border border-[rgba(255,255,255,0.1)] shadow-xl glass bg-[rgba(255,255,255,0.05)] w-[120px] h-[120px] flex items-center justify-center">
+          <div className="relative group rounded-full overflow-hidden border border-border shadow-xl glass bg-muted/50 w-[120px] h-[120px] flex items-center justify-center">
             {profile?.avatar_url ? (
                <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
-               <span className="text-4xl text-[rgba(255,255,255,0.8)] font-bold uppercase">
+               <span className="text-4xl text-muted-foreground font-bold uppercase">
                  {(profile?.username || userEmail).charAt(0)}
                </span>
             )}
@@ -210,7 +210,7 @@ export default function ProfilePage() {
               className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
               onClick={() => fileInputRef.current?.click()}
             >
-              {isUploadingAvatar ? <Loader2 className="w-8 h-8 animate-spin text-white" /> : <Camera className="w-8 h-8 text-white" />}
+              {isUploadingAvatar ? <Loader2 className="w-8 h-8 animate-spin text-foreground" /> : <Camera className="w-8 h-8 text-foreground" />}
             </div>
             
             <input 
@@ -228,7 +228,7 @@ export default function ProfilePage() {
                size="sm" 
                onClick={handleRemoveAvatar} 
                disabled={isRemovingAvatar}
-               className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
+               className="text-destructive hover:text-destructive hover:bg-red-400/10"
              >
                {isRemovingAvatar ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
                Remover Avatar
@@ -240,10 +240,10 @@ export default function ProfilePage() {
         <div className="w-full md:w-2/3 space-y-6">
           
           {/* Form A - Username */}
-          <div className="glass p-6 rounded-2xl border border-[rgba(255,255,255,0.05)] space-y-4">
+          <div className="glass p-6 rounded-2xl border border-border space-y-4">
             <div>
-              <h3 className="text-lg font-semibold text-white">Nome de Usuário</h3>
-              <p className="text-sm text-[rgba(255,255,255,0.5)]">Como você gostaria de ser chamado.</p>
+              <h3 className="text-lg font-semibold text-foreground">Nome de Usuário</h3>
+              <p className="text-sm text-muted-foreground">Como você gostaria de ser chamado.</p>
             </div>
             <Form {...usernameForm}>
               <form onSubmit={usernameForm.handleSubmit(onSubmitUsername)} className="space-y-4">
@@ -269,11 +269,11 @@ export default function ProfilePage() {
           </div>
 
           {/* Form B - Email */}
-          <div className="glass p-6 rounded-2xl border border-[rgba(255,255,255,0.05)] space-y-4">
+          <div className="glass p-6 rounded-2xl border border-border space-y-4">
             <div>
-              <h3 className="text-lg font-semibold text-white">Email</h3>
-              <p className="text-sm text-[rgba(255,255,255,0.5)]">
-                Email atual: <span className="text-white font-medium">{userEmail}</span>
+              <h3 className="text-lg font-semibold text-foreground">Email</h3>
+              <p className="text-sm text-muted-foreground">
+                Email atual: <span className="text-foreground font-medium">{userEmail}</span>
               </p>
             </div>
             <Form {...emailForm}>
@@ -336,8 +336,8 @@ export default function ProfilePage() {
                   <Lock className="w-5 h-5" style={{ color: '#F59E0B' }} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Mudar Senha</h3>
-                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>Escolha uma senha forte para proteger sua conta.</p>
+                  <h3 className="text-lg font-bold text-foreground">Mudar Senha</h3>
+                  <p className="text-sm text-muted-foreground">Escolha uma senha forte para proteger sua conta.</p>
                 </div>
               </div>
             </div>
@@ -348,8 +348,8 @@ export default function ProfilePage() {
                   className="flex items-center gap-2 p-3 rounded-xl mb-4"
                   style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)' }}
                 >
-                  <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <p className="text-sm text-emerald-400 font-medium">Senha alterada com sucesso!</p>
+                  <CheckCircle className="w-4 h-4 text-success shrink-0" />
+                  <p className="text-sm text-success font-medium">Senha alterada com sucesso!</p>
                 </div>
               )}
 
@@ -360,7 +360,7 @@ export default function ProfilePage() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white/70">Nova Senha</FormLabel>
+                        <FormLabel className="text-muted-foreground">Nova Senha</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <Input
@@ -372,7 +372,7 @@ export default function ProfilePage() {
                             <button
                               type="button"
                               onClick={() => setShowNewPassword(v => !v)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/70 transition-colors"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
                             >
                               {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
@@ -389,7 +389,7 @@ export default function ProfilePage() {
                                   style={{
                                     backgroundColor: bar <= pwdStrength.score
                                       ? pwdStrength.color
-                                      : 'rgba(255,255,255,0.08)'
+                                      : 'var(--muted)'
                                   }}
                                 />
                               ))}
@@ -411,7 +411,7 @@ export default function ProfilePage() {
                     name="confirmPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white/70">Confirmar Nova Senha</FormLabel>
+                        <FormLabel className="text-muted-foreground">Confirmar Nova Senha</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <Input
@@ -423,7 +423,7 @@ export default function ProfilePage() {
                             <button
                               type="button"
                               onClick={() => setShowConfirmPassword(v => !v)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/70 transition-colors"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
                             >
                               {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
@@ -438,17 +438,15 @@ export default function ProfilePage() {
                     <Button
                       type="submit"
                       disabled={isSubmittingPassword || !passwordForm.formState.isDirty}
-                      className="w-full sm:w-auto font-bold"
+                      className="w-full bg-primary font-semibold text-primary-foreground hover:bg-primary/90 sm:w-auto"
                       style={{
-                        background: 'linear-gradient(135deg, #F59E0B, #D97706)',
-                        color: '#000',
                         opacity: (!passwordForm.formState.isDirty || isSubmittingPassword) ? 0.5 : 1
                       }}
                     >
                       {isSubmittingPassword && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                       Salvar Nova Senha
                     </Button>
-                    <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                    <p className="text-xs text-muted-foreground">
                       Mínimo 6 caracteres
                     </p>
                   </div>

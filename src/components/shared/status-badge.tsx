@@ -6,15 +6,16 @@ interface Props {
 
 export function StatusBadge({ status }: Props) {
   const variants = {
-    pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    paid: 'bg-green-100 text-green-800 border-green-200',
-    open: 'bg-blue-100 text-blue-800 border-blue-200',
-    closed: 'bg-muted text-foreground border-border',
+    pending: 'bg-primary/10 text-primary border-primary/20',
+    paid: 'bg-success/10 text-success border-success/20',
+    open: 'bg-primary/10 text-primary border-primary/20',
+    closed: 'bg-muted text-muted-foreground border-border',
   };
+  const labels = { pending: 'Pendente', paid: 'Pago', open: 'Em aberto', closed: 'Fechado' };
 
   return (
     <Badge variant="outline" className={variants[status] || ''}>
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+      {labels[status]}
     </Badge>
   );
 }

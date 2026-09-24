@@ -42,14 +42,14 @@ export function DatePicker({
         disabled={disabled}
         className={cn(
           'flex h-9 w-full items-center gap-2 rounded-md border px-3 py-1 text-sm',
-          'border-white/10 bg-transparent',
-          'hover:bg-white/5 hover:text-white',
+          'border-border bg-background',
+          'hover:bg-accent hover:text-accent-foreground',
           'transition-colors duration-150',
           'disabled:cursor-not-allowed disabled:opacity-50',
-          value ? 'text-white/90' : 'text-white/40'
+          value ? 'text-foreground' : 'text-muted-foreground'
         )}
       >
-        <CalendarIcon className="h-4 w-4 shrink-0 text-white/40" />
+        <CalendarIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
         <span className="flex-1 text-left font-normal">
           {value
             ? format(parseISO(value), 'dd/MM/yyyy', { locale: ptBR })
@@ -58,13 +58,7 @@ export function DatePicker({
       </PopoverTrigger>
 
       <PopoverContent
-        className="w-auto p-3 rounded-2xl z-[200]
-          border border-white/10
-          shadow-2xl shadow-black/60"
-        style={{
-          background: 'rgba(10, 10, 10, 0.98)',
-          backdropFilter: 'blur(40px)',
-        }}
+        className="z-[200] w-auto rounded-2xl border border-border bg-popover p-3 text-popover-foreground shadow-lg"
         align="start"
       >
         <Calendar
@@ -77,19 +71,19 @@ export function DatePicker({
             months: 'flex flex-col space-y-4',
             month: 'space-y-4',
             caption: 'flex justify-center pt-1 relative items-center',
-            caption_label: 'text-sm font-semibold text-white',
+            caption_label: 'text-sm font-semibold text-foreground',
             nav: 'flex items-center gap-1',
             nav_button: cn(
               'h-8 w-8 bg-transparent p-0 rounded-lg transition-colors',
-              'text-white/60 hover:text-white hover:bg-white/10',
-              'flex items-center justify-center border border-white/10'
+              'text-muted-foreground hover:text-foreground hover:bg-accent',
+              'flex items-center justify-center border border-border'
             ),
             nav_button_previous: 'absolute left-1',
             nav_button_next: 'absolute right-1',
             table: 'w-full border-collapse',
             head_row: 'flex w-full',
             head_cell: cn(
-              'text-white/40 rounded-md font-normal text-[0.75rem]',
+              'text-muted-foreground rounded-md font-normal text-[0.75rem]',
               'w-9 h-9 flex items-center justify-center'
             ),
             row: 'flex w-full mt-1',
@@ -99,17 +93,17 @@ export function DatePicker({
             ),
             day: cn(
               'w-9 h-9 p-0 font-normal rounded-lg transition-colors',
-              'text-white/80 hover:bg-white/10 hover:text-white',
+              'text-foreground hover:bg-accent hover:text-accent-foreground',
               'flex items-center justify-center'
             ),
             day_selected: cn(
-              'bg-amber-500 text-black font-bold',
-              'hover:bg-amber-600 hover:text-black',
+              'bg-primary text-primary-foreground font-bold',
+              'hover:bg-primary/90 hover:text-primary-foreground',
               'rounded-lg'
             ),
-            day_today: 'text-amber-400 font-bold',
-            day_outside: 'text-white/20 opacity-50',
-            day_disabled: 'text-white/20 opacity-30 cursor-not-allowed',
+            day_today: 'text-primary font-bold',
+            day_outside: 'text-muted-foreground opacity-50',
+            day_disabled: 'text-muted-foreground opacity-50 cursor-not-allowed',
             day_range_middle: 'rounded-none',
             day_hidden: 'invisible',
           }}

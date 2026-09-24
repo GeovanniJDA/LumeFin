@@ -135,7 +135,7 @@ export default function CreditCardDetail() {
 
   if (!card)
     return (
-      <div className="p-8 text-white/40 text-center">Cartão não encontrado.</div>
+      <div className="p-8 text-muted-foreground text-center">Cartão não encontrado.</div>
     )
 
   return (
@@ -144,7 +144,7 @@ export default function CreditCardDetail() {
       {/* Back button */}
       <button
         onClick={() => navigate('/app/credit-cards')}
-        className="flex items-center gap-2 text-white/40 hover:text-white transition-colors text-sm"
+        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm"
       >
         <ArrowLeft className="w-4 h-4" />
         Voltar para Cartões
@@ -166,16 +166,16 @@ export default function CreditCardDetail() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <div className="w-3 h-3 rounded-full" style={{ background: card.color ?? '#6B7280' }} />
-              <h1 className="text-2xl font-black text-white">{card.name}</h1>
+              <h1 className="text-2xl font-black text-foreground">{card.name}</h1>
             </div>
             {card.dependents?.length > 0 && (
-              <p className="text-white/40 text-sm">{card.dependents.map(dependent => dependent.name).join(', ')}</p>
+              <p className="text-muted-foreground text-sm">{card.dependents.map(dependent => dependent.name).join(', ')}</p>
             )}
           </div>
           <div className="text-right">
-            <p className="text-xs text-white/40 mb-1">Fatura actual</p>
-            <p className="text-2xl font-black text-white">{formatCurrency(card.invoice_amount)}</p>
-            <p className="text-xs text-white/40 mt-1">
+            <p className="text-xs text-muted-foreground mb-1">Fatura actual</p>
+            <p className="text-2xl font-black text-foreground">{formatCurrency(card.invoice_amount)}</p>
+            <p className="text-xs text-muted-foreground mt-1">
               Vence {format(parseISO(card.due_date), 'dd/MM/yyyy', { locale: ptBR })}
             </p>
           </div>
@@ -184,7 +184,7 @@ export default function CreditCardDetail() {
 
       {/* Mini bar chart — 12 months overview */}
       <div className="glass rounded-2xl p-5">
-        <p className="text-xs text-white/40 uppercase tracking-wider mb-4 font-semibold">
+        <p className="text-xs text-muted-foreground uppercase tracking-wider mb-4 font-semibold">
           Projeção 12 meses
         </p>
         <div className="flex items-end gap-1 h-16">
@@ -204,13 +204,13 @@ export default function CreditCardDetail() {
                       ? '#F59E0B'
                       : d.total > 0
                         ? 'rgba(245,158,11,0.3)'
-                        : 'rgba(255,255,255,0.06)',
+                        : 'var(--muted)',
                   borderBottom: d.month === selectedMonth ? '2px solid #F59E0B' : 'none'
                 }}
               />
               <span
                 className={`text-[9px] transition-colors ${
-                  d.month === selectedMonth ? 'text-amber-400 font-bold' : 'text-white/30'
+                  d.month === selectedMonth ? 'text-primary font-bold' : 'text-muted-foreground'
                 }`}
               >
                 {d.label}
@@ -228,17 +228,17 @@ export default function CreditCardDetail() {
             if (idx > 0) setSelectedMonth(months[idx - 1])
           }}
           disabled={months.indexOf(selectedMonth) === 0}
-          className="p-2 rounded-lg border border-white/10 text-white/40 hover:text-white
-            hover:border-white/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+          className="p-2 rounded-lg border border-border text-muted-foreground hover:text-foreground
+            hover:border-border transition-all disabled:opacity-30 disabled:cursor-not-allowed"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
 
         <div className="text-center">
-          <p className="text-lg font-black text-white capitalize">
+          <p className="text-lg font-black text-foreground capitalize">
             {format(parseISO(`${selectedMonth}-01`), 'MMMM yyyy', { locale: ptBR })}
           </p>
-          <p className="text-sm text-amber-400 font-bold">{formatCurrency(monthTotal)}</p>
+          <p className="text-sm text-primary font-bold">{formatCurrency(monthTotal)}</p>
         </div>
 
         <button
@@ -247,8 +247,8 @@ export default function CreditCardDetail() {
             if (idx < months.length - 1) setSelectedMonth(months[idx + 1])
           }}
           disabled={months.indexOf(selectedMonth) === months.length - 1}
-          className="p-2 rounded-lg border border-white/10 text-white/40 hover:text-white
-            hover:border-white/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+          className="p-2 rounded-lg border border-border text-muted-foreground hover:text-foreground
+            hover:border-border transition-all disabled:opacity-30 disabled:cursor-not-allowed"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -256,13 +256,13 @@ export default function CreditCardDetail() {
 
       {/* Purchase list for selected month */}
       <div className="glass rounded-2xl overflow-hidden">
-        <div className="flex items-center justify-between p-4 border-b border-white/6">
-          <p className="text-sm font-semibold text-white/70">Compras deste mês</p>
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <p className="text-sm font-semibold text-muted-foreground">Compras deste mês</p>
           <button
             onClick={() => navigate('/app/credit-cards', {
               state: { addPurchaseTo: id, returnTo: location.pathname }
             })}
-            className="flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 transition-colors"
+            className="flex items-center gap-1 text-xs text-primary hover:text-primary transition-colors"
           >
             <Plus className="w-3 h-3" />
             Adicionar compra
@@ -275,32 +275,32 @@ export default function CreditCardDetail() {
           </div>
         ) : monthPurchases.length === 0 ? (
           <div className="p-8 text-center">
-            <CreditCard className="w-8 h-8 text-white/10 mx-auto mb-2" />
-            <p className="text-white/30 text-sm">Nenhuma compra neste mês</p>
+            <CreditCard className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+            <p className="text-muted-foreground text-sm">Nenhuma compra neste mês</p>
           </div>
         ) : (
           <div className="divide-y divide-white/6">
             {monthPurchases.map((p, i) => (
               <div
                 key={`${p.id}-${i}`}
-                className="flex items-center justify-between px-4 py-3 hover:bg-white/2 transition-colors"
+                className="flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   {/* Type indicator */}
                   <div
                     className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-[10px] font-bold ${
                       p.type === 'cash'
-                        ? 'bg-emerald-400/10 text-emerald-400'
+                        ? 'bg-emerald-400/10 text-success'
                         : p.type === 'recurring'
                           ? 'bg-blue-400/10 text-blue-400'
-                          : 'bg-amber-400/10 text-amber-400'
+                          : 'bg-amber-400/10 text-primary'
                     }`}
                   >
                     {p.type === 'cash' ? 'AV' : p.type === 'recurring' ? 'RC' : p.installmentLabel}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-white">{p.description}</p>
-                    <p className="text-xs text-white/30">
+                    <p className="text-sm font-medium text-foreground">{p.description}</p>
+                    <p className="text-xs text-muted-foreground">
                       {p.type === 'cash'
                         ? 'À Vista'
                         : p.type === 'recurring'
@@ -313,9 +313,9 @@ export default function CreditCardDetail() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-bold text-white">{formatCurrency(p.monthlyAmount)}</p>
+                  <p className="text-sm font-bold text-foreground">{formatCurrency(p.monthlyAmount)}</p>
                   {p.type === 'installment' && (
-                    <p className="text-[10px] text-white/30">de {formatCurrency(p.amount)}</p>
+                    <p className="text-[10px] text-muted-foreground">de {formatCurrency(p.amount)}</p>
                   )}
                 </div>
               </div>
@@ -325,9 +325,9 @@ export default function CreditCardDetail() {
 
         {/* Month total footer */}
         {monthPurchases.length > 0 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-white/10 bg-white/2">
-            <p className="text-sm font-semibold text-white/60">Total estimado</p>
-            <p className="text-base font-black text-amber-400">{formatCurrency(monthTotal)}</p>
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/50">
+            <p className="text-sm font-semibold text-muted-foreground">Total estimado</p>
+            <p className="text-base font-black text-primary">{formatCurrency(monthTotal)}</p>
           </div>
         )}
       </div>

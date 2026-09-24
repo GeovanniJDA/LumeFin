@@ -18,6 +18,7 @@ import { AppLayout } from './components/shared/app-layout';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import { useProfileStore } from '@/store/profile-store';
+import { ThemeProvider } from 'next-themes';
 
 window.addEventListener('focus', async () => {
   const store = useProfileStore.getState()
@@ -68,8 +69,9 @@ function App() {
     <BrowserRouter>
       <AuthListener />
       <InactivityListener />
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
       <Suspense fallback={
-        <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
           <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
         </div>
       }>
@@ -88,7 +90,8 @@ function App() {
           <Route path="/app/profile" element={<AuthGuard><AppLayout><Profile /></AppLayout></AuthGuard>} />
         </Routes>
       </Suspense>
-      <Toaster position="bottom-right" richColors theme="dark" />
+      <Toaster position="bottom-right" richColors />
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

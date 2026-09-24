@@ -143,29 +143,29 @@ export function CardPurchasesPanel({ cardId, referenceMonth, dependents, openOnM
   const filteredPurchases = purchases.filter(p => p.reference_month === referenceMonth);
 
   return (
-    <div className="pt-4 border-t border-white/6 space-y-4">
+    <div className="pt-4 border-t border-border space-y-4">
       {/* Summary Row */}
       <div className="grid grid-cols-3 gap-2">
-        <div className="bg-white/5 rounded-lg p-2 text-center border border-white/5">
-          <p className="text-[10px] text-white/40 uppercase">À Vista</p>
-          <p className="text-sm font-bold text-white">{formatCurrency(totalByType.cash)}</p>
+        <div className="bg-muted/50 rounded-lg p-2 text-center border border-border">
+          <p className="text-[10px] text-muted-foreground uppercase">À Vista</p>
+          <p className="text-sm font-bold text-foreground">{formatCurrency(totalByType.cash)}</p>
         </div>
-        <div className="bg-white/5 rounded-lg p-2 text-center border border-white/5">
-          <p className="text-[10px] text-white/40 uppercase">Parcelado</p>
-          <p className="text-sm font-bold text-white">{formatCurrency(totalByType.installment)}</p>
+        <div className="bg-muted/50 rounded-lg p-2 text-center border border-border">
+          <p className="text-[10px] text-muted-foreground uppercase">Parcelado</p>
+          <p className="text-sm font-bold text-foreground">{formatCurrency(totalByType.installment)}</p>
         </div>
-        <div className="bg-white/5 rounded-lg p-2 text-center border border-white/5">
-          <p className="text-[10px] text-white/40 uppercase">Recorrente</p>
-          <p className="text-sm font-bold text-white">{formatCurrency(totalByType.recurring)}</p>
+        <div className="bg-muted/50 rounded-lg p-2 text-center border border-border">
+          <p className="text-[10px] text-muted-foreground uppercase">Recorrente</p>
+          <p className="text-sm font-bold text-foreground">{formatCurrency(totalByType.recurring)}</p>
         </div>
       </div>
 
       {/* Header and Add Button */}
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-bold text-white">Compras da Fatura</h4>
+        <h4 className="text-sm font-bold text-foreground">Compras da Fatura</h4>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger render={
-            <Button variant="ghost" size="sm" onClick={handleOpenAdd} className="h-8 text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-400/10">
+            <Button variant="ghost" size="sm" onClick={handleOpenAdd} className="h-8 text-xs text-primary hover:text-primary hover:bg-amber-400/10">
               <Plus className="w-3 h-3 mr-1" /> Adicionar
             </Button>
           } />
@@ -288,7 +288,7 @@ export function CardPurchasesPanel({ cardId, referenceMonth, dependents, openOnM
                 </div>
 
                 {watchType === 'installment' && (
-                  <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                  <div className="p-4 bg-muted/50 rounded-lg border border-border">
                     <FormField
                       control={form.control as any}
                       name="installments"
@@ -311,7 +311,7 @@ export function CardPurchasesPanel({ cardId, referenceMonth, dependents, openOnM
                         </FormItem>
                       )}
                     />
-                    <p className="mt-3 text-sm text-white/50">
+                    <p className="mt-3 text-sm text-muted-foreground">
                       Total da compra: {formatCurrency(Math.round(watchAmount * watchInstallments * 100) / 100)}
                     </p>
                   </div>
@@ -365,7 +365,7 @@ export function CardPurchasesPanel({ cardId, referenceMonth, dependents, openOnM
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting}>
                     Cancelar
                   </Button>
-                  <Button type="submit" disabled={isSubmitting} className="bg-amber-500 hover:bg-amber-600 text-white">
+                  <Button type="submit" disabled={isSubmitting} className="bg-amber-500 hover:bg-amber-600 text-foreground">
                     {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                     {editingId ? 'Salvar' : 'Adicionar'}
                   </Button>
@@ -378,28 +378,28 @@ export function CardPurchasesPanel({ cardId, referenceMonth, dependents, openOnM
 
       {/* List of Purchases */}
       {error ? (
-        <p role="alert" className="text-center py-4 text-sm text-red-400">Falha ao carregar compras: {error}</p>
+        <p role="alert" className="text-center py-4 text-sm text-destructive">Falha ao carregar compras: {error}</p>
       ) : loading ? (
         <div className="flex justify-center py-4">
-          <Loader2 className="w-5 h-5 text-white/20 animate-spin" />
+          <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
         </div>
       ) : filteredPurchases.length === 0 ? (
-        <div className="text-center py-6 bg-white/5 rounded-lg border border-white/5 border-dashed">
-          <CardIcon className="w-6 h-6 text-white/20 mx-auto mb-2" />
-          <p className="text-xs text-white/40">Nenhuma compra lançada nesta fatura.</p>
+        <div className="text-center py-6 bg-muted/50 rounded-lg border border-border border-dashed">
+          <CardIcon className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+          <p className="text-xs text-muted-foreground">Nenhuma compra lançada nesta fatura.</p>
         </div>
       ) : (
         <div className="space-y-2">
           {filteredPurchases.map(purchase => (
-            <div key={purchase.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:border-white/10 transition-colors">
+            <div key={purchase.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border hover:border-border transition-colors">
               <div className="flex-1 min-w-0 pr-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-semibold text-sm text-white truncate">{purchase.description}</span>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-white/10 text-white/60 whitespace-nowrap">
+                  <span className="font-semibold text-sm text-foreground truncate">{purchase.description}</span>
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-muted/50 text-muted-foreground whitespace-nowrap">
                     {purchase.type === 'installment' ? `${purchase.current_installment}/${purchase.installments} ${typeLabels.installment}` : typeLabels[purchase.type]}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-[11px] text-white/40">
+                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                   <span>{format(parseISO(purchase.purchase_date), "dd 'de' MMM", { locale: ptBR })}</span>
                   {purchase.dependents.length > 0 && (
                     <span className="truncate max-w-32">• {purchase.dependents.map(dependent => dependent.name).join(', ')}</span>
@@ -414,7 +414,7 @@ export function CardPurchasesPanel({ cardId, referenceMonth, dependents, openOnM
               </div>
 
               <div className="flex flex-col items-end shrink-0 gap-1">
-                <span className="font-bold text-sm text-white">
+                <span className="font-bold text-sm text-foreground">
                   {purchase.type === 'installment' 
                     ? formatCurrency(purchase.amount / purchase.installments)
                     : formatCurrency(purchase.amount)}
@@ -422,12 +422,12 @@ export function CardPurchasesPanel({ cardId, referenceMonth, dependents, openOnM
                 
                 <div className="flex items-center gap-1">
                   <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(purchase)} disabled={loadingId === purchase.id} className="h-6 w-6">
-                    <Edit className="w-3 h-3 text-white/40 hover:text-amber-300" />
+                    <Edit className="w-3 h-3 text-muted-foreground hover:text-primary" />
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger render={
                       <Button variant="ghost" size="icon" disabled={loadingId === purchase.id} className="h-6 w-6">
-                        {loadingId === purchase.id ? <Loader2 className="w-3 h-3 text-white/40 animate-spin" /> : <Trash2 className="w-3 h-3 text-white/40 hover:text-red-400" />}
+                        {loadingId === purchase.id ? <Loader2 className="w-3 h-3 text-muted-foreground animate-spin" /> : <Trash2 className="w-3 h-3 text-muted-foreground hover:text-destructive" />}
                       </Button>
                     } />
                     <AlertDialogContent>
@@ -439,7 +439,7 @@ export function CardPurchasesPanel({ cardId, referenceMonth, dependents, openOnM
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(purchase.id)} className="bg-red-600 hover:bg-red-700 text-white">
+                        <AlertDialogAction onClick={() => handleDelete(purchase.id)} className="bg-red-600 hover:bg-red-700 text-foreground">
                           Excluir
                         </AlertDialogAction>
                       </AlertDialogFooter>

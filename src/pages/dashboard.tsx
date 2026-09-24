@@ -171,127 +171,110 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8">
       <PageHeader title="Dashboard" description="Visão geral financeira e alertas." />
 
       {/* ── Hero Card ── */}
       {!isLoading && !financialDataError && (
-        <div
-          className="relative overflow-hidden rounded-2xl p-4 md:p-6 border border-amber-400/20"
-          style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(245,158,11,0.05) 50%, transparent 100%)' }}
-        >
-          <div
-            className="absolute top-0 right-0 w-64 h-64 rounded-full pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%)', transform: 'translate(30%, -30%)' }}
-          />
+        <section className="relative overflow-hidden rounded-2xl border border-primary/20 bg-card p-5 md:p-7">
           <div className="relative z-10 flex flex-col gap-4">
-            {/* Total amount — always full width */}
             <div>
-              <p className="text-sm text-white/50 uppercase tracking-widest font-semibold mb-1">
+              <p className="mb-1 text-sm font-medium text-muted-foreground">
                 Posição líquida de compromissos
               </p>
-              <p className="text-3xl md:text-5xl font-black text-white">
-                <span className={netCommitments < 0 ? 'text-red-400' : netCommitments > 0 ? 'text-emerald-400' : 'text-white'}>
+              <p className="text-3xl font-semibold tracking-tight tabular-nums md:text-4xl">
+                <span className={netCommitments < 0 ? 'text-destructive dark:text-destructive' : netCommitments > 0 ? 'text-success dark:text-success' : 'text-foreground'}>
                   {formatCurrency(netCommitments)}
                 </span>
               </p>
-              <p className="text-sm text-white/50 mt-1">
-                valores a receber menos transações, contas e faturas pendentes
+              <p className="mt-1 max-w-[65ch] text-sm leading-relaxed text-muted-foreground">
+                O que falta receber, menos pagamentos, contas e faturas em aberto.
               </p>
             </div>
 
-            {/* Valores em aberto que compõem a posição líquida */}
-            <div className="flex gap-3 md:gap-6">
+            <div className="grid grid-cols-3 gap-3 border-t border-border pt-4 md:max-w-xl md:gap-6">
               <div>
-                <p className="text-[10px] md:text-xs text-white/40 mb-0.5">
-                  A Receber
-                </p>
-                <p className="text-sm md:text-lg font-bold text-emerald-400">
+                <p className="mb-0.5 text-xs text-muted-foreground">A receber</p>
+                <p className="text-sm font-semibold tabular-nums text-success dark:text-success md:text-lg">
                   {formatCurrency(totalToReceive)}
                 </p>
               </div>
-              <div className="w-px bg-white/10" />
               <div>
-                <p className="text-[10px] md:text-xs text-white/40 mb-0.5">
-                  A Pagar
-                </p>
-                <p className="text-sm md:text-lg font-bold text-red-400">
+                <p className="mb-0.5 text-xs text-muted-foreground">A pagar</p>
+                <p className="text-sm font-semibold tabular-nums text-destructive dark:text-destructive md:text-lg">
                   {formatCurrency(totalToPay)}
                 </p>
               </div>
-              <div className="w-px bg-white/10" />
               <div>
-                <p className="text-[10px] md:text-xs text-white/40 mb-0.5">
-                  Vencidas
-                </p>
-                <p className="text-sm md:text-lg font-bold text-amber-400">
+                <p className="mb-0.5 text-xs text-muted-foreground">Vencidas</p>
+                <p className="text-sm font-semibold tabular-nums text-foreground md:text-lg">
                   {overdueCount}
                 </p>
               </div>
             </div>
           </div>
-        </div>
+        </section>
       )}
 
       {/* ── Section 1: Summary Cards ── */}
       {isLoading ? (
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {[1, 2, 3, 4].map(i => (
             <Skeleton key={i} className="h-32 w-full rounded-2xl" />
           ))}
         </div>
       ) : financialDataError ? (
-        <p role="alert" className="text-sm text-red-400">Falha ao calcular a posição financeira: {financialDataError}</p>
+        <p role="alert" className="text-sm text-destructive dark:text-destructive">Falha ao calcular a posição financeira: {financialDataError}</p>
       ) : (
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {/* Contas Pendentes */}
-          <div className="glass-strong rounded-2xl p-5 hover:shadow-lg transition-all">
+          <div className="rounded-xl border border-border bg-card p-4 transition-colors hover:bg-accent/40">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-[rgba(255,255,255,0.5)]">Contas Pendentes</span>
-              <div className="p-2 bg-[rgba(245,158,11,0.15)] rounded-lg">
-                <Receipt className="w-4 h-4 text-[#F59E0B]" />
+              <span className="text-sm font-medium text-muted-foreground">Contas pendentes</span>
+              <div className="rounded-md bg-primary/10 p-2">
+                <Receipt className="h-4 w-4 text-primary" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-white font-quicksand">{pendingBillsCount}</div>
-            <p className="text-xs text-[rgba(255,255,255,0.4)] mt-1">{formatCurrency(pendingBillsTotal)}</p>
-            <p className="text-xs text-white/40 mt-1">{overdueCount} vencida{overdueCount !== 1 ? 's' : ''}</p>
+            <div className="text-2xl font-semibold tabular-nums">{pendingBillsCount}</div>
+            <p className="mt-1 text-sm text-muted-foreground">{formatCurrency(pendingBillsTotal)}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{overdueCount} vencida{overdueCount !== 1 ? 's' : ''}</p>
           </div>
 
           {/* Faturas em Aberto */}
-          <div className="glass-strong rounded-2xl p-5 hover:shadow-lg transition-all">
+          <div className="rounded-xl border border-border bg-card p-4 transition-colors hover:bg-accent/40">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-[rgba(255,255,255,0.5)]">Faturas em Aberto</span>
-              <div className="p-2 bg-[rgba(245,158,11,0.15)] rounded-lg">
-                <CreditCard className="w-4 h-4 text-[#F59E0B]" />
+              <span className="text-sm font-medium text-muted-foreground">Faturas em aberto</span>
+              <div className="rounded-md bg-primary/10 p-2">
+                <CreditCard className="h-4 w-4 text-primary" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-white font-quicksand">{openCardsCount}</div>
-            <p className="text-xs text-[rgba(255,255,255,0.4)] mt-1">{formatCurrency(openCardsTotal)}</p>
-            <p className="text-xs text-white/40 mt-1">{formatCurrency(totalInvoiceAmount)} em aberto</p>
+            <div className="text-2xl font-semibold tabular-nums">{openCardsCount}</div>
+            <p className="mt-1 text-sm text-muted-foreground">{formatCurrency(openCardsTotal)}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{formatCurrency(totalInvoiceAmount)} em aberto</p>
           </div>
 
           {/* A Receber */}
-          <div className="glass-strong rounded-2xl p-5 hover:shadow-lg transition-all">
+          <div className="rounded-xl border border-border bg-card p-4 transition-colors hover:bg-accent/40">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-[rgba(255,255,255,0.5)]">A Receber</span>
-              <div className="p-2 bg-[rgba(16,185,129,0.15)] rounded-lg">
-                <TrendingUp className="w-4 h-4 text-[#10B981]" />
+              <span className="text-sm font-medium text-muted-foreground">A receber</span>
+              <div className="rounded-md bg-emerald-600/10 p-2">
+                <TrendingUp className="h-4 w-4 text-success dark:text-success" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-[#10B981] font-quicksand">{formatCurrency(totalToReceive)}</div>
-            <p className="text-xs text-white/40 mt-1">{transactionCounts.toReceive} transaç{transactionCounts.toReceive !== 1 ? 'ões' : 'ão'}</p>
+            <div className="text-2xl font-semibold tabular-nums text-success dark:text-success">{formatCurrency(totalToReceive)}</div>
+            <p className="mt-1 text-xs text-muted-foreground">{transactionCounts.toReceive} transaç{transactionCounts.toReceive !== 1 ? 'ões' : 'ão'}</p>
           </div>
 
           {/* A Pagar */}
-          <div className="glass-strong rounded-2xl p-5 hover:shadow-lg transition-all">
+          <div className="rounded-xl border border-border bg-card p-4 transition-colors hover:bg-accent/40">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-[rgba(255,255,255,0.5)]">A Pagar</span>
-              <div className="p-2 bg-[rgba(239,68,68,0.15)] rounded-lg">
-                <TrendingDown className="w-4 h-4 text-[#EF4444]" />
+              <span className="text-sm font-medium text-muted-foreground">A pagar</span>
+              <div className="rounded-md bg-red-600/10 p-2">
+                <TrendingDown className="h-4 w-4 text-destructive dark:text-destructive" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-[#EF4444] font-quicksand">{formatCurrency(totalToPay)}</div>
-            <p className="text-xs text-white/40 mt-1">transações, contas e faturas pendentes</p>
+            <div className="text-2xl font-semibold tabular-nums text-destructive dark:text-destructive">{formatCurrency(totalToPay)}</div>
+            <p className="mt-1 text-xs text-muted-foreground">transações, contas e faturas pendentes</p>
           </div>
         </div>
       )}
@@ -303,36 +286,32 @@ export default function Dashboard() {
         null
       ) : hasAlerts ? (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-[rgba(255,255,255,0.9)] flex items-center gap-2 border-b border-[rgba(255,255,255,0.06)] pb-2">
-            <AlertCircle className="w-5 h-5 text-[#EF4444]" />
+          <h2 className="flex items-center gap-2 border-b border-border pb-2 text-lg font-semibold">
+            <AlertCircle className="h-5 w-5 text-destructive dark:text-destructive" />
             Alertas
           </h2>
           <div className="grid gap-4 md:grid-cols-2">
             {/* Overdue */}
             {(overdueBills.length > 0 || overdueCards.length > 0) && (
-              <div className="glass rounded-2xl p-5" style={{ borderLeft: '3px solid #EF4444' }}>
-                <div className="text-[#EF4444] text-sm font-semibold flex items-center gap-2 mb-3">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                  </span>
+              <div className="rounded-xl border border-border border-l-4 border-l-red-600 bg-card p-5">
+                <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-destructive dark:text-destructive">
                   Vencidos ({overdueBills.length + overdueCards.length})
                 </div>
-                <ul className="text-sm space-y-2 font-quicksand">
+                <ul className="space-y-2 text-sm">
                   {overdueBills.slice(0, 5).map(b => (
-                    <li key={b.id} className="flex justify-between border-b border-[rgba(255,255,255,0.04)] pb-1">
-                      <span className="text-[rgba(255,255,255,0.7)] truncate mr-2">
-                        {getCategoryName(b.category_id)} — venceu em {format(parseISO(b.due_date), 'dd/MM/yyyy', { locale: ptBR })}
+                    <li key={b.id} className="flex justify-between gap-3 border-b border-border pb-2 last:border-0">
+                      <span className="truncate text-muted-foreground">
+                        {getCategoryName(b.category_id)}, venceu em {format(parseISO(b.due_date), 'dd/MM/yyyy', { locale: ptBR })}
                       </span>
-                      <span className="font-semibold text-[#EF4444] whitespace-nowrap">{formatCurrency(b.amount)}</span>
+                      <span className="whitespace-nowrap font-semibold tabular-nums text-destructive dark:text-destructive">{formatCurrency(b.amount)}</span>
                     </li>
                   ))}
                   {overdueCards.slice(0, 3).map(c => (
-                    <li key={c.id} className="flex justify-between border-b border-[rgba(255,255,255,0.04)] pb-1">
-                      <span className="text-[rgba(255,255,255,0.7)] truncate mr-2">
-                        Cartão: {c.name} — venceu em {format(parseISO(c.due_date), 'dd/MM/yyyy', { locale: ptBR })}
+                    <li key={c.id} className="flex justify-between gap-3 border-b border-border pb-2 last:border-0">
+                      <span className="truncate text-muted-foreground">
+                        Cartão: {c.name}, venceu em {format(parseISO(c.due_date), 'dd/MM/yyyy', { locale: ptBR })}
                       </span>
-                      <span className="font-semibold text-[#EF4444] whitespace-nowrap">{formatCurrency(c.invoice_amount)}</span>
+                      <span className="whitespace-nowrap font-semibold tabular-nums text-destructive dark:text-destructive">{formatCurrency(c.invoice_amount)}</span>
                     </li>
                   ))}
                 </ul>
@@ -341,25 +320,25 @@ export default function Dashboard() {
 
             {/* Due Soon */}
             {(dueSoonBills.length > 0 || dueSoonCards.length > 0) && (
-              <div className="glass rounded-2xl p-5" style={{ borderLeft: '3px solid #F59E0B' }}>
-                <div className="text-[#F59E0B] text-sm font-semibold mb-3">
+              <div className="rounded-xl border border-border border-l-4 border-l-primary bg-card p-5">
+                <div className="mb-3 text-sm font-semibold text-primary">
                   Vence em breve ({dueSoonBills.length + dueSoonCards.length})
                 </div>
-                <ul className="text-sm space-y-2 font-quicksand">
+                <ul className="space-y-2 text-sm">
                   {dueSoonBills.slice(0, 5).map(b => (
-                    <li key={b.id} className="flex justify-between border-b border-[rgba(255,255,255,0.04)] pb-1">
-                      <span className="text-[rgba(255,255,255,0.7)] truncate mr-2">
-                        {getCategoryName(b.category_id)} — vence em {format(parseISO(b.due_date), 'dd/MM/yyyy', { locale: ptBR })}
+                    <li key={b.id} className="flex justify-between gap-3 border-b border-border pb-2 last:border-0">
+                      <span className="truncate text-muted-foreground">
+                        {getCategoryName(b.category_id)}, vence em {format(parseISO(b.due_date), 'dd/MM/yyyy', { locale: ptBR })}
                       </span>
-                      <span className="font-semibold text-[#F59E0B] whitespace-nowrap">{formatCurrency(b.amount)}</span>
+                      <span className="whitespace-nowrap font-semibold tabular-nums text-primary">{formatCurrency(b.amount)}</span>
                     </li>
                   ))}
                   {dueSoonCards.slice(0, 3).map(c => (
-                    <li key={c.id} className="flex justify-between border-b border-[rgba(255,255,255,0.04)] pb-1">
-                      <span className="text-[rgba(255,255,255,0.7)] truncate mr-2">
-                        Cartão: {c.name} — vence em {format(parseISO(c.due_date), 'dd/MM/yyyy', { locale: ptBR })}
+                    <li key={c.id} className="flex justify-between gap-3 border-b border-border pb-2 last:border-0">
+                      <span className="truncate text-muted-foreground">
+                        Cartão: {c.name}, vence em {format(parseISO(c.due_date), 'dd/MM/yyyy', { locale: ptBR })}
                       </span>
-                      <span className="font-semibold text-[#F59E0B] whitespace-nowrap">{formatCurrency(c.invoice_amount)}</span>
+                      <span className="whitespace-nowrap font-semibold tabular-nums text-primary">{formatCurrency(c.invoice_amount)}</span>
                     </li>
                   ))}
                 </ul>
@@ -377,32 +356,32 @@ export default function Dashboard() {
           ))}
         </div>
       ) : financialDataError ? null : purchasesError ? (
-        <p role="alert" className="text-sm text-red-400">Falha ao calcular o rateio por dependente: {purchasesError}</p>
+        <p role="alert" className="text-sm text-destructive dark:text-destructive">Falha ao calcular o rateio por dependente: {purchasesError}</p>
       ) : dependents.length > 0 ? (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-[rgba(255,255,255,0.9)] border-b border-[rgba(255,255,255,0.06)] pb-2">
+          <h2 className="border-b border-border pb-2 text-lg font-semibold">
             Resumo por Dependente
           </h2>
           <div className="grid gap-4 md:grid-cols-2">
             {dependentSummaries.map(dep => (
-              <div key={dep.id} className="glass rounded-2xl p-5 hover:shadow-lg transition-all">
+              <div key={dep.id} className="rounded-xl border border-border bg-card p-5">
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="text-base font-semibold text-white">{dep.name}</span>
-                  <Badge variant="secondary" className="text-[10px] font-medium py-0 h-5 bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.6)] border-none">
+                  <span className="text-base font-semibold text-foreground">{dep.name}</span>
+                  <Badge variant="secondary" className="h-5 border-0 bg-muted px-2 py-0 text-[10px] font-medium text-muted-foreground">
                     {RELATIONSHIP_LABELS[dep.relationship] || dep.relationship}
                   </Badge>
                 </div>
 
                 <div className="grid grid-cols-3 gap-3 text-center mb-4">
-                  <div className="rounded-xl bg-[rgba(255,255,255,0.04)] p-3">
-                    <div className="text-lg font-bold text-white">{dep.pendingBillsCount}</div>
-                    <p className="text-[10px] text-[rgba(255,255,255,0.4)]">Contas</p>
+                  <div className="rounded-lg bg-muted p-3">
+                    <div className="text-lg font-semibold tabular-nums text-foreground">{dep.pendingBillsCount}</div>
+                    <p className="text-[10px] text-muted-foreground">Contas</p>
                   </div>
-                  <div className="rounded-xl bg-[rgba(255,255,255,0.04)] p-3">
-                    <div className="text-lg font-bold text-white">{dep.pendingCardsCount}</div>
-                    <p className="text-[10px] text-[rgba(255,255,255,0.4)]">Cartões</p>
+                  <div className="rounded-lg bg-muted p-3">
+                    <div className="text-lg font-semibold tabular-nums text-foreground">{dep.pendingCardsCount}</div>
+                    <p className="text-[10px] text-muted-foreground">Cartões</p>
                     {dep.pendingCardsTotal > 0 && (
-                      <p className="text-[10px] text-[rgba(255,255,255,0.3)]" title="Faturas divididas igualmente entre dependentes vinculados.">
+                      <p className="text-[10px] text-muted-foreground" title="Faturas divididas igualmente entre dependentes vinculados.">
                         Sua parte: {formatCurrency(dep.pendingCardsTotal)}
                       </p>
                     )}
@@ -411,17 +390,17 @@ export default function Dashboard() {
                     ? 'bg-[rgba(16,185,129,0.1)]'
                     : dep.balance < 0
                       ? 'bg-[rgba(239,68,68,0.1)]'
-                      : 'bg-[rgba(255,255,255,0.04)]'
+                      : 'bg-muted'
                   }`}>
                     <div className={`text-lg font-bold ${dep.balance > 0
-                      ? 'text-[#10B981]'
+                      ? 'text-success dark:text-success'
                       : dep.balance < 0
-                        ? 'text-[#EF4444]'
-                        : 'text-[rgba(255,255,255,0.4)]'
+                        ? 'text-destructive dark:text-destructive'
+                      : 'text-muted-foreground'
                     }`}>
                       {formatCurrency(Math.abs(dep.balance))}
                     </div>
-                    <p className="text-[10px] text-[rgba(255,255,255,0.4)]">
+                    <p className="text-[10px] text-muted-foreground">
                       {dep.balance > 0 ? 'A receber' : dep.balance < 0 ? 'A pagar' : 'Sem saldo'}
                     </p>
                   </div>
@@ -430,19 +409,19 @@ export default function Dashboard() {
                 <div className="flex gap-2 pt-1">
                   <button
                     onClick={() => navigate('/app/bills')}
-                    className="flex items-center gap-1 text-xs text-[#F59E0B] hover:text-amber-300 font-medium transition-colors"
+                    className="flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:underline"
                   >
                     Contas <ArrowRight className="w-3 h-3" />
                   </button>
                   <button
                     onClick={() => navigate('/app/credit-cards')}
-                    className="flex items-center gap-1 text-xs text-[#F59E0B] hover:text-amber-300 font-medium transition-colors"
+                    className="flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:underline"
                   >
                     Cartões <ArrowRight className="w-3 h-3" />
                   </button>
                   <button
                     onClick={() => navigate('/app/transactions')}
-                    className="flex items-center gap-1 text-xs text-[#F59E0B] hover:text-amber-300 font-medium transition-colors"
+                    className="flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:underline"
                   >
                     Transações <ArrowRight className="w-3 h-3" />
                   </button>

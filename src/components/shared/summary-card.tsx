@@ -20,7 +20,7 @@ export function SummaryCard({ title, value, icon: Icon, trend, trendUp }: Props)
       <CardContent>
         <div className="text-2xl font-bold font-quicksand">{value}</div>
         {trend && (
-          <p className={cn("text-xs flex items-center mt-1 font-medium", trendUp ? "text-green-600" : "text-red-600")}>
+          <p className={cn("text-xs flex items-center mt-1 font-medium", trendUp ? "text-success" : "text-destructive")}>
             {trend}
           </p>
         )}

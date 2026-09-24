@@ -33,13 +33,13 @@ const RELATIONSHIP_LABELS: Record<Relationship, string> = {
 const RELATIONSHIP_COLORS: Record<Relationship, string> = {
   mae: 'bg-[rgba(236,72,153,0.15)] text-pink-400 border-[rgba(236,72,153,0.3)]',
   pai: 'bg-[rgba(59,130,246,0.15)] text-blue-400 border-[rgba(59,130,246,0.3)]',
-  avo: 'bg-[rgba(16,185,129,0.15)] text-emerald-400 border-[rgba(16,185,129,0.3)]',
+  avo: 'bg-[rgba(16,185,129,0.15)] text-success border-[rgba(16,185,129,0.3)]',
   avoa: 'bg-[rgba(20,184,166,0.15)] text-teal-400 border-[rgba(20,184,166,0.3)]',
   irmao: 'bg-[rgba(99,102,241,0.15)] text-indigo-400 border-[rgba(99,102,241,0.3)]',
   irma: 'bg-[rgba(168,85,247,0.15)] text-purple-400 border-[rgba(168,85,247,0.3)]',
-  tio: 'bg-[rgba(245,158,11,0.15)] text-amber-400 border-[rgba(245,158,11,0.3)]',
+  tio: 'bg-[rgba(245,158,11,0.15)] text-primary border-[rgba(245,158,11,0.3)]',
   tia: 'bg-[rgba(249,115,22,0.15)] text-orange-400 border-[rgba(249,115,22,0.3)]',
-  outro: 'bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.6)] border-[rgba(255,255,255,0.15)]'
+  outro: 'bg-muted/50 text-muted-foreground border-border'
 };
 
 export default function Dependents() {
@@ -114,7 +114,7 @@ export default function Dependents() {
         action={
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger render={
-              <Button onClick={handleOpenAdd} className="bg-amber-500 hover:bg-amber-600 text-white gap-2 shadow-sm font-quicksand font-bold">
+              <Button onClick={handleOpenAdd} className="bg-amber-500 hover:bg-amber-600 text-foreground gap-2 shadow-sm font-quicksand font-bold">
                 <Plus className="w-4 h-4" /> Adicionar Dependente
               </Button>
             } />
@@ -189,7 +189,7 @@ export default function Dependents() {
                     <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting}>
                       Cancelar
                     </Button>
-                    <Button type="submit" disabled={isSubmitting} className="bg-amber-500 hover:bg-amber-600 text-white">
+                    <Button type="submit" disabled={isSubmitting} className="bg-amber-500 hover:bg-amber-600 text-foreground">
                       {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                       {editingId ? 'Salvar' : 'Adicionar'}
                     </Button>
@@ -202,7 +202,7 @@ export default function Dependents() {
       />
 
       {error && !isDialogOpen && (
-        <div className="p-4 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)] text-red-400 rounded-lg">
+        <div className="p-4 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)] text-destructive rounded-lg">
           Falha ao carregar dependentes: {error}
         </div>
       )}
@@ -224,8 +224,8 @@ export default function Dependents() {
           {dependents.map(dep => (
             <div key={dep.id}
               className="glass rounded-2xl p-5 flex flex-col gap-4
-                hover:border-white/12 transition-all duration-200
-                border border-white/6">
+                hover:border-border transition-all duration-200
+                border border-border">
 
               {/* Top row: avatar + name + relationship + actions */}
               <div className="flex items-start justify-between gap-3">
@@ -233,12 +233,11 @@ export default function Dependents() {
                   {/* Avatar with initials */}
                   <div
                     className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 text-lg font-black border-2 ${RELATIONSHIP_COLORS[dep.relationship]}`}
-                    style={{ background: 'rgba(255,255,255,0.06)' }}
                   >
                     {dep.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="font-bold text-white text-base leading-tight">{dep.name}</h3>
+                    <h3 className="font-bold text-foreground text-base leading-tight">{dep.name}</h3>
                     <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${RELATIONSHIP_COLORS[dep.relationship]}`}>
                       {RELATIONSHIP_LABELS[dep.relationship]}
                     </span>
@@ -248,12 +247,12 @@ export default function Dependents() {
                 {/* Action buttons */}
                 <div className="flex items-center gap-1 shrink-0">
                   <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(dep)} disabled={loadingId === dep.id}>
-                    <Edit className="w-4 h-4 text-white/40 hover:text-amber-400" />
+                    <Edit className="w-4 h-4 text-muted-foreground hover:text-primary" />
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger render={
                       <Button variant="ghost" size="icon" disabled={loadingId === dep.id}>
-                        {loadingId === dep.id ? <Loader2 className="w-4 h-4 text-white/40 animate-spin" /> : <Trash2 className="w-4 h-4 text-white/40 hover:text-red-400" />}
+                        {loadingId === dep.id ? <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" /> : <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />}
                       </Button>
                     } />
                     <AlertDialogContent>
@@ -265,7 +264,7 @@ export default function Dependents() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(dep.id)} className="bg-red-600 hover:bg-red-700 text-white">
+                        <AlertDialogAction onClick={() => handleDelete(dep.id)} className="bg-red-600 hover:bg-red-700 text-foreground">
                           Remover
                         </AlertDialogAction>
                       </AlertDialogFooter>
@@ -276,7 +275,7 @@ export default function Dependents() {
 
               {/* Notes if present */}
               {dep.notes && (
-                <p className="text-sm text-white/50 line-clamp-2 leading-relaxed">
+                <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                   {dep.notes}
                 </p>
               )}

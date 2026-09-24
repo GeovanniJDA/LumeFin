@@ -36,9 +36,9 @@ const STATUS_LABELS: Record<CardStatus, string> = {
 };
 
 const STATUS_COLORS: Record<CardStatus, string> = {
-  open: 'bg-[rgba(245,158,11,0.15)] text-[#F59E0B] border-[rgba(245,158,11,0.3)]',
-  closed: 'bg-[rgba(245,158,11,0.15)] text-[#F59E0B] border-[rgba(245,158,11,0.3)]',
-  paid: 'bg-[rgba(16,185,129,0.15)] text-[#10B981] border-[rgba(16,185,129,0.3)]'
+  open: 'bg-[rgba(245,158,11,0.15)] text-primary border-[rgba(245,158,11,0.3)]',
+  closed: 'bg-[rgba(245,158,11,0.15)] text-primary border-[rgba(245,158,11,0.3)]',
+  paid: 'bg-[rgba(16,185,129,0.15)] text-success border-[rgba(16,185,129,0.3)]'
 };
 
 const CARD_COLORS = [
@@ -216,7 +216,7 @@ export default function CreditCards() {
         action={
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger render={
-              <Button onClick={handleOpenAdd} className="bg-amber-500 hover:bg-amber-600 text-white gap-2 shadow-sm font-quicksand font-bold">
+              <Button onClick={handleOpenAdd} className="bg-amber-500 hover:bg-amber-600 text-foreground gap-2 shadow-sm font-quicksand font-bold">
                 <Plus className="w-4 h-4" /> Adicionar Cartão
               </Button>
             } />
@@ -353,7 +353,7 @@ export default function CreditCards() {
                               placeholder="0,00"
                             />
                           </FormControl>
-                          <p className="text-[11px] text-amber-500/80 mt-1 leading-tight">
+                          <p className="text-[11px] text-primary/80 mt-1 leading-tight">
                             O valor da fatura é calculado automaticamente pelas compras
                           </p>
                           <FormMessage />
@@ -425,7 +425,7 @@ export default function CreditCards() {
                     <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting}>
                       Cancelar
                     </Button>
-                    <Button type="submit" disabled={isSubmitting} className="bg-amber-500 hover:bg-amber-600 text-white">
+                    <Button type="submit" disabled={isSubmitting} className="bg-amber-500 hover:bg-amber-600 text-foreground">
                       {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                       {editingId ? 'Salvar' : 'Adicionar'}
                     </Button>
@@ -438,7 +438,7 @@ export default function CreditCards() {
       />
 
       {error && !isDialogOpen && (
-        <div className="p-4 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)] text-red-400 rounded-lg">
+        <div className="p-4 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)] text-destructive rounded-lg">
           Falha ao carregar cartões: {error}
         </div>
       )}
@@ -460,10 +460,8 @@ export default function CreditCards() {
           {creditCards.map(card => (
             <div
               key={card.id}
-              className="relative overflow-hidden rounded-2xl p-5 flex flex-col justify-between gap-4 border border-white/8 hover:border-white/14 transition-all duration-200"
+              className="relative flex flex-col justify-between gap-4 overflow-hidden rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/50"
               style={{
-                background: 'rgba(255,255,255,0.04)',
-                backdropFilter: 'blur(20px)',
                 borderLeftWidth: 3,
                 borderLeftColor: card.color ?? '#6B7280'
               }}
@@ -481,20 +479,20 @@ export default function CreditCards() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: card.color ?? '#6B7280' }} />
-                    <h3 className="font-bold text-white text-lg leading-tight truncate">{card.name}</h3>
+                    <h3 className="font-bold text-foreground text-lg leading-tight truncate">{card.name}</h3>
                   </div>
                   {card.dependents.length > 0 && (
-                    <p className="text-xs text-white/40">{card.dependents.map(dependent => dependent.name).join(', ')}</p>
+                    <p className="text-xs text-muted-foreground">{card.dependents.map(dependent => dependent.name).join(', ')}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(card)} disabled={loadingId === card.id} className="h-8 w-8">
-                    <Edit className="w-4 h-4 text-white/40 hover:text-amber-300" />
+                    <Edit className="w-4 h-4 text-muted-foreground hover:text-primary" />
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger render={
                       <Button variant="ghost" size="icon" disabled={loadingId === card.id} className="h-8 w-8">
-                        {loadingId === card.id ? <Loader2 className="w-4 h-4 text-white/40 animate-spin" /> : <Trash2 className="w-4 h-4 text-white/40 hover:text-red-400" />}
+                        {loadingId === card.id ? <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" /> : <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />}
                       </Button>
                     } />
                     <AlertDialogContent>
@@ -506,7 +504,7 @@ export default function CreditCards() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(card.id)} className="bg-red-600 hover:bg-red-700 text-white">
+                        <AlertDialogAction onClick={() => handleDelete(card.id)} className="bg-red-600 hover:bg-red-700 text-foreground">
                           Remover
                         </AlertDialogAction>
                       </AlertDialogFooter>
@@ -517,20 +515,20 @@ export default function CreditCards() {
 
               {/* Invoice amount — prominent */}
               <div className="relative">
-                <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Valor da Fatura</p>
-                <p className="text-3xl font-black text-white">{formatCurrency(card.invoice_amount)}</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Valor da Fatura</p>
+                <p className="text-3xl font-black text-foreground">{formatCurrency(card.invoice_amount)}</p>
               </div>
 
               {/* Meta row */}
-              <div className="relative flex items-center justify-between pt-3 border-t border-white/6">
+              <div className="relative flex items-center justify-between pt-3 border-t border-border">
                 <div className="flex items-center gap-2">
                   <span className={`px-2 py-1 rounded-md border text-xs font-semibold ${STATUS_COLORS[card.status]}`}>
                     {STATUS_LABELS[card.status]}
                   </span>
-                  <span className="text-xs text-white/30">{card.reference_month}</span>
+                  <span className="text-xs text-muted-foreground">{card.reference_month}</span>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-white/40">Vence {format(parseISO(card.due_date), 'dd/MM', { locale: ptBR })}</p>
+                  <p className="text-xs text-muted-foreground">Vence {format(parseISO(card.due_date), 'dd/MM', { locale: ptBR })}</p>
                 </div>
               </div>
 
@@ -538,7 +536,7 @@ export default function CreditCards() {
               <div className="relative">
                 {card.status === 'open' && (
                   <Button
-                    className="w-full bg-[rgba(245,158,11,0.15)] hover:bg-[rgba(245,158,11,0.25)] text-[#F59E0B] border border-[rgba(245,158,11,0.3)] font-medium"
+                    className="w-full bg-[rgba(245,158,11,0.15)] hover:bg-[rgba(245,158,11,0.25)] text-primary border border-[rgba(245,158,11,0.3)] font-medium"
                     variant="outline"
                     onClick={() => handleCloseInvoice(card.id, card.status)}
                     disabled={loadingId === card.id || loading}
@@ -549,7 +547,7 @@ export default function CreditCards() {
                 )}
                 {card.status === 'closed' && (
                   <Button
-                    className="w-full bg-[rgba(16,185,129,0.15)] hover:bg-[rgba(16,185,129,0.25)] text-[#10B981] border border-[rgba(16,185,129,0.3)] font-medium"
+                    className="w-full bg-[rgba(16,185,129,0.15)] hover:bg-[rgba(16,185,129,0.25)] text-success border border-[rgba(16,185,129,0.3)] font-medium"
                     variant="outline"
                     onClick={() => handleMarkAsPaid(card.id, card.status)}
                     disabled={loadingId === card.id || loading}
@@ -559,7 +557,7 @@ export default function CreditCards() {
                   </Button>
                 )}
                 {card.status === 'paid' && (
-                  <div className="w-full text-center py-2 text-sm text-[#10B981] font-medium bg-[rgba(16,185,129,0.1)] rounded-md border border-[rgba(16,185,129,0.2)]">
+                  <div className="w-full text-center py-2 text-sm text-success font-medium bg-[rgba(16,185,129,0.1)] rounded-md border border-[rgba(16,185,129,0.2)]">
                     Fatura Paga
                   </div>
                 )}
@@ -570,8 +568,8 @@ export default function CreditCards() {
                     expandedCardId === card.id ? null : card.id
                   )}
                   className="w-full flex items-center justify-between
-                    pt-3 mt-2 border-t border-white/6 text-xs
-                    text-white/40 hover:text-white/70 transition-colors"
+                    pt-3 mt-2 border-t border-border text-xs
+                    text-muted-foreground hover:text-muted-foreground transition-colors"
                 >
                   <span>
                     Compras
@@ -603,7 +601,7 @@ export default function CreditCards() {
               <button
                 onClick={() => navigate(`/app/credit-cards/${card.id}`)}
                 className="w-full mt-4 py-2.5 rounded-xl text-sm font-semibold
-                  border border-amber-400/30 text-amber-400
+                  border border-amber-400/30 text-primary
                   hover:bg-amber-400/10 hover:border-amber-400/60
                   transition-all duration-200 flex items-center
                   justify-center gap-2 group"

@@ -72,8 +72,8 @@ const TYPE_LABELS: Record<TransactionType, string> = {
 };
 
 const TYPE_COLORS: Record<TransactionType, string> = {
-  to_pay: 'bg-[rgba(239,68,68,0.15)] text-[#EF4444] border-[rgba(239,68,68,0.3)]',
-  to_receive: 'bg-[rgba(16,185,129,0.15)] text-[#10B981] border-[rgba(16,185,129,0.3)]',
+  to_pay: 'bg-[rgba(239,68,68,0.15)] text-destructive border-[rgba(239,68,68,0.3)]',
+  to_receive: 'bg-[rgba(16,185,129,0.15)] text-success border-[rgba(16,185,129,0.3)]',
 };
 
 const STATUS_LABELS: Record<TransactionStatus, string> = {
@@ -82,8 +82,8 @@ const STATUS_LABELS: Record<TransactionStatus, string> = {
 };
 
 const STATUS_COLORS: Record<TransactionStatus, string> = {
-  pending: 'bg-[rgba(245,158,11,0.15)] text-[#F59E0B] border-[rgba(245,158,11,0.3)]',
-  paid: 'bg-[rgba(16,185,129,0.15)] text-[#10B981] border-[rgba(16,185,129,0.3)]',
+  pending: 'bg-[rgba(245,158,11,0.15)] text-primary border-[rgba(245,158,11,0.3)]',
+  paid: 'bg-[rgba(16,185,129,0.15)] text-success border-[rgba(16,185,129,0.3)]',
 };
 
 const PAYMENT_LABELS: Record<PaymentType, string> = {
@@ -341,7 +341,7 @@ export default function Transactions() {
             <DialogTrigger render={
               <Button
                 onClick={handleOpenAdd}
-                className="bg-amber-500 hover:bg-amber-600 text-white gap-2 shadow-sm font-quicksand font-bold"
+                className="bg-amber-500 hover:bg-amber-600 text-foreground gap-2 shadow-sm font-quicksand font-bold"
               >
                 <Plus className="w-4 h-4" /> Adicionar Transação
               </Button>
@@ -415,7 +415,7 @@ export default function Transactions() {
                               placeholder="0,00"
                             />
                           </FormControl>
-                          <p className="text-xs text-white/40 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             Valor total do empréstimo ou produto
                           </p>
                           <FormMessage />
@@ -542,13 +542,13 @@ export default function Transactions() {
                   {/* Installment preview — only when payment_type === 'installment' */}
                   {watchPaymentType === 'installment' && watchAmount > 0 && watchInstallments > 1 && (
                     <div className="p-3 rounded-xl bg-amber-400/6 border border-amber-400/20">
-                      <p className="text-xs text-white/40 mb-1">
+                      <p className="text-xs text-muted-foreground mb-1">
                         Valor por parcela
                       </p>
-                      <p className="text-base font-bold text-amber-400">
+                      <p className="text-base font-bold text-primary">
                         {formatCurrency(watchAmount / watchInstallments)}
                       </p>
-                      <p className="text-xs text-white/40 mt-0.5">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         {watchInstallments}x de {formatCurrency(watchAmount / watchInstallments)}
                       </p>
                     </div>
@@ -622,7 +622,7 @@ export default function Transactions() {
                     <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting}>
                       Cancelar
                     </Button>
-                    <Button type="submit" disabled={isSubmitting} className="bg-amber-500 hover:bg-amber-600 text-white">
+                    <Button type="submit" disabled={isSubmitting} className="bg-amber-500 hover:bg-amber-600 text-foreground">
                       {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                       {editingId ? 'Salvar' : 'Adicionar'}
                     </Button>
@@ -635,7 +635,7 @@ export default function Transactions() {
       />
 
       {error && !isDialogOpen && (
-        <div className="p-4 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)] text-red-400 rounded-lg">
+        <div className="p-4 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)] text-destructive rounded-lg">
           Falha ao carregar transações: {error}
         </div>
       )}
@@ -653,13 +653,13 @@ export default function Transactions() {
             >
               <div className="flex items-center gap-2 mb-1">
                 {dep.netBalance >= 0 ? (
-                  <ArrowDownLeft className="w-4 h-4 text-[#10B981]" />
+                  <ArrowDownLeft className="w-4 h-4 text-success" />
                 ) : (
-                  <ArrowUpRight className="w-4 h-4 text-[#EF4444]" />
+                  <ArrowUpRight className="w-4 h-4 text-destructive" />
                 )}
                 <span className="font-semibold text-foreground text-sm truncate">{dep.name}</span>
               </div>
-              <span className={`text-xl font-bold ${dep.netBalance >= 0 ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
+              <span className={`text-xl font-bold ${dep.netBalance >= 0 ? 'text-success' : 'text-destructive'}`}>
                 {formatCurrency(Math.abs(dep.netBalance))}
               </span>
               <p className="text-xs text-muted-foreground mt-1">
@@ -749,7 +749,7 @@ export default function Transactions() {
 
               return (
                 <div key={tx.id}
-                  className="glass rounded-2xl p-4 space-y-3 border border-white/6"
+                  className="glass rounded-2xl p-4 space-y-3 border border-border"
                   style={{
                     borderLeftWidth: 2,
                     borderLeftColor: tx.type === 'to_receive' ? '#10B981' : '#EF4444'
@@ -757,8 +757,8 @@ export default function Transactions() {
                   {/* Top: dependent + type badge */}
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="font-bold text-white text-sm">{dep?.name || 'Desconhecido'}</p>
-                      <p className="text-xs text-white/40 mt-0.5">{tx.description}</p>
+                      <p className="font-bold text-foreground text-sm">{dep?.name || 'Desconhecido'}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{tx.description}</p>
                     </div>
                     <span className={`px-2 py-1 rounded-md text-xs font-semibold border shrink-0 ${TYPE_COLORS[tx.type]}`}>
                       {TYPE_LABELS[tx.type]}
@@ -767,22 +767,22 @@ export default function Transactions() {
 
                   {/* Amount + date */}
                   <div className="flex items-center justify-between">
-                    <p className={`text-2xl font-black ${tx.type === 'to_receive' ? 'text-emerald-400' : 'text-red-400'}`}>
+                    <p className={`text-2xl font-black ${tx.type === 'to_receive' ? 'text-success' : 'text-destructive'}`}>
                       {tx.type === 'to_receive' ? '+' : '-'}{formatCurrency(tx.amount)}
                     </p>
                     <div className="text-right">
-                      <p className="text-xs text-white/40">
+                      <p className="text-xs text-muted-foreground">
                         {format(parseISO(tx.transaction_date), 'dd/MM/yyyy', { locale: ptBR })}
                       </p>
                       {tx.payment_type === 'installment' && (
                         <div className="flex items-center justify-end gap-1.5 mt-1">
-                          <div className="w-12 h-1 rounded-full bg-white/10 overflow-hidden">
+                          <div className="w-12 h-1 rounded-full bg-muted/50 overflow-hidden">
                             <div
                               className="h-full rounded-full bg-amber-400 transition-all"
                               style={{ width: `${progressPercent}%` }}
                             />
                           </div>
-                          <span className="text-[11px] text-white/40">
+                          <span className="text-[11px] text-muted-foreground">
                             {tx.manual_paid_installments || 0}/{tx.installments || 1} manuais
                           </span>
                         </div>
@@ -791,14 +791,14 @@ export default function Transactions() {
                   </div>
 
                   {/* Status + actions */}
-                  <div className="flex items-center justify-between pt-2 border-t border-white/6">
+                  <div className="flex items-center justify-between pt-2 border-t border-border">
                     <span className={`px-2 py-1 rounded-md text-xs font-semibold border ${STATUS_COLORS[tx.status]}`}>
                       {STATUS_LABELS[tx.status]}
                     </span>
                     <div className="flex items-center gap-1">
                       {tx.status === 'pending' && tx.payment_type !== 'installment' && (
                         <Button variant="outline" size="sm"
-                          className="h-7 text-xs text-green-400 border-green-400/30 hover:bg-green-400/10"
+                          className="h-7 text-xs text-success border-green-400/30 hover:bg-green-400/10"
                           onClick={() => handleMarkAsPaid(tx.id)}
                           disabled={loadingId === tx.id}>
                           Marcar pago
@@ -807,12 +807,12 @@ export default function Transactions() {
                       <Button variant="ghost" size="icon" className="h-7 w-7"
                         onClick={() => handleOpenEdit(tx)}
                         disabled={loadingId === tx.id}>
-                        <Edit className="w-3 h-3 text-white/40" />
+                        <Edit className="w-3 h-3 text-muted-foreground" />
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger render={
                           <Button variant="ghost" size="icon" className="h-7 w-7" disabled={loadingId === tx.id}>
-                            {loadingId === tx.id ? <Loader2 className="w-3 h-3 text-white/40 animate-spin" /> : <Trash2 className="w-3 h-3 text-white/40" />}
+                            {loadingId === tx.id ? <Loader2 className="w-3 h-3 text-muted-foreground animate-spin" /> : <Trash2 className="w-3 h-3 text-muted-foreground" />}
                           </Button>
                         } />
                         <AlertDialogContent>
@@ -822,7 +822,7 @@ export default function Transactions() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(tx.id)} className="bg-red-600 hover:bg-red-700 text-white">Remover</AlertDialogAction>
+                            <AlertDialogAction onClick={() => handleDelete(tx.id)} className="bg-red-600 hover:bg-red-700 text-foreground">Remover</AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
@@ -830,16 +830,16 @@ export default function Transactions() {
                   </div>
 
                   {tx.payment_type === 'installment' && (
-                    <div className="pt-2 border-t border-white/6 space-y-2">
+                    <div className="pt-2 border-t border-border space-y-2">
                       {/* Progress */}
                       <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 rounded-full bg-white/10">
+                        <div className="flex-1 h-1.5 rounded-full bg-muted/50">
                           <div
                             className="h-full rounded-full bg-amber-400 transition-all"
                             style={{ width: `${progressPercent}%` }}
                           />
                         </div>
-                        <span className="text-xs text-white/50 shrink-0">
+                        <span className="text-xs text-muted-foreground shrink-0">
                           {tx.manual_paid_installments || 0}/{tx.installments || 1} manuais
                         </span>
                       </div>
@@ -853,8 +853,8 @@ export default function Transactions() {
                               onClick={() => handleToggleInstallment(tx, n)}
                               className={`w-6 h-6 rounded text-[10px] font-bold transition-all duration-150 border
                                 ${n <= (tx.manual_paid_installments || 0)
-                                  ? 'bg-amber-400/20 border-amber-400/60 text-amber-400'
-                                  : 'bg-white/4 border-white/10 text-white/30'}`}
+                                  ? 'bg-amber-400/20 border-amber-400/60 text-primary'
+                                  : 'bg-muted/50 border-border text-muted-foreground'}`}
                             >
                               {n}
                             </button>
@@ -863,20 +863,20 @@ export default function Transactions() {
                       )}
                       {/* Quick action */}
                       {tx.status === 'paid' ? (
-                        <span className="text-xs text-emerald-400 font-medium">
+                        <span className="text-xs text-success font-medium">
                           ✓ Transação quitada
                         </span>
                       ) : (tx.manual_paid_installments || 0) < (tx.installments || 1) ? (
                         <button
                           disabled={loadingId === tx.id}
                           onClick={() => handleIncrementInstallment(tx)}
-                          className="text-xs text-amber-400/70 hover:text-amber-400 transition-colors flex items-center gap-1"
+                          className="text-xs text-primary/70 hover:text-primary transition-colors flex items-center gap-1"
                         >
                           <Plus className="w-3 h-3" />
                           Próxima
                         </button>
                       ) : (
-                        <span className="text-xs text-emerald-400 font-medium">
+                        <span className="text-xs text-success font-medium">
                           ✓ Transação quitada
                         </span>
                       )}
@@ -886,11 +886,11 @@ export default function Transactions() {
                           expandedTxId === tx.id ? null : tx.id
                         )}
                         className={`w-full flex items-center justify-between
-                          pt-2 mt-2 border-t border-white/6 text-xs
+                          pt-2 mt-2 border-t border-border text-xs
                           transition-colors
                           ${expandedTxId === tx.id
-                            ? 'text-amber-400'
-                            : 'text-white/30 hover:text-white/50'
+                            ? 'text-primary'
+                            : 'text-muted-foreground hover:text-muted-foreground'
                           }`}
                       >
                         <div className="flex items-center gap-1.5">
@@ -925,7 +925,7 @@ export default function Transactions() {
           <div className="hidden md:block rounded-2xl overflow-hidden glass">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="text-xs uppercase" style={{ background: 'rgba(255,255,255,0.02)', color: 'rgba(255,255,255,0.4)' }}>
+                <thead className="bg-muted text-xs text-muted-foreground">
                   <tr>
                     <th scope="col" className="px-6 py-4 font-semibold">Dependente</th>
                     <th scope="col" className="px-6 py-4 font-semibold">Descrição</th>
@@ -965,12 +965,12 @@ export default function Transactions() {
                         <td className="px-6 py-4 whitespace-nowrap font-bold text-foreground">
                           <div className="flex flex-col">
                             <span className={`font-bold ${tx.type === 'to_receive'
-                              ? 'text-emerald-400' : 'text-red-400'}`}>
+                              ? 'text-success' : 'text-destructive'}`}>
                               {tx.type === 'to_receive' ? '+' : '-'}
                               {formatCurrency(tx.amount)}
                             </span>
                             {tx.payment_type === 'installment' && (
-                              <span className="text-xs text-white/30">
+                              <span className="text-xs text-muted-foreground">
                                 {tx.installments}x de {formatCurrency(tx.amount / tx.installments)}
                               </span>
                             )}
@@ -985,18 +985,18 @@ export default function Transactions() {
                           {tx.payment_type === 'installment' ? (
                             <div className="flex flex-col gap-1.5">
                               <div className="flex items-center gap-2">
-                                <div className="w-16 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                                <div className="w-16 h-1.5 rounded-full bg-muted/50 overflow-hidden">
                                   <div
                                     className="h-full rounded-full bg-amber-400 transition-all"
                                     style={{ width: `${progressPercent}%` }}
                                   />
                                 </div>
-                                <span className="text-xs text-white/50">
+                                <span className="text-xs text-muted-foreground">
                                   {tx.manual_paid_installments || 0}/{tx.installments || 1} manuais
                                 </span>
                               </div>
                               {(tx.manual_paid_installments || 0) === (tx.installments || 1) && (
-                                <span className="text-[10px] text-emerald-400 font-medium">✓ Quitado</span>
+                                <span className="text-[10px] text-success font-medium">✓ Quitado</span>
                               )}
                             </div>
                           ) : (
@@ -1023,14 +1023,14 @@ export default function Transactions() {
                                         title={`Parcela ${n}`}
                                         className={`w-5 h-5 rounded text-[9px] font-bold transition-all duration-150 border
                                           ${n <= (tx.manual_paid_installments || 0)
-                                            ? 'bg-amber-400/20 border-amber-400/60 text-amber-400'
-                                            : 'bg-white/4 border-white/10 text-white/30 hover:border-white/20'}`}
+                                            ? 'bg-amber-400/20 border-amber-400/60 text-primary'
+                                            : 'bg-muted/50 border-border text-muted-foreground hover:border-border'}`}
                                       >
                                         {n}
                                       </button>
                                     ))}
                                     {(tx.installments || 1) > 12 && (
-                                      <span className="text-[9px] text-white/30 self-center">+{(tx.installments || 1) - 12}</span>
+                                      <span className="text-[9px] text-muted-foreground self-center">+{(tx.installments || 1) - 12}</span>
                                     )}
                                   </div>
                                 )}
@@ -1038,7 +1038,7 @@ export default function Transactions() {
                                 <button
                                   disabled={loadingId === tx.id}
                                   onClick={() => handleIncrementInstallment(tx)}
-                                  className="text-[10px] text-amber-400/70 hover:text-amber-400 transition-colors flex items-center gap-1"
+                                  className="text-[10px] text-primary/70 hover:text-primary transition-colors flex items-center gap-1"
                                 >
                                   <Plus className="w-3 h-3" />
                                   Próxima
@@ -1053,8 +1053,8 @@ export default function Transactions() {
                               className={`text-[10px] px-2 py-1 rounded-lg border
                                 transition-colors flex items-center gap-1
                                 ${expandedTxId === tx.id
-                                  ? 'border-amber-400/40 text-amber-400 bg-amber-400/8'
-                                  : 'border-white/10 text-white/40 hover:text-white/60'
+                                  ? 'border-amber-400/40 text-primary bg-amber-400/8'
+                                  : 'border-border text-muted-foreground hover:text-muted-foreground'
                                 }`}
                             >
                               <Wallet className="w-3 h-3" />
@@ -1064,7 +1064,7 @@ export default function Transactions() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-8 text-xs font-semibold text-green-600 border-green-200 hover:bg-green-50"
+                                className="h-8 text-xs font-semibold text-success border-green-200 hover:bg-green-50"
                                 onClick={() => handleMarkAsPaid(tx.id)}
                                 disabled={loadingId === tx.id || loading}
                               >
@@ -1073,12 +1073,12 @@ export default function Transactions() {
                               </Button>
                             )}
                             <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(tx)} disabled={loadingId === tx.id} className="h-8 w-8">
-                              <Edit className="w-4 h-4 text-muted-foreground hover:text-amber-500" />
+                              <Edit className="w-4 h-4 text-muted-foreground hover:text-primary" />
                             </Button>
                             <AlertDialog>
                               <AlertDialogTrigger render={
                                 <Button variant="ghost" size="icon" disabled={loadingId === tx.id} className="h-8 w-8">
-                                  {loadingId === tx.id ? <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" /> : <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-600" />}
+                                  {loadingId === tx.id ? <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" /> : <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />}
                                 </Button>
                               } />
                               <AlertDialogContent>
@@ -1090,7 +1090,7 @@ export default function Transactions() {
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDelete(tx.id)} className="bg-red-600 hover:bg-red-700 text-white">
+                                  <AlertDialogAction onClick={() => handleDelete(tx.id)} className="bg-red-600 hover:bg-red-700 text-foreground">
                                     Remover
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
@@ -1123,8 +1123,8 @@ export default function Transactions() {
               </table>
             </div>
             {totalPages > 0 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-white/8">
-                <span className="text-sm text-white/40">
+              <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+                <span className="text-sm text-muted-foreground">
                   Página {page + 1} de {totalPages || 1}
                 </span>
                 <div className="flex gap-2">
