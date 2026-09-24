@@ -4,6 +4,7 @@ import { useTransactionPaymentStore } from '@/store/transaction-payment-store'
 import { Input } from '@/components/ui/input'
 import { DatePicker } from '@/components/shared/date-picker'
 import { formatCurrency, getTransactionPaidCents, getTransactionRemainingCents } from '@/lib/utils'
+import { useProfileStore } from '@/store/profile-store'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Plus, Trash2, Loader2 } from 'lucide-react'
@@ -22,11 +23,13 @@ export function TransactionPaymentsPanel({
   onTransactionSettled
 }: TransactionPaymentsPanelProps) {
   const store = useTransactionPaymentStore()
+  const profile = useProfileStore(state => state.profile)
   const payments = store.payments.filter(p => p.transaction_id === transaction.id)
 
   const [amountCents, setAmountCents] = useState(0)
   const [amountDisplay, setAmountDisplay] = useState('')
   const [newDate, setNewDate] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [newPaidBy, setNewPaidBy] = useState('')
   const [newNotes, setNewNotes] = useState('')
   const [isAdding, setIsAdding] = useState(false)
   const [isSettled, setIsSettled] = useState(
@@ -58,7 +61,7 @@ export function TransactionPaymentsPanel({
 
 
   const handleAdd = async () => {
-    if (amountCents === 0 || !newDate) return
+    if (amountCents === 0 || !newDate || !newPaidBy.trim()) return
 
     // Block if already fully paid
     const currentTotalCents = getTransactionPaidCents({ ...transaction, transaction_payments: payments })
@@ -72,6 +75,7 @@ export function TransactionPaymentsPanel({
       await store.add(transaction.id, {
         amount: amountCents / 100,
         payment_date: newDate,
+        paid_by: newPaidBy.trim(),
         notes: newNotes || undefined
       })
 
@@ -98,6 +102,7 @@ export function TransactionPaymentsPanel({
       // Reset form
       resetAmount()
       setNewDate(format(new Date(), 'yyyy-MM-dd'))
+      setNewPaidBy('')
       setNewNotes('')
     } catch (err: any) {
       toast.error(err.message || 'Erro ao registar pagamento.')
@@ -206,11 +211,19 @@ export function TransactionPaymentsPanel({
                     <p className="text-sm font-semibold text-emerald-400">
                       {formatCurrency(p.amount)}
                     </p>
+                    <p className="text-[10px] text-white/40">
+                      Pago por: {p.paid_by || 'Não informado (registro antigo)'}
+                    </p>
                     {p.notes && (
                       <p className="text-[10px] text-white/30 truncate max-w-[160px]">
                         {p.notes}
                       </p>
                     )}
+                    <p className="text-[10px] text-white/30" title={p.user_id}>
+                      Registrado por {p.user_id === profile?.id
+                        ? profile?.username || 'você'
+                        : `conta ${p.user_id.slice(0, 8)}`}
+                    </p>
                   </div>
                 </div>
                 <button
@@ -256,6 +269,17 @@ export function TransactionPaymentsPanel({
               </div>
             </div>
 
+            <label className="block space-y-1">
+              <span className="text-[10px] text-white/30">Quem pagou *</span>
+              <Input
+                value={newPaidBy}
+                onChange={e => setNewPaidBy(e.target.value)}
+                placeholder="Nome"
+                className="h-9 text-sm bg-white/4 border-white/10
+                focus:border-amber-400/50 rounded-lg"
+              />
+            </label>
+
             <Input
               value={newNotes}
               onChange={e => setNewNotes(e.target.value)}
@@ -265,7 +289,7 @@ export function TransactionPaymentsPanel({
             />
 
             <button
-              disabled={isAdding || amountCents === 0 || !newDate}
+              disabled={isAdding || amountCents === 0 || !newDate || !newPaidBy.trim()}
               onClick={handleAdd}
               className="w-full h-10 rounded-xl text-sm font-bold
               bg-amber-500 hover:bg-amber-600 text-black

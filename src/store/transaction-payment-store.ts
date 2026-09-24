@@ -10,6 +10,7 @@ interface TransactionPaymentStore {
   add: (transactionId: string, data: {
     amount: number
     payment_date: string
+    paid_by: string
     notes?: string
   }) => Promise<{ shouldAutoSettle: boolean; totalPaid: number }>
   remove: (id: string, transactionId: string) => Promise<void>

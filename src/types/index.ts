@@ -130,5 +130,6 @@ export interface TransactionPayment {
   amount: number
   payment_date: string
   notes: string | null
+  paid_by: string | null
   created_at: string
 }
