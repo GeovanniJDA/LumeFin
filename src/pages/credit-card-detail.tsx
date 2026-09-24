@@ -103,10 +103,15 @@ export default function CreditCardDetail() {
     if (id) fetchByCard(id)
   }, [id, fetchByCard])
 
+  const cardPurchases = useMemo(
+    () => purchases.filter(p => p.credit_card_id === id),
+    [purchases, id]
+  )
+
   // Purchases for selected month
   const monthPurchases = useMemo(
-    () => getPurchasesForMonth(purchases, selectedMonth),
-    [purchases, selectedMonth]
+    () => getPurchasesForMonth(cardPurchases, selectedMonth),
+    [cardPurchases, selectedMonth]
   )
 
   const monthTotal = useMemo(
@@ -120,9 +125,9 @@ export default function CreditCardDetail() {
       months.map(m => ({
         month: m,
         label: format(parseISO(`${m}-01`), 'MMM', { locale: ptBR }),
-        total: getTotalForMonth(purchases, m)
+        total: getTotalForMonth(cardPurchases, m)
       })),
-    [purchases, months]
+    [cardPurchases, months]
   )
   const maxChartValue = Math.max(...chartData.map(d => d.total), 1)
 
@@ -279,7 +284,7 @@ export default function CreditCardDetail() {
             <p className="text-muted-foreground text-sm">Nenhuma compra neste mês</p>
           </div>
         ) : (
-          <div className="divide-y divide-white/6">
+          <div className="divide-y divide-border">
             {monthPurchases.map((p, i) => (
               <div
                 key={`${p.id}-${i}`}
@@ -292,7 +297,7 @@ export default function CreditCardDetail() {
                       p.type === 'cash'
                         ? 'bg-emerald-400/10 text-success'
                         : p.type === 'recurring'
-                          ? 'bg-blue-400/10 text-blue-400'
+                          ? 'bg-blue-400/10 text-blue-800 dark:text-blue-400'
                           : 'bg-amber-400/10 text-primary'
                     }`}
                   >

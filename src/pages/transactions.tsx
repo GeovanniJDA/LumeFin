@@ -740,8 +740,8 @@ export default function Transactions() {
         />
       ) : (
         <>
-          {/* Mobile view — cards */}
-          <div className="md:hidden space-y-3">
+          {/* Responsive view — cards */}
+          <div className="2xl:hidden space-y-3">
             {filteredTransactions.map(tx => {
               const dep = dependents.find(d => d.id === tx.dependent_id);
               const totalPaid = getTransactionPaidCents(tx) / 100;
@@ -870,7 +870,7 @@ export default function Transactions() {
                         <button
                           disabled={loadingId === tx.id}
                           onClick={() => handleIncrementInstallment(tx)}
-                          className="text-xs text-primary/70 hover:text-primary transition-colors flex items-center gap-1"
+                          className="text-xs text-primary flex items-center gap-1"
                         >
                           <Plus className="w-3 h-3" />
                           Próxima
@@ -922,7 +922,7 @@ export default function Transactions() {
           </div>
 
           {/* Desktop view — existing table */}
-          <div className="hidden md:block rounded-2xl overflow-hidden glass">
+          <div className="hidden 2xl:block rounded-2xl overflow-hidden glass">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
                 <thead className="bg-muted text-xs text-muted-foreground">
@@ -1038,7 +1038,7 @@ export default function Transactions() {
                                 <button
                                   disabled={loadingId === tx.id}
                                   onClick={() => handleIncrementInstallment(tx)}
-                                  className="text-[10px] text-primary/70 hover:text-primary transition-colors flex items-center gap-1"
+                                  className="text-[10px] text-primary flex items-center gap-1"
                                 >
                                   <Plus className="w-3 h-3" />
                                   Próxima

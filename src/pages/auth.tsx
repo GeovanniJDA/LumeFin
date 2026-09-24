@@ -117,7 +117,7 @@ export default function Auth() {
           <h1 className="text-4xl font-black text-amber-400 tracking-tight">
             LumeFin
           </h1>
-          <p className="text-white/40 text-sm mt-1 font-medium">
+          <p className="text-white/60 text-sm mt-1 font-medium">
             Clareza financeira para toda a família
           </p>
         </div>
@@ -151,7 +151,7 @@ export default function Auth() {
 
         {/* Footer */}
         <div className="relative z-10">
-          <p className="text-white/20 text-xs">
+          <p className="text-white/60 text-xs">
             LumeFin © 2026 — Gratuito e open source
           </p>
         </div>
@@ -182,7 +182,7 @@ export default function Auth() {
           {/* Mobile logo — only visible on mobile */}
           <div className="lg:hidden text-center">
             <h1 className="text-3xl font-black text-amber-400">LumeFin</h1>
-            <p className="text-white/40 text-sm mt-1">
+            <p className="text-white/60 text-sm mt-1">
               Clareza financeira para toda a família
             </p>
           </div>
@@ -192,7 +192,7 @@ export default function Auth() {
             <h2 className="text-2xl font-black text-white">
               {isLogin ? 'Bem-vindo de volta' : 'Criar conta'}
             </h2>
-            <p className="text-white/40 text-sm mt-1">
+            <p className="text-white/60 text-sm mt-1">
               {isLogin
                 ? 'Entre com suas credenciais para continuar'
                 : 'Preencha os dados para criar sua conta'
@@ -226,7 +226,7 @@ export default function Auth() {
                         type="email"
                         placeholder="seu@email.com"
                         autoComplete="email"
-                        className="bg-white/4 border-white/10 text-white placeholder:text-white/25 h-11 rounded-xl focus:border-amber-400/50 focus:ring-amber-400/20 transition-colors"
+                        className="bg-white/4 border-white/10 text-white placeholder:text-white/60 h-11 rounded-xl transition-colors"
                         {...field}
                       />
                     </FormControl>
@@ -249,7 +249,7 @@ export default function Auth() {
                         type="password"
                         placeholder="••••••••"
                         autoComplete={isLogin ? 'current-password' : 'new-password'}
-                        className="bg-white/4 border-white/10 text-white placeholder:text-white/25 h-11 rounded-xl focus:border-amber-400/50 focus:ring-amber-400/20 transition-colors"
+                        className="bg-white/4 border-white/10 text-white placeholder:text-white/60 h-11 rounded-xl transition-colors"
                         {...field}
                       />
                     </FormControl>
@@ -264,7 +264,7 @@ export default function Auth() {
                   <button
                     type="button"
                     onClick={() => navigate('/auth/forgot-password')}
-                    className="text-xs text-white/40 hover:text-amber-400 transition-colors"
+                    className="text-xs text-white/60 hover:text-amber-400 transition-colors"
                   >
                     Esqueceu a senha?
                   </button>
@@ -287,7 +287,7 @@ export default function Auth() {
 
           {/* Toggle mode */}
           <div className="text-center">
-            <p className="text-white/40 text-sm">
+            <p className="text-white/60 text-sm">
               {isLogin
                 ? 'Não tem uma conta? '
                 : 'Já tem uma conta? '
@@ -303,7 +303,7 @@ export default function Auth() {
           </div>
 
           {/* Footer */}
-          <p className="text-center text-white/20 text-xs">
+          <p className="text-center text-white/60 text-xs">
             Ao continuar, você concorda com os termos de uso do LumeFin.
           </p>
         </div>

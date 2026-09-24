@@ -72,7 +72,7 @@ const StatCard = ({ value, suffix, label, sub, trigger, delayClass }: { value: s
         {isNumber ? count : value}{suffix}
       </p>
       <p className="text-white font-semibold text-sm">{label}</p>
-      <p className="text-white/40 text-xs mt-0.5">{sub}</p>
+      <p className="text-white/60 text-xs mt-0.5">{sub}</p>
     </div>
   )
 }
@@ -113,7 +113,7 @@ const StepCard = ({ item, delayClass }: { item: { step: string, title: string, d
       <div className={`flex-1 p-6 rounded-2xl ${item.side === 'right' ? 'md:text-right' : 'md:text-left'}`}
         style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
         <h3 className="font-syne font-bold text-white text-xl mb-2">{item.title}</h3>
-        <p className="text-white/50 leading-relaxed">{item.desc}</p>
+        <p className="text-white/60 leading-relaxed">{item.desc}</p>
       </div>
     </div>
   )
@@ -206,7 +206,7 @@ export default function Landing() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white overflow-x-hidden">
+      <div className="min-h-screen bg-black text-white overflow-x-hidden">
 
       <div
         className="fixed top-0 left-0 z-[100] h-[2px] pointer-events-none"
@@ -362,7 +362,7 @@ export default function Landing() {
               transform: `translate(${mousePos.x * 8}px, ${mousePos.y * 6}px)`,
               transition: 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
             }}>
-            <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Total pendente</p>
+            <p className="text-[10px] text-white/60 uppercase tracking-wider mb-1">Total pendente</p>
             <p className="font-syne font-bold text-white text-2xl mb-3">R$ 2.847,00</p>
             <div className="flex gap-2">
               {[
@@ -373,7 +373,7 @@ export default function Landing() {
                 <div key={item.label} className="flex-1 rounded-lg p-2 text-center"
                   style={{ background: 'rgba(255,255,255,0.04)' }}>
                   <p className="font-bold text-sm" style={{ color: item.color }}>{item.value}</p>
-                  <p className="text-[9px] text-white/40">{item.label}</p>
+                  <p className="text-[9px] text-white/60">{item.label}</p>
                 </div>
               ))}
             </div>
@@ -422,7 +422,7 @@ export default function Landing() {
 
         {/* Scroll indicator */}
         <div className="reveal delay-600 absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-          <p className="text-xs text-white/30 uppercase tracking-widest">scroll</p>
+          <p className="text-xs text-white/60 uppercase tracking-widest">scroll</p>
           <div className="w-px h-8 bg-gradient-to-b from-amber-400/60 to-transparent"
             style={{ animation: 'scrollBounce 2s ease-in-out infinite' }}
           />
@@ -463,7 +463,7 @@ export default function Landing() {
               style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
               Tudo que sua família precisa
             </h2>
-            <p className="text-white/40 max-w-md mx-auto leading-relaxed">
+            <p className="text-white/60 max-w-md mx-auto leading-relaxed">
               Cada funcionalidade foi pensada para tornar o controle financeiro familiar simples e claro.
             </p>
           </div>
@@ -517,7 +517,7 @@ export default function Landing() {
                     </div>
                     <div>
                       <h3 className="font-syne font-bold text-white mb-1">{feat.title}</h3>
-                      <p className="text-white/40 text-sm leading-relaxed">{feat.desc}</p>
+                      <p className="text-white/60 text-sm leading-relaxed">{feat.desc}</p>
                     </div>
                   </div>
                 </FeatureCard>
@@ -538,7 +538,7 @@ export default function Landing() {
                   <feat.icon className="w-5 h-5" style={{ color: feat.color }} />
                 </div>
                 <h3 className="font-syne font-bold text-white mb-2">{feat.title}</h3>
-                <p className="text-white/40 text-sm leading-relaxed">{feat.desc}</p>
+                <p className="text-white/60 text-sm leading-relaxed">{feat.desc}</p>
               </FeatureCard>
             ))}
           </div>
@@ -604,7 +604,7 @@ export default function Landing() {
                 clareza financeira.
               </span>
             </h2>
-            <p className="text-white/40 text-lg mb-10 leading-relaxed">
+            <p className="text-white/60 text-lg mb-10 leading-relaxed">
               Gratuito. Sem anúncios. Sem limite de dependentes.
               <br />
               Open source e seguro.
@@ -618,7 +618,7 @@ export default function Landing() {
               <span>Criar minha conta — é grátis</span>
               <span className="text-xl group-hover:translate-x-1 transition-transform duration-200">→</span>
             </button>
-            <p className="text-white/20 text-sm mt-6">
+            <p className="text-white/60 text-sm mt-6">
               Já tem uma conta?{' '}
               <button onClick={() => navigate('/auth')}
                 className="text-amber-400/60 hover:text-amber-400 transition-colors underline-offset-2 hover:underline cursor-pointer">
@@ -633,10 +633,10 @@ export default function Landing() {
       <footer className="py-8 px-6 border-t border-white/[0.06]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <span className="font-syne font-bold text-amber-400">LumeFin</span>
-          <p className="text-white/20 text-sm text-center">Feito com ♥ para famílias brasileiras</p>
+          <p className="text-white/60 text-sm text-center">Feito com ♥ para famílias brasileiras</p>
           <div className="flex items-center gap-6">
             <a href="https://github.com/GeovanniJDA/LumeFin" target="_blank" rel="noopener noreferrer"
-              className="text-white/30 hover:text-white/60 text-sm transition-colors">
+              className="text-white/60 hover:text-white/60 text-sm transition-colors">
               GitHub
             </a>
           </div>

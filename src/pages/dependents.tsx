@@ -31,14 +31,14 @@ const RELATIONSHIP_LABELS: Record<Relationship, string> = {
 };
 
 const RELATIONSHIP_COLORS: Record<Relationship, string> = {
-  mae: 'bg-[rgba(236,72,153,0.15)] text-pink-400 border-[rgba(236,72,153,0.3)]',
-  pai: 'bg-[rgba(59,130,246,0.15)] text-blue-400 border-[rgba(59,130,246,0.3)]',
+  mae: 'bg-[rgba(236,72,153,0.15)] text-pink-800 dark:text-pink-400 border-[rgba(236,72,153,0.3)]',
+  pai: 'bg-[rgba(59,130,246,0.15)] text-blue-800 dark:text-blue-400 border-[rgba(59,130,246,0.3)]',
   avo: 'bg-[rgba(16,185,129,0.15)] text-success border-[rgba(16,185,129,0.3)]',
-  avoa: 'bg-[rgba(20,184,166,0.15)] text-teal-400 border-[rgba(20,184,166,0.3)]',
-  irmao: 'bg-[rgba(99,102,241,0.15)] text-indigo-400 border-[rgba(99,102,241,0.3)]',
-  irma: 'bg-[rgba(168,85,247,0.15)] text-purple-400 border-[rgba(168,85,247,0.3)]',
+  avoa: 'bg-[rgba(20,184,166,0.15)] text-teal-800 dark:text-teal-400 border-[rgba(20,184,166,0.3)]',
+  irmao: 'bg-[rgba(99,102,241,0.15)] text-indigo-800 dark:text-indigo-400 border-[rgba(99,102,241,0.3)]',
+  irma: 'bg-[rgba(168,85,247,0.15)] text-purple-800 dark:text-purple-400 border-[rgba(168,85,247,0.3)]',
   tio: 'bg-[rgba(245,158,11,0.15)] text-primary border-[rgba(245,158,11,0.3)]',
-  tia: 'bg-[rgba(249,115,22,0.15)] text-orange-400 border-[rgba(249,115,22,0.3)]',
+  tia: 'bg-[rgba(249,115,22,0.15)] text-orange-800 dark:text-orange-400 border-[rgba(249,115,22,0.3)]',
   outro: 'bg-muted/50 text-muted-foreground border-border'
 };
 

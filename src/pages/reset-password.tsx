@@ -144,7 +144,7 @@ export default function ResetPassword() {
           <h1 className="text-4xl font-black text-amber-400 tracking-tight">
             LumeFin
           </h1>
-          <p className="text-white/40 text-sm mt-1 font-medium">
+          <p className="text-white/60 text-sm mt-1 font-medium">
             Clareza financeira para toda a família
           </p>
         </div>
@@ -177,7 +177,7 @@ export default function ResetPassword() {
 
         {/* Footer */}
         <div className="relative z-10">
-          <p className="text-white/20 text-xs">
+          <p className="text-white/60 text-xs">
             LumeFin © 2026 — Gratuito e open source
           </p>
         </div>
@@ -201,7 +201,7 @@ export default function ResetPassword() {
           {/* Mobile logo */}
           <div className="lg:hidden text-center">
             <h1 className="text-3xl font-black text-amber-400">LumeFin</h1>
-            <p className="text-white/40 text-sm mt-1">
+            <p className="text-white/60 text-sm mt-1">
               Clareza financeira para toda a família
             </p>
           </div>
@@ -242,7 +242,7 @@ export default function ResetPassword() {
               {/* Back button */}
               <button
                 onClick={() => navigate('/auth/forgot-password')}
-                className="flex items-center gap-2 text-white/40 hover:text-white transition-colors text-sm"
+                className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Voltar
@@ -253,7 +253,7 @@ export default function ResetPassword() {
                 <h2 className="text-2xl font-black text-white">
                   Nova senha
                 </h2>
-                <p className="text-white/40 text-sm mt-1">
+                <p className="text-white/60 text-sm mt-1">
                   Escolha uma senha segura para sua conta
                   {session?.user?.email ? ` (${session.user.email})` : ''}
                 </p>
@@ -283,7 +283,7 @@ export default function ResetPassword() {
                             type="password"
                             placeholder="••••••••"
                             autoComplete="new-password"
-                            className="bg-white/4 border-white/10 text-white placeholder:text-white/25 h-11 rounded-xl focus:border-amber-400/50 focus:ring-amber-400/20 transition-colors"
+                            className="bg-white/4 border-white/10 text-white placeholder:text-white/60 h-11 rounded-xl transition-colors"
                             {...field}
                           />
                         </FormControl>
@@ -333,7 +333,7 @@ export default function ResetPassword() {
                             type="password"
                             placeholder="••••••••"
                             autoComplete="new-password"
-                            className="bg-white/4 border-white/10 text-white placeholder:text-white/25 h-11 rounded-xl focus:border-amber-400/50 focus:ring-amber-400/20 transition-colors"
+                            className="bg-white/4 border-white/10 text-white placeholder:text-white/60 h-11 rounded-xl transition-colors"
                             {...field}
                           />
                         </FormControl>

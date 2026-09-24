@@ -353,7 +353,7 @@ export default function CreditCards() {
                               placeholder="0,00"
                             />
                           </FormControl>
-                          <p className="text-[11px] text-primary/80 mt-1 leading-tight">
+                          <p className="text-[11px] text-primary mt-1 leading-tight">
                             O valor da fatura é calculado automaticamente pelas compras
                           </p>
                           <FormMessage />

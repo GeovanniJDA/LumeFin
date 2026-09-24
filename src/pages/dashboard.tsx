@@ -176,9 +176,9 @@ export default function Dashboard() {
 
       {/* ── Hero Card ── */}
       {!isLoading && !financialDataError && (
-        <section className="relative overflow-hidden rounded-2xl border border-primary/20 bg-card p-5 md:p-7">
-          <div className="relative z-10 flex flex-col gap-4">
-            <div>
+        <section className="relative overflow-hidden rounded-2xl border border-primary/20 bg-card p-5 md:p-6">
+          <div className="relative z-10 grid gap-5 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:items-center">
+            <div className="min-w-0">
               <p className="mb-1 text-sm font-medium text-muted-foreground">
                 Posição líquida de compromissos
               </p>
@@ -192,22 +192,22 @@ export default function Dashboard() {
               </p>
             </div>
 
-            <div className="grid grid-cols-3 gap-3 border-t border-border pt-4 md:max-w-xl md:gap-6">
+            <div className="grid grid-cols-2 gap-4 border-t border-border pt-4 md:border-l md:border-t-0 md:pl-6 md:pt-0 lg:grid-cols-3">
               <div>
                 <p className="mb-0.5 text-xs text-muted-foreground">A receber</p>
-                <p className="text-sm font-semibold tabular-nums text-success dark:text-success md:text-lg">
+                <p className="text-sm font-semibold tabular-nums text-success dark:text-success xl:text-base">
                   {formatCurrency(totalToReceive)}
                 </p>
               </div>
               <div>
                 <p className="mb-0.5 text-xs text-muted-foreground">A pagar</p>
-                <p className="text-sm font-semibold tabular-nums text-destructive dark:text-destructive md:text-lg">
+                <p className="text-sm font-semibold tabular-nums text-destructive dark:text-destructive xl:text-base">
                   {formatCurrency(totalToPay)}
                 </p>
               </div>
               <div>
                 <p className="mb-0.5 text-xs text-muted-foreground">Vencidas</p>
-                <p className="text-sm font-semibold tabular-nums text-foreground md:text-lg">
+                <p className="text-sm font-semibold tabular-nums text-foreground xl:text-base">
                   {overdueCount}
                 </p>
               </div>
@@ -380,11 +380,6 @@ export default function Dashboard() {
                   <div className="rounded-lg bg-muted p-3">
                     <div className="text-lg font-semibold tabular-nums text-foreground">{dep.pendingCardsCount}</div>
                     <p className="text-[10px] text-muted-foreground">Cartões</p>
-                    {dep.pendingCardsTotal > 0 && (
-                      <p className="text-[10px] text-muted-foreground" title="Faturas divididas igualmente entre dependentes vinculados.">
-                        Sua parte: {formatCurrency(dep.pendingCardsTotal)}
-                      </p>
-                    )}
                   </div>
                   <div className={`rounded-xl p-3 ${dep.balance > 0
                     ? 'bg-[rgba(16,185,129,0.1)]'
@@ -404,6 +399,14 @@ export default function Dashboard() {
                       {dep.balance > 0 ? 'A receber' : dep.balance < 0 ? 'A pagar' : 'Sem saldo'}
                     </p>
                   </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 rounded-lg bg-primary/10 px-4 py-3">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Sua parte</p>
+                    <p className="text-xs text-muted-foreground">nas faturas dos cartões</p>
+                  </div>
+                  <span className="text-lg font-bold tabular-nums text-primary">{formatCurrency(dep.pendingCardsTotal)}</span>
                 </div>
 
                 <div className="flex gap-2 pt-1">

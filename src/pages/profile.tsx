@@ -311,7 +311,7 @@ export default function ProfilePage() {
                     {isSubmittingEmail && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                     Atualizar Email
                   </Button>
-                  <p className="text-xs text-[rgba(255,165,0,0.8)]">Um email de confirmação será enviado.</p>
+                  <p className="text-xs text-primary">Um email de confirmação será enviado.</p>
                 </div>
               </form>
             </Form>

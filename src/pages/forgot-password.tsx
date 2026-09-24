@@ -80,7 +80,7 @@ export default function ForgotPassword() {
           <h1 className="text-4xl font-black text-amber-400 tracking-tight">
             LumeFin
           </h1>
-          <p className="text-white/40 text-sm mt-1 font-medium">
+          <p className="text-white/60 text-sm mt-1 font-medium">
             Clareza financeira para toda a família
           </p>
         </div>
@@ -113,7 +113,7 @@ export default function ForgotPassword() {
 
         {/* Footer */}
         <div className="relative z-10">
-          <p className="text-white/20 text-xs">
+          <p className="text-white/60 text-xs">
             LumeFin © 2026 — Gratuito e open source
           </p>
         </div>
@@ -137,7 +137,7 @@ export default function ForgotPassword() {
           {/* Mobile logo */}
           <div className="lg:hidden text-center">
             <h1 className="text-3xl font-black text-amber-400">LumeFin</h1>
-            <p className="text-white/40 text-sm mt-1">
+            <p className="text-white/60 text-sm mt-1">
               Clareza financeira para toda a família
             </p>
           </div>
@@ -155,7 +155,7 @@ export default function ForgotPassword() {
                 Se este email estiver cadastrado, você receberá
                 um link de recuperação em breve.
               </p>
-              <p className="text-white/30 text-sm">
+              <p className="text-white/60 text-sm">
                 Verifique também sua pasta de spam.
               </p>
               <button
@@ -171,7 +171,7 @@ export default function ForgotPassword() {
               {/* Back button */}
               <button
                 onClick={() => navigate('/auth')}
-                className="flex items-center gap-2 text-white/40 hover:text-white transition-colors text-sm"
+                className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Voltar ao login
@@ -182,7 +182,7 @@ export default function ForgotPassword() {
                 <h2 className="text-2xl font-black text-white">
                   Recuperar senha
                 </h2>
-                <p className="text-white/40 text-sm mt-1">
+                <p className="text-white/60 text-sm mt-1">
                   Digite seu email para receber o link de recuperação
                 </p>
               </div>
@@ -212,7 +212,7 @@ export default function ForgotPassword() {
                             type="email"
                             placeholder="seu@email.com"
                             autoComplete="email"
-                            className="bg-white/4 border-white/10 text-white placeholder:text-white/25 h-11 rounded-xl focus:border-amber-400/50 focus:ring-amber-400/20 transition-colors"
+                            className="bg-white/4 border-white/10 text-white placeholder:text-white/60 h-11 rounded-xl transition-colors"
                             {...field}
                           />
                         </FormControl>
