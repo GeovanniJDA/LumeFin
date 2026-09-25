@@ -37,6 +37,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const isDark = theme !== 'light';
+  const contentWidth = location.pathname === '/app/transactions' ? 'max-w-[1600px]' : 'max-w-7xl';
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -167,7 +168,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       <main className="pt-14 md:ml-60 md:pt-0">
-        <div className="mx-auto min-h-dvh max-w-7xl space-y-6 px-4 py-6 md:px-8 md:py-8">
+        <div className={`mx-auto min-h-dvh ${contentWidth} space-y-6 px-4 py-6 md:px-8 md:py-8`}>
           {children}
         </div>
       </main>

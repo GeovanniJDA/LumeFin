@@ -923,17 +923,26 @@ export default function Transactions() {
 
           {/* Desktop view — existing table */}
           <div className="hidden 2xl:block rounded-2xl overflow-hidden glass">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
+            <div>
+              <table className="w-full table-fixed text-sm text-left">
+                <colgroup>
+                  <col className="w-[15%]" />
+                  <col className="w-[17%]" />
+                  <col className="w-[14%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[14%]" />
+                  <col className="w-[9%]" />
+                  <col className="w-[21%]" />
+                </colgroup>
                 <thead className="bg-muted text-xs text-muted-foreground">
                   <tr>
-                    <th scope="col" className="px-6 py-4 font-semibold">Dependente</th>
-                    <th scope="col" className="px-6 py-4 font-semibold">Descrição</th>
-                    <th scope="col" className="px-6 py-4 font-semibold">Valor</th>
-                    <th scope="col" className="px-6 py-4 font-semibold">Tipo</th>
-                    <th scope="col" className="px-6 py-4 font-semibold">Pagamento</th>
-                    <th scope="col" className="px-6 py-4 font-semibold">Status</th>
-                    <th scope="col" className="px-6 py-4 font-semibold text-right">Ações</th>
+                    <th scope="col" className="px-2 py-4 font-semibold md:px-3">Dependente</th>
+                    <th scope="col" className="px-2 py-4 font-semibold md:px-3">Descrição</th>
+                    <th scope="col" className="px-2 py-4 font-semibold md:px-3">Valor</th>
+                    <th scope="col" className="px-2 py-4 font-semibold md:px-3">Tipo</th>
+                    <th scope="col" className="px-2 py-4 font-semibold md:px-3">Pagamento</th>
+                    <th scope="col" className="px-2 py-4 font-semibold md:px-3">Status</th>
+                    <th scope="col" className="px-2 py-4 font-semibold text-right md:px-3">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -944,9 +953,9 @@ export default function Transactions() {
 
                     return (
                       <tr key={tx.id} className="hover:bg-muted/50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-foreground">{dep?.name || 'Desconhecido'}</span>
+                        <td className="px-2 py-4 md:px-3">
+                          <div className="flex min-w-0 flex-wrap items-center gap-2">
+                            <span className="break-words font-medium text-foreground">{dep?.name || 'Desconhecido'}</span>
                             {dep?.relationship && (
                               <Badge variant="secondary" className="text-[10px] font-medium py-0 h-5">
                                 {RELATIONSHIP_LABELS[dep.relationship] || dep.relationship}
@@ -954,7 +963,7 @@ export default function Transactions() {
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-2 py-4 md:px-3">
                           <div className="flex flex-col">
                             <span className="font-medium text-foreground">{tx.description}</span>
                             <span className="text-xs text-muted-foreground">
@@ -962,7 +971,7 @@ export default function Transactions() {
                             </span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap font-bold text-foreground">
+                        <td className="px-2 py-4 font-bold text-foreground md:px-3">
                           <div className="flex flex-col">
                             <span className={`font-bold ${tx.type === 'to_receive'
                               ? 'text-success' : 'text-destructive'}`}>
@@ -976,12 +985,12 @@ export default function Transactions() {
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-2 py-4 md:px-3">
                           <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${TYPE_COLORS[tx.type]}`}>
                             {TYPE_LABELS[tx.type]}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-muted-foreground text-sm">
+                        <td className="px-2 py-4 text-muted-foreground text-sm md:px-3">
                           {tx.payment_type === 'installment' ? (
                             <div className="flex flex-col gap-1.5">
                               <div className="flex items-center gap-2">
@@ -1003,13 +1012,13 @@ export default function Transactions() {
                             PAYMENT_LABELS[tx.payment_type]
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-2 py-4 md:px-3">
                           <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${STATUS_COLORS[tx.status]}`}>
                             {STATUS_LABELS[tx.status]}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                          <div className="flex items-center justify-end gap-2">
+                        <td className="px-2 py-4 text-right md:px-3">
+                          <div className="flex flex-wrap items-center justify-end gap-2">
                             {tx.payment_type === 'installment' && tx.status !== 'paid' && (tx.manual_paid_installments || 0) < (tx.installments || 1) && (
                               <div className="flex flex-col items-end gap-1 mr-2">
                                 {/* Checkbox grid */}
