@@ -6,6 +6,7 @@ export type CardStatus = 'open' | 'closed' | 'paid'
 export type TransactionType = 'to_pay' | 'to_receive'
 export type PaymentType = 'cash' | 'installment'
 export type TransactionStatus = 'pending' | 'paid'
+export type CashFlowEntryType = 'income' | 'expense'
 
 export interface Profile {
   id: string
@@ -131,5 +132,16 @@ export interface TransactionPayment {
   payment_date: string
   notes: string | null
   paid_by: string | null
+  created_at: string
+}
+
+export interface CashFlowEntry {
+  id: string
+  user_id: string
+  entry_date: string
+  description: string
+  amount: number
+  type: CashFlowEntryType
+  is_recurring: boolean
   created_at: string
 }

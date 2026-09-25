@@ -9,6 +9,7 @@ const Dependents = lazy(() => import('./pages/dependents'));
 const CreditCards = lazy(() => import('./pages/credit-cards'));
 const CreditCardDetail = lazy(() => import('./pages/credit-card-detail'));
 const Transactions = lazy(() => import('./pages/transactions'));
+const CashFlow = lazy(() => import('./pages/cash-flow'));
 const Auth = lazy(() => import('./pages/auth'));
 const Profile = lazy(() => import('./pages/profile'));
 const ForgotPassword = lazy(() => import('./pages/forgot-password'));
@@ -87,6 +88,7 @@ function App() {
           <Route path="/app/credit-cards" element={<AuthGuard><AppLayout><CreditCards /></AppLayout></AuthGuard>} />
           <Route path="/app/credit-cards/:id" element={<AuthGuard><AppLayout><CreditCardDetail /></AppLayout></AuthGuard>} />
           <Route path="/app/transactions" element={<AuthGuard><AppLayout><Transactions /></AppLayout></AuthGuard>} />
+          <Route path="/app/cash-flow" element={<AuthGuard><AppLayout><CashFlow /></AppLayout></AuthGuard>} />
           <Route path="/app/profile" element={<AuthGuard><AppLayout><Profile /></AppLayout></AuthGuard>} />
         </Routes>
       </Suspense>

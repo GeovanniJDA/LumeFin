@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { supabase } from '../../lib/supabase';
-import { LayoutDashboard, Receipt, CreditCard, ArrowRightLeft, Users, LogOut, Loader2, UserCircle, ChevronsUpDown, Sun, Moon } from 'lucide-react';
+import { LayoutDashboard, Receipt, CreditCard, ArrowRightLeft, Users, LogOut, Loader2, UserCircle, ChevronsUpDown, Sun, Moon, Wallet } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,12 +20,14 @@ import { useTransactionStoreRaw } from '../../store/transaction-store';
 import { useCategoryStoreRaw } from '../../store/category-store';
 import { useProfileStore } from '@/store/profile-store';
 import { useCardPurchaseStore } from '@/store/card-purchase-store';
+import { useCashFlowStore } from '@/store/cash-flow-store';
 
 const navigation = [
   { name: 'Dashboard', href: '/app', icon: LayoutDashboard },
   { name: 'Contas', href: '/app/bills', icon: Receipt },
   { name: 'Cartões', href: '/app/credit-cards', icon: CreditCard },
   { name: 'Transações', href: '/app/transactions', icon: ArrowRightLeft },
+  { name: 'Fluxo de caixa', href: '/app/cash-flow', icon: Wallet },
   { name: 'Dependentes', href: '/app/dependents', icon: Users },
 ];
 
@@ -60,6 +62,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         useCategoryStoreRaw.getState().reset();
         useProfileStore.getState().reset();
         useCardPurchaseStore.getState().reset();
+        useCashFlowStore.getState().reset();
         toast.success('Sessão encerrada.');
         navigate('/auth');
       }
@@ -173,7 +176,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </main>
 
-      <nav aria-label="Navegação principal" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-border bg-background/95 px-1 pb-[env(safe-area-inset-bottom)] md:hidden">
+      <nav aria-label="Navegação principal" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t border-border bg-background/95 px-1 pb-[env(safe-area-inset-bottom)] md:hidden">
         {navigation.map((item) => {
           const active = item.href === '/app'
             ? location.pathname === item.href
