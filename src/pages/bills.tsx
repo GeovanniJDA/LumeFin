@@ -408,13 +408,13 @@ export default function Bills() {
         title="Contas"
         description="Gerencie suas contas e despesas."
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
               <DialogTrigger
                 render={
                   <Button
                     variant="outline"
-                    className="gap-2 shadow-sm font-quicksand font-bold border-border"
+                    className="w-full justify-center gap-2 border-border font-quicksand font-bold shadow-sm sm:w-auto"
                   >
                     Gerenciar Categorias
                   </Button>
@@ -495,7 +495,7 @@ export default function Bills() {
                   <Button
                     onClick={handleOpenAdd}
                     disabled={categoriesLoading}
-                    className="bg-amber-500 hover:bg-amber-600 text-foreground gap-2 shadow-sm font-quicksand font-bold"
+                    className="w-full justify-center gap-2 bg-amber-500 font-quicksand font-bold text-foreground shadow-sm hover:bg-amber-600 sm:w-auto"
                   >
                     <Plus className="w-4 h-4" /> Adicionar Conta
                   </Button>
@@ -872,47 +872,89 @@ export default function Bills() {
       )}
 
       {/* Filter Bar */}
-      <div className="flex flex-col flex-wrap gap-3 glass rounded-2xl p-4 md:flex-row">
-        <div className="w-full md:w-48">
-          <Select value={filterStatus} onValueChange={(val) => { setFilterStatus(val || 'all'); resetPage(); }}>
-            <SelectTrigger>
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os Status</SelectItem>
-              <SelectItem value="pending">Pendente</SelectItem>
-              <SelectItem value="paid">Paga</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="w-full md:w-64 flex items-center gap-2">
-          <div className="flex-1">
-            <MonthPicker
-              value={filterMonth}
-              onChange={(val) => {
-                setFilterMonth(val);
-                if (val) {
-                  setPaidDateFrom('');
-                  setPaidDateTo('');
-                }
-                resetPage();
-              }}
-            />
+      <div className="space-y-3 glass rounded-2xl p-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="min-w-0">
+            <Select value={filterStatus} onValueChange={(val) => { setFilterStatus(val || 'all'); resetPage(); }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Status">
+                  {filterStatus === 'all' ? 'Todos os Status' : STATUS_LABELS[filterStatus as BillStatus]}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Status</SelectItem>
+                <SelectItem value="pending">Pendente</SelectItem>
+                <SelectItem value="paid">Paga</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          {filterMonth && (
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-10 w-10 shrink-0 border-dashed text-muted-foreground hover:text-foreground"
-              onClick={() => { setFilterMonth(''); resetPage(); }}
-            >
-              <FilterX className="h-4 w-4" />
-            </Button>
-          )}
+
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="flex-1">
+              <MonthPicker
+                value={filterMonth}
+                onChange={(val) => {
+                  setFilterMonth(val);
+                  if (val) {
+                    setPaidDateFrom('');
+                    setPaidDateTo('');
+                  }
+                  resetPage();
+                }}
+              />
+            </div>
+            {filterMonth && (
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Limpar mês selecionado"
+                title="Limpar mês selecionado"
+                className="h-10 w-10 shrink-0 border-dashed text-muted-foreground hover:text-foreground"
+                onClick={() => { setFilterMonth(''); resetPage(); }}
+              >
+                <FilterX className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
+          <div className="min-w-0">
+            <Select value={filterDependent} onValueChange={(val) => { setFilterDependent(val || 'all'); resetPage(); }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Dependente">
+                  {filterDependent === 'all'
+                    ? 'Todos (Dependentes)'
+                    : dependents.find(d => d.id === filterDependent)?.name ?? 'Dependente'}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos (Dependentes)</SelectItem>
+                {dependents.map(d => (
+                  <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="min-w-0">
+            <Select value={filterCategory} onValueChange={(val) => { setFilterCategory(val || 'all'); resetPage(); }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Categoria">
+                  {filterCategory === 'all'
+                    ? 'Todas as Categorias'
+                    : categories.find(c => c.id === filterCategory)?.name ?? 'Categoria'}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as Categorias</SelectItem>
+                {categories.map(c => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 md:w-[300px] md:shrink-0">
+        <div className="grid grid-cols-1 items-end gap-3 border-t border-border pt-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
           <div className="space-y-1">
             <span className="text-xs text-muted-foreground">Pagamento de</span>
             <DatePicker
@@ -939,47 +981,10 @@ export default function Bills() {
               placeholder="Data final"
             />
           </div>
+          <Button variant="outline" onClick={clearFilters} className="h-10 w-full gap-2 whitespace-nowrap sm:w-auto">
+            <FilterX className="w-4 h-4" /> Limpar filtros
+          </Button>
         </div>
-
-        <div className="w-full md:w-48">
-          <Select value={filterDependent} onValueChange={(val) => { setFilterDependent(val || 'all'); resetPage(); }}>
-            <SelectTrigger>
-              <SelectValue placeholder="Dependente">
-                {filterDependent === 'all'
-                  ? 'Todos (Dependentes)'
-                  : dependents.find(d => d.id === filterDependent)?.name ?? 'Dependente'}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos (Dependentes)</SelectItem>
-              {dependents.map(d => (
-                <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="w-full md:w-48">
-          <Select value={filterCategory} onValueChange={(val) => { setFilterCategory(val || 'all'); resetPage(); }}>
-            <SelectTrigger>
-              <SelectValue placeholder="Categoria">
-                {filterCategory === 'all'
-                  ? 'Todas as Categorias'
-                  : categories.find(c => c.id === filterCategory)?.name ?? 'Categoria'}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as Categorias</SelectItem>
-              {categories.map(c => (
-                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <Button variant="outline" onClick={clearFilters} className="md:ml-auto w-full md:w-auto h-10 gap-2 whitespace-nowrap">
-          <FilterX className="w-4 h-4" /> Limpar
-        </Button>
       </div>
 
       {loading && bills.length === 0 ? (

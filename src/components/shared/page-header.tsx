@@ -11,7 +11,11 @@ export function PageHeader({ title, description, action }: Props) {
         <h1 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">{title}</h1>
         {description && <p className="mt-1 max-w-[65ch] text-sm leading-relaxed text-muted-foreground">{description}</p>}
       </div>
-      {action && <div>{action}</div>}
+      {action && (
+        <div className="w-full sm:w-auto [&_button]:w-full sm:[&_button]:w-auto">
+          {action}
+        </div>
+      )}
     </div>
   );
 }
