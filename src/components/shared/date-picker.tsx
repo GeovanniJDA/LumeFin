@@ -15,6 +15,7 @@ interface DatePickerProps {
   onChange: (value: string) => void
   placeholder?: string
   disabled?: boolean
+  ariaLabel?: string
 }
 
 export function DatePicker({
@@ -22,6 +23,7 @@ export function DatePicker({
   onChange,
   placeholder = 'Selecione uma data',
   disabled = false,
+  ariaLabel,
 }: DatePickerProps) {
   const [open, setOpen] = useState(false)
 
@@ -40,6 +42,7 @@ export function DatePicker({
       <PopoverTrigger
         render={<button type="button" />}
         disabled={disabled}
+        aria-label={ariaLabel}
         className={cn(
           'flex h-9 w-full items-center gap-2 rounded-md border px-3 py-1 text-sm',
           'border-border bg-background',

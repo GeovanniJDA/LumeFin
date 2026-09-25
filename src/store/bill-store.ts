@@ -8,6 +8,8 @@ import { PAGE_SIZE } from '../hooks/use-pagination';
 interface FetchOptions {
   range?: { from: number; to: number };
   month?: string; // 'YYYY-MM' — when set, fetches ALL records for that month (no pagination)
+  paidDateFrom?: string;
+  paidDateTo?: string;
 }
 
 interface BillStore {
@@ -43,7 +45,14 @@ export const useBillStoreRaw = create<BillStore>((set, get) => ({
       .select('*, bill_categories(*), bill_dependents(dependent_id, dependents(*))', { count: 'exact' })
       .order('due_date', { ascending: true });
 
-    if (options?.month) {
+    if (options?.paidDateFrom || options?.paidDateTo) {
+      query = query.eq('status', 'paid');
+      if (options.paidDateFrom) query = query.gte('paid_date', options.paidDateFrom);
+      if (options.paidDateTo) query = query.lt('paid_date', options.paidDateTo);
+      const from = options.range?.from ?? 0;
+      const to = options.range?.to ?? PAGE_SIZE - 1;
+      query = query.range(from, to);
+    } else if (options?.month) {
       // Server-side month filter — fetch ALL records for that month AND all previous recurring bills
       query = query.or(`reference_month.eq.${options.month},and(is_recurring.eq.true,reference_month.lte.${options.month})`);
     } else {

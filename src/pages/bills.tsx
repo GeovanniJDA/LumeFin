@@ -71,6 +71,7 @@ import {
   HeartPulse,
   Car,
   FilterX,
+  Undo2,
   Tag,
   Phone,
   GraduationCap,
@@ -125,9 +126,11 @@ export default function Bills() {
   const [filterMonth, setFilterMonth] = useState<string>(currentMonthStr);
   const [filterDependent, setFilterDependent] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [paidDateFrom, setPaidDateFrom] = useState('');
+  const [paidDateTo, setPaidDateTo] = useState('');
 
-  // Pass filterMonth to the hook so it fetches server-side when a month is selected
-  const { bills, loading, error, addBill, updateBill, removeBill, page, totalPages, hasNextPage, hasPrevPage, nextPage, prevPage, resetPage, refreshBills } = useBills(filterMonth || undefined);
+  // Payment-date filters query paid bills across reference months.
+  const { bills, loading, error, addBill, updateBill, removeBill, page, totalPages, hasNextPage, hasPrevPage, nextPage, prevPage, resetPage, refreshBills } = useBills(filterMonth || undefined, false, { from: paidDateFrom, to: paidDateTo });
   const { categories, systemCategories, userCategories, loading: categoriesLoading, addCategory, removeCategory } = useCategories();
   const { dependents } = useDependents();
 
@@ -163,12 +166,13 @@ export default function Bills() {
 
   const amountInput = useCurrencyInput(0);
   const filteredBills = useMemo(() => {
+    const filteringByPaidDate = !!(paidDateFrom || paidDateTo);
     // When filterMonth is set, the server already filtered by month,
     // so we only need to apply status, category, and dependent filters client-side.
     const filtered = bills.filter(bill => {
       // Exclude previous months' recurring bills from the direct list
       // They will be handled by the projections logic below
-      if (filterMonth && bill.reference_month !== filterMonth) return false;
+      if (!filteringByPaidDate && filterMonth && bill.reference_month !== filterMonth) return false;
 
       if (filterStatus !== 'all' && bill.status !== filterStatus) return false;
       if (filterCategory !== 'all' && bill.category_id !== filterCategory) return false;
@@ -180,6 +184,7 @@ export default function Bills() {
     });
 
     // Recurring projections: only generated when a specific month is selected
+    if (filteringByPaidDate) return filtered;
     if (!filterMonth) return filtered;
 
     const currentMonth = filterMonth;
@@ -239,13 +244,15 @@ export default function Bills() {
       });
 
     return [...filtered, ...recurringBillsForMonth];
-  }, [bills, filterStatus, filterMonth, filterDependent, filterCategory]);
+  }, [bills, filterStatus, filterMonth, filterDependent, filterCategory, paidDateFrom, paidDateTo]);
 
   const clearFilters = () => {
     setFilterStatus('all');
     setFilterMonth(currentMonthStr);
     setFilterDependent('all');
     setFilterCategory('all');
+    setPaidDateFrom('');
+    setPaidDateTo('');
     resetPage();
   };
 
@@ -313,6 +320,20 @@ export default function Bills() {
       });
       refreshBills();
       toast.success('Conta marcada como paga.');
+    } catch (err: any) {
+      toast.error(err.message || 'Erro inesperado.');
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  const handleMarkAsPending = async (id: string, currentStatus: BillStatus) => {
+    if (currentStatus !== 'paid') return;
+    setLoadingId(id);
+    try {
+      await updateBill(id, { status: 'pending', paid_date: null });
+      refreshBills();
+      toast.success('Conta voltou para pendente.');
     } catch (err: any) {
       toast.error(err.message || 'Erro inesperado.');
     } finally {
@@ -851,7 +872,7 @@ export default function Bills() {
       )}
 
       {/* Filter Bar */}
-      <div className="flex flex-col md:flex-row gap-3 glass rounded-2xl p-4">
+      <div className="flex flex-col flex-wrap gap-3 glass rounded-2xl p-4 md:flex-row">
         <div className="w-full md:w-48">
           <Select value={filterStatus} onValueChange={(val) => { setFilterStatus(val || 'all'); resetPage(); }}>
             <SelectTrigger>
@@ -869,7 +890,14 @@ export default function Bills() {
           <div className="flex-1">
             <MonthPicker
               value={filterMonth}
-              onChange={(val) => { setFilterMonth(val); resetPage(); }}
+              onChange={(val) => {
+                setFilterMonth(val);
+                if (val) {
+                  setPaidDateFrom('');
+                  setPaidDateTo('');
+                }
+                resetPage();
+              }}
             />
           </div>
           {filterMonth && (
@@ -882,6 +910,35 @@ export default function Bills() {
               <FilterX className="h-4 w-4" />
             </Button>
           )}
+        </div>
+
+        <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 md:w-[300px] md:shrink-0">
+          <div className="space-y-1">
+            <span className="text-xs text-muted-foreground">Pagamento de</span>
+            <DatePicker
+              value={paidDateFrom || null}
+              ariaLabel="Data inicial do pagamento"
+              onChange={value => {
+                setPaidDateFrom(value);
+                if (value) setFilterMonth('');
+                resetPage();
+              }}
+              placeholder="Data inicial"
+            />
+          </div>
+          <div className="space-y-1">
+            <span className="text-xs text-muted-foreground">Pagamento até</span>
+            <DatePicker
+              value={paidDateTo || null}
+              ariaLabel="Data final do pagamento"
+              onChange={value => {
+                setPaidDateTo(value);
+                if (value) setFilterMonth('');
+                resetPage();
+              }}
+              placeholder="Data final"
+            />
+          </div>
         </div>
 
         <div className="w-full md:w-48">
@@ -971,9 +1028,16 @@ export default function Bills() {
                         </p>
                       </div>
                     </div>
-                    <span className={`px-2 py-1 rounded-md text-xs font-semibold border ${STATUS_COLORS[bill.status]}`}>
-                      {STATUS_LABELS[bill.status]}
-                    </span>
+                    <div className="text-right">
+                      <span className={`px-2 py-1 rounded-md text-xs font-semibold border ${STATUS_COLORS[bill.status]}`}>
+                        {STATUS_LABELS[bill.status]}
+                      </span>
+                      {bill.status === 'paid' && bill.paid_date && (
+                        <p className="mt-1 text-[10px] text-muted-foreground">
+                          Paga em {format(parseISO(bill.paid_date), 'dd/MM/yyyy', { locale: ptBR })}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   {/* Amount + dependents */}
@@ -1003,6 +1067,17 @@ export default function Bills() {
                         disabled={loadingId === bill.id}>
                         {loadingId === bill.id ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : null}
                         Marcar paga
+                      </Button>
+                    )}
+                    {bill.status === 'paid' && !(bill as any)._isProjected && (
+                      <Button variant="outline" size="sm"
+                        className="h-7 text-xs"
+                        onClick={() => handleMarkAsPending(bill.id, bill.status)}
+                        disabled={loadingId === bill.id}>
+                        {loadingId === bill.id
+                          ? <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                          : <Undo2 className="w-3 h-3 mr-1" />}
+                        Desfazer pagamento
                       </Button>
                     )}
                     {(bill as any)._isProjected ? (
@@ -1111,9 +1186,16 @@ export default function Bills() {
                           {bill.reference_month}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${STATUS_COLORS[bill.status]}`}>
-                            {STATUS_LABELS[bill.status]}
-                          </span>
+                          <div>
+                            <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${STATUS_COLORS[bill.status]}`}>
+                              {STATUS_LABELS[bill.status]}
+                            </span>
+                            {bill.status === 'paid' && bill.paid_date && (
+                              <p className="mt-1 text-[10px] text-muted-foreground">
+                                Paga em {format(parseISO(bill.paid_date), 'dd/MM/yyyy', { locale: ptBR })}
+                              </p>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <div className="flex items-center justify-end gap-2">
@@ -1127,6 +1209,20 @@ export default function Bills() {
                               >
                                 {loadingId === bill.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                                 Marcar como paga
+                              </Button>
+                            )}
+                            {bill.status === 'paid' && !(bill as any)._isProjected && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-xs"
+                                onClick={() => handleMarkAsPending(bill.id, bill.status)}
+                                disabled={loadingId === bill.id || loading}
+                              >
+                                {loadingId === bill.id
+                                  ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  : <Undo2 className="w-3 h-3 mr-1" />}
+                                Desfazer pagamento
                               </Button>
                             )}
                             {(bill as any)._isProjected ? (
