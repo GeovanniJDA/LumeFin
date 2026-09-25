@@ -8,6 +8,7 @@ export interface CashFlowEntryInput {
   amount: number;
   type: CashFlowEntryType;
   is_recurring: boolean;
+  recurrence?: 'weekly' | 'monthly' | null;
 }
 
 interface CashFlowStore {
@@ -34,6 +35,7 @@ export const useCashFlowStore = create<CashFlowStore>((set, get) => ({
       .select('*')
       .or(`and(entry_date.gte.${from},entry_date.lte.${to}),and(is_recurring.eq.true,entry_date.lt.${from})`)
       .order('entry_date', { ascending: false });
+    // ponytail: linhas antigas sem a coluna recurrence voltam como null — tratado na página
     if (get().month !== month) return;
     if (error) {
       handleSupabaseError(error);

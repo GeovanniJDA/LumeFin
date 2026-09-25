@@ -143,5 +143,6 @@ export interface CashFlowEntry {
   amount: number
   type: CashFlowEntryType
   is_recurring: boolean
+  recurrence: 'weekly' | 'monthly' | null
   created_at: string
 }

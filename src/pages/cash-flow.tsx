@@ -5,6 +5,7 @@ import { ArrowDownLeft, ArrowUpRight, Pencil, Plus, Trash2, Wallet } from 'lucid
 import { toast } from 'sonner';
 import { PageHeader } from '../components/shared/page-header';
 import { MonthPicker } from '../components/shared/month-picker';
+import { DatePicker } from '../components/shared/date-picker';
 import { useBills } from '../hooks/use-bills';
 import { useCreditCards } from '../hooks/use-credit-cards';
 import { useCurrencyInput } from '../hooks/use-currency-input';
@@ -19,6 +20,27 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const localDate = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 type CashFlowListEntry = CashFlowEntry & { projected?: boolean; sourceId?: string; sourceDate?: string };
+type Recurrence = 'weekly' | 'monthly' | null;
+const getWeekday = (dateStr: string) => parseISO(dateStr).getDay();
+
+// ponytail: gera ocorrências do mês de uma série recorrente (semanal = mesmo dia
+// da semana da data inicial; mensal = mesmo dia do mês). Sem estado no banco
+// além da data inicial — upgrade path: coluna de dia da semana explícita.
+const projectOccurrences = (entry: CashFlowEntry, month: string): string[] => {
+  if (!entry.is_recurring || entry.entry_date.slice(0, 7) >= month) return [];
+  const [year, monthNumber] = month.split('-').map(Number);
+  const finalDay = new Date(year, monthNumber, 0).getDate();
+  if (entry.recurrence === 'weekly') {
+    const target = getWeekday(entry.entry_date);
+    const dates: string[] = [];
+    for (let day = 1; day <= finalDay; day++) {
+      const date = `${month}-${String(day).padStart(2, '0')}`;
+      if (getWeekday(date) === target) dates.push(date);
+    }
+    return dates;
+  }
+  return [`${month}-${String(Math.min(Number(entry.entry_date.slice(-2)), finalDay)).padStart(2, '0')}`];
+};
 
 export default function CashFlow() {
   const [month, setMonth] = useState(format(new Date(), 'yyyy-MM'));
@@ -27,7 +49,8 @@ export default function CashFlow() {
   const [description, setDescription] = useState('');
   const [date, setDate] = useState(localDate(new Date()));
   const [type, setType] = useState<CashFlowEntryType>('income');
-  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrence, setRecurrence] = useState<Recurrence>(null);
+  const isRecurring = recurrence !== null;
   const [saving, setSaving] = useState(false);
   const amount = useCurrencyInput();
   const entries = useCashFlowStore(state => state.entries);
@@ -44,19 +67,17 @@ export default function CashFlow() {
 
   const monthEntries = useMemo<CashFlowListEntry[]>(() => {
     const actual = entries.filter(entry => entry.entry_date.startsWith(month));
-    const [year, monthNumber] = month.split('-').map(Number);
-    const finalDay = new Date(year, monthNumber, 0).getDate();
-    const projected = entries
-      .filter(entry => entry.is_recurring && entry.entry_date.slice(0, 7) < month)
-      .map(entry => ({
+    const projected = entries.flatMap(entry =>
+      projectOccurrences(entry, month).map(date => ({
         ...entry,
-        id: `recurring-${entry.id}-${month}`,
+        id: `recurring-${entry.id}-${date}`,
         sourceId: entry.id,
         sourceDate: entry.entry_date,
-        entry_date: `${month}-${String(Math.min(Number(entry.entry_date.slice(-2)), finalDay)).padStart(2, '0')}`,
+        entry_date: date,
         projected: true,
-      }));
-    return [...actual, ...projected].sort((a, b) => b.entry_date.localeCompare(a.entry_date));
+      }))
+    );
+    return [...actual, ...projected].sort((a, b) => a.entry_date.localeCompare(b.entry_date));
   }, [entries, month]);
 
   const { billCents, invoiceCents } = useMemo(() => {
@@ -94,7 +115,7 @@ export default function CashFlow() {
     setDescription('');
     setDate(month === format(new Date(), 'yyyy-MM') ? localDate(new Date()) : `${month}-01`);
     setType('income');
-    setIsRecurring(false);
+    setRecurrence(null);
     amount.reset(0);
     setDialogOpen(true);
   };
@@ -104,7 +125,7 @@ export default function CashFlow() {
     setDescription(entry.description);
     setDate(entry.sourceDate ?? entry.entry_date);
     setType(entry.type);
-    setIsRecurring(entry.is_recurring);
+    setRecurrence(entry.recurrence ?? (entry.is_recurring ? 'monthly' : null));
     amount.reset(entry.amount);
     setDialogOpen(true);
   };
@@ -115,7 +136,7 @@ export default function CashFlow() {
       toast.error('Informe descrição, data e um valor maior que zero.');
       return;
     }
-    const input: CashFlowEntryInput = { description: description.trim(), entry_date: date, type, amount: amount.cents / 100, is_recurring: isRecurring };
+    const input: CashFlowEntryInput = { description: description.trim(), entry_date: date, type, amount: amount.cents / 100, is_recurring: isRecurring, recurrence };
     setSaving(true);
     try {
       if (editing) {
@@ -162,19 +183,33 @@ export default function CashFlow() {
                 <label className="block space-y-1.5 text-sm font-medium">Descrição
                   <Input required maxLength={120} value={description} onChange={event => setDescription(event.target.value)} placeholder="Ex.: salário, mercado, transporte" />
                 </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={isRecurring} onChange={event => setIsRecurring(event.target.checked)} className="h-4 w-4 accent-primary" />
-                  Repetir todos os meses
-                </label>
+                <fieldset className="space-y-1.5">
+                  <legend className="text-sm font-medium">Repetir</legend>
+                  <div className="mt-1 flex flex-wrap gap-2">
+                    {[['none', 'Não repetir'], ['weekly', 'Toda semana'], ['monthly', 'Todo mês']].map(([value, label]) => (
+                      <Button
+                        key={value}
+                        type="button"
+                        variant={recurrence === value ? 'default' : 'outline'}
+                        size="sm"
+                        aria-pressed={recurrence === value}
+                        onClick={() => setRecurrence(value as Recurrence)}
+                      >
+                        {label}
+                      </Button>
+                    ))}
+                  </div>
+                </fieldset>
                 <div className="grid grid-cols-2 gap-3">
                   <label className="block space-y-1.5 text-sm font-medium">Valor
                     <Input required inputMode="numeric" value={amount.displayValue} onChange={event => amount.handleChange(event, () => {})} aria-label="Valor em reais" />
                   </label>
-                  <label className="block space-y-1.5 text-sm font-medium">{isRecurring ? 'Início' : 'Data'}
-                    <Input required type="date" value={date} onChange={event => setDate(event.target.value)} />
+                  <label className="block space-y-1.5 text-sm font-medium">{recurrence ? 'Início' : 'Data'}
+                    <DatePicker value={date || null} onChange={setDate} ariaLabel="Data do lançamento" />
                   </label>
                 </div>
-                {isRecurring && <p className="text-xs text-muted-foreground">O lançamento será projetado mensalmente. Alterar ou excluir esta série afeta todos os meses, inclusive o histórico.</p>}
+                {recurrence === 'weekly' && date && <p className="text-xs text-muted-foreground">Será lançado toda {format(parseISO(date), 'EEEE', { locale: ptBR })}, começando em {format(parseISO(date), 'dd/MM/yyyy')}.</p>}
+                {recurrence === 'monthly' && <p className="text-xs text-muted-foreground">O lançamento será projetado mensalmente. Alterar ou excluir esta série afeta todos os meses, inclusive o histórico.</p>}
                 <p className="text-xs text-muted-foreground">Contas e faturas cadastradas entram automaticamente no resultado. Não as registre novamente como gastos.</p>
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} disabled={saving}>Cancelar</Button>
@@ -231,7 +266,7 @@ export default function CashFlow() {
                       {entry.type === 'income' ? <ArrowDownLeft className="h-4 w-4" aria-hidden="true" /> : <ArrowUpRight className="h-4 w-4" aria-hidden="true" />}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{entry.description}{entry.is_recurring && <span className="ml-2 text-xs font-normal text-muted-foreground">Recorrente</span>}</p>
+                      <p className="truncate text-sm font-medium">{entry.description}{entry.is_recurring && <span className="ml-2 text-xs font-normal text-muted-foreground">{entry.recurrence === 'weekly' ? 'Recorrente · toda semana' : entry.recurrence === 'monthly' ? 'Recorrente · todo mês' : 'Recorrente'}</span>}</p>
                       <p className="text-xs text-muted-foreground">{format(parseISO(entry.entry_date), 'dd/MM/yyyy', { locale: ptBR })} · {entry.type === 'income' ? 'Entrada' : 'Gasto'}</p>
                     </div>
                     <span className={`whitespace-nowrap text-sm font-semibold tabular-nums ${entry.type === 'income' ? 'text-success' : 'text-destructive'}`}>
