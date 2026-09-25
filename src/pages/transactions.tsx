@@ -62,6 +62,7 @@ import {
   Wallet,
   FilterX,
   ChevronDown,
+  Undo2,
 } from 'lucide-react';
 import { TransactionPaymentsPanel } from '@/components/sections/transaction-payments-panel';
 import { toast } from 'sonner';
@@ -251,44 +252,10 @@ export default function Transactions() {
   ): number => {
     return getTransactionPaidCents({
       ...tx,
+      status: 'pending',
       manual_paid_installments: newPaidInstallments,
       transaction_payments: allPayments.filter(p => p.transaction_id === tx.id),
     }) / 100;
-  }
-
-  const handleToggleInstallment = async (
-    tx: TransactionWithDependent,
-    installmentNumber: number
-  ) => {
-    setLoadingId(tx.id)
-    try {
-      let newPaid: number
-      if (installmentNumber <= (tx.manual_paid_installments || 0)) {
-        // Uncheck — set paid to installmentNumber - 1
-        newPaid = installmentNumber - 1
-      } else {
-        // Check — set paid to installmentNumber
-        newPaid = installmentNumber
-      }
-      const combinedTotal = getCombinedTotal(tx, newPaid)
-      const isFullyPaid = combinedTotal >= tx.amount
-      const newStatus = isFullyPaid ? 'paid' : 'pending'
-      await updateTransaction(tx.id, {
-        manual_paid_installments: newPaid,
-        status: newStatus,
-        settled_date: newStatus === 'paid'
-          ? new Date().toISOString() : null
-      })
-      toast.success(
-        isFullyPaid
-          ? 'Transação quitada!'
-          : `Parcela ${installmentNumber} ${newPaid >= installmentNumber ? 'marcada' : 'desmarcada'}.`
-      )
-    } catch (err: any) {
-      toast.error(err.message || 'Erro ao atualizar parcela.')
-    } finally {
-      setLoadingId(null)
-    }
   }
 
   const handleIncrementInstallment = async (
@@ -314,6 +281,29 @@ export default function Transactions() {
       )
     } catch (err: any) {
       toast.error(err.message || 'Erro ao atualizar parcela.')
+    } finally {
+      setLoadingId(null)
+    }
+  }
+
+  const handleUndoLastInstallment = async (tx: TransactionWithDependent) => {
+    const paidInstallments = tx.manual_paid_installments || 0
+    if (paidInstallments === 0) return
+
+    setLoadingId(tx.id)
+    try {
+      const newPaid = paidInstallments - 1
+      const remainsPaid = getCombinedTotal(tx, newPaid) >= tx.amount
+      await updateTransaction(tx.id, {
+        manual_paid_installments: newPaid,
+        status: remainsPaid ? 'paid' : 'pending',
+        settled_date: remainsPaid ? tx.settled_date || new Date().toISOString() : null,
+      })
+      toast.success(remainsPaid
+        ? 'Última parcela desfeita. A transação continua quitada.'
+        : 'Última parcela desfeita.')
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao desfazer a última parcela.')
     } finally {
       setLoadingId(null)
     }
@@ -774,19 +764,6 @@ export default function Transactions() {
                       <p className="text-xs text-muted-foreground">
                         {format(parseISO(tx.transaction_date), 'dd/MM/yyyy', { locale: ptBR })}
                       </p>
-                      {tx.payment_type === 'installment' && (
-                        <div className="flex items-center justify-end gap-1.5 mt-1">
-                          <div className="w-12 h-1 rounded-full bg-muted/50 overflow-hidden">
-                            <div
-                              className="h-full rounded-full bg-amber-400 transition-all"
-                              style={{ width: `${progressPercent}%` }}
-                            />
-                          </div>
-                          <span className="text-[11px] text-muted-foreground">
-                            {tx.manual_paid_installments || 0}/{tx.installments || 1} manuais
-                          </span>
-                        </div>
-                      )}
                     </div>
                   </div>
 
@@ -832,7 +809,7 @@ export default function Transactions() {
                   {tx.payment_type === 'installment' && (
                     <div className="pt-2 border-t border-border space-y-2">
                       {/* Progress */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-col gap-2 sm:flex-row">
                         <div className="flex-1 h-1.5 rounded-full bg-muted/50">
                           <div
                             className="h-full rounded-full bg-amber-400 transition-all"
@@ -843,43 +820,34 @@ export default function Transactions() {
                           {tx.manual_paid_installments || 0}/{tx.installments || 1} manuais
                         </span>
                       </div>
-                      {/* Checkbox grid */}
-                      {tx.status !== 'paid' && (
-                        <div className="flex flex-wrap gap-1">
-                          {Array.from({ length: Math.min(tx.installments || 1, 12) }, (_, i) => i + 1).map(n => (
-                            <button
-                              key={n}
-                              disabled={loadingId === tx.id}
-                              onClick={() => handleToggleInstallment(tx, n)}
-                              className={`w-6 h-6 rounded text-[10px] font-bold transition-all duration-150 border
-                                ${n <= (tx.manual_paid_installments || 0)
-                                  ? 'bg-amber-400/20 border-amber-400/60 text-primary'
-                                  : 'bg-muted/50 border-border text-muted-foreground'}`}
-                            >
-                              {n}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                      {/* Quick action */}
-                      {tx.status === 'paid' ? (
-                        <span className="text-xs text-success font-medium">
-                          ✓ Transação quitada
-                        </span>
-                      ) : (tx.manual_paid_installments || 0) < (tx.installments || 1) ? (
-                        <button
-                          disabled={loadingId === tx.id}
-                          onClick={() => handleIncrementInstallment(tx)}
-                          className="text-xs text-primary flex items-center gap-1"
-                        >
-                          <Plus className="w-3 h-3" />
-                          Próxima
-                        </button>
-                      ) : (
-                        <span className="text-xs text-success font-medium">
-                          ✓ Transação quitada
-                        </span>
-                      )}
+                      {/* Quick installment actions */}
+                      <div className="flex items-center gap-2">
+                        {tx.status === 'paid' || (tx.manual_paid_installments || 0) >= (tx.installments || 1) ? (
+                          <span className="text-xs font-medium text-success">✓ Transação quitada</span>
+                        ) : (
+                          <Button
+                            size="sm"
+                            disabled={loadingId === tx.id}
+                            onClick={() => handleIncrementInstallment(tx)}
+                            className="h-10 w-full flex-1 justify-center gap-2 bg-amber-500 font-semibold text-[#302000] hover:bg-amber-600"
+                          >
+                            <Plus className="h-4 w-4" />
+                            Próxima parcela
+                          </Button>
+                        )}
+                        {(tx.manual_paid_installments || 0) > 0 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={loadingId === tx.id}
+                            onClick={() => handleUndoLastInstallment(tx)}
+                            className="h-10 w-full justify-center gap-1.5 px-3 sm:w-auto"
+                          >
+                            <Undo2 className="h-4 w-4" />
+                            Desfazer última parcela
+                          </Button>
+                        )}
+                      </div>
                       {/* Payments toggle */}
                       <button
                         onClick={() => setExpandedTxId(
@@ -1020,39 +988,27 @@ export default function Transactions() {
                         <td className="px-2 py-4 text-right md:px-3">
                           <div className="flex flex-wrap items-center justify-end gap-2">
                             {tx.payment_type === 'installment' && tx.status !== 'paid' && (tx.manual_paid_installments || 0) < (tx.installments || 1) && (
-                              <div className="flex flex-col items-end gap-1 mr-2">
-                                {/* Checkbox grid */}
-                                {(tx.status as string) !== 'paid' && (
-                                  <div className="flex flex-wrap gap-1 justify-end max-w-[140px]">
-                                    {Array.from({ length: Math.min(tx.installments || 1, 12) }, (_, i) => i + 1).map(n => (
-                                      <button
-                                        key={n}
-                                        disabled={loadingId === tx.id}
-                                        onClick={() => handleToggleInstallment(tx, n)}
-                                        title={`Parcela ${n}`}
-                                        className={`w-5 h-5 rounded text-[9px] font-bold transition-all duration-150 border
-                                          ${n <= (tx.manual_paid_installments || 0)
-                                            ? 'bg-amber-400/20 border-amber-400/60 text-primary'
-                                            : 'bg-muted/50 border-border text-muted-foreground hover:border-border'}`}
-                                      >
-                                        {n}
-                                      </button>
-                                    ))}
-                                    {(tx.installments || 1) > 12 && (
-                                      <span className="text-[9px] text-muted-foreground self-center">+{(tx.installments || 1) - 12}</span>
-                                    )}
-                                  </div>
-                                )}
-                                {/* Quick +1 */}
-                                <button
-                                  disabled={loadingId === tx.id}
-                                  onClick={() => handleIncrementInstallment(tx)}
-                                  className="text-[10px] text-primary flex items-center gap-1"
-                                >
-                                  <Plus className="w-3 h-3" />
-                                  Próxima
-                                </button>
-                              </div>
+                              <Button
+                                size="sm"
+                                disabled={loadingId === tx.id}
+                                onClick={() => handleIncrementInstallment(tx)}
+                                className="h-8 gap-1.5 bg-amber-500 px-3 text-xs font-semibold text-[#302000] hover:bg-amber-600"
+                              >
+                                <Plus className="h-3.5 w-3.5" />
+                                Próxima parcela
+                              </Button>
+                            )}
+                            {tx.payment_type === 'installment' && (tx.manual_paid_installments || 0) > 0 && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={loadingId === tx.id}
+                                onClick={() => handleUndoLastInstallment(tx)}
+                                className="h-8 gap-1 px-2 text-xs"
+                              >
+                                <Undo2 className="h-3.5 w-3.5" />
+                                Desfazer última parcela
+                              </Button>
                             )}
                             {/* Payments button */}
                             <button
