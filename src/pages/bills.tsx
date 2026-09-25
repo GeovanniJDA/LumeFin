@@ -728,11 +728,11 @@ export default function Bills() {
                               duration-200 shrink-0
                               ${field.value
                                 ? 'bg-amber-500'
-                                : 'bg-muted/50'
+                                : 'bg-muted'
                               }`}
                           >
                             <span className={`absolute top-1 w-4 h-4 rounded-full
-                              bg-white transition-all duration-200
+                              bg-card border border-foreground transition-all duration-200
                               ${field.value ? 'left-5' : 'left-1'}`}
                             />
                           </button>
@@ -1029,7 +1029,7 @@ export default function Bills() {
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(bill.id)} className="bg-red-600 hover:bg-red-700 text-foreground">Remover</AlertDialogAction>
+                          <AlertDialogAction onClick={() => handleDelete(bill.id)} className="bg-red-600 hover:bg-red-700 text-white">Remover</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
@@ -1153,7 +1153,7 @@ export default function Bills() {
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDelete(bill.id)} className="bg-red-600 hover:bg-red-700 text-foreground">
+                                  <AlertDialogAction onClick={() => handleDelete(bill.id)} className="bg-red-600 hover:bg-red-700 text-white">
                                     Remover
                                   </AlertDialogAction>
                                 </AlertDialogFooter>

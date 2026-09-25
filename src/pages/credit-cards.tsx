@@ -256,7 +256,7 @@ export default function CreditCards() {
                               title={c.label}
                               onClick={() => field.onChange(c.value)}
                               className={`w-8 h-8 rounded-full border-2 transition-all ${field.value === c.value
-                                ? 'border-white scale-110'
+                                ? 'border-white ring-2 ring-foreground scale-110'
                                 : 'border-transparent opacity-70 hover:opacity-100'
                                 }`}
                               style={{ backgroundColor: c.value }}
@@ -504,7 +504,7 @@ export default function CreditCards() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(card.id)} className="bg-red-600 hover:bg-red-700 text-foreground">
+                        <AlertDialogAction onClick={() => handleDelete(card.id)} className="bg-red-600 hover:bg-red-700 text-white">
                           Remover
                         </AlertDialogAction>
                       </AlertDialogFooter>

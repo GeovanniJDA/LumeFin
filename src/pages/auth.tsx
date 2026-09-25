@@ -98,13 +98,9 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex">
+    <div className="min-h-dvh flex bg-background text-foreground">
       {/* Left panel — brand (hidden on mobile) */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden flex-col items-start justify-between p-12"
-        style={{
-          background: 'linear-gradient(135deg, #000000 0%, #1a0f00 50%, #000000 100%)'
-        }}
-      >
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden flex-col items-start justify-between bg-card p-12">
         {/* Amber radial glow */}
         <div className="absolute inset-0 pointer-events-none"
           style={{
@@ -114,22 +110,22 @@ export default function Auth() {
 
         {/* Logo */}
         <div className="relative z-10">
-          <h1 className="text-4xl font-black text-amber-400 tracking-tight">
+          <h1 className="text-4xl font-black text-primary tracking-tight">
             LumeFin
           </h1>
-          <p className="text-white/60 text-sm mt-1 font-medium">
+          <p className="text-muted-foreground text-sm mt-1 font-medium">
             Clareza financeira para toda a família
           </p>
         </div>
 
         {/* Central statement */}
         <div className="relative z-10 space-y-6">
-          <h2 className="text-4xl font-black text-white leading-tight">
+          <h2 className="text-4xl font-black text-foreground leading-tight">
             Organize as finanças<br />
-            <span className="text-amber-400">da sua família</span><br />
+            <span className="text-primary">da sua família</span><br />
             em um só lugar.
           </h2>
-          <p className="text-white/50 text-base leading-relaxed max-w-sm">
+          <p className="text-muted-foreground text-base leading-relaxed max-w-sm">
             Contas, cartões, dependentes e transações —
             tudo sob controle com clareza e simplicidade.
           </p>
@@ -143,7 +139,7 @@ export default function Auth() {
             ].map(f => (
               <div key={f} className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                <span className="text-white/60 text-sm">{f}</span>
+                <span className="text-muted-foreground text-sm">{f}</span>
               </div>
             ))}
           </div>
@@ -151,16 +147,14 @@ export default function Auth() {
 
         {/* Footer */}
         <div className="relative z-10">
-          <p className="text-white/60 text-xs">
+          <p className="text-muted-foreground text-xs">
             LumeFin © 2026 — Gratuito e open source
           </p>
         </div>
       </div>
 
       {/* Right panel — auth form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative"
-        style={{ background: 'rgba(5,5,5,1)' }}
-      >
+      <div className="relative flex w-full items-center justify-center bg-background p-6 sm:p-12 lg:w-1/2">
         {/* Subtle top amber line */}
         <div className="absolute top-0 left-0 right-0 h-px"
           style={{
@@ -181,18 +175,18 @@ export default function Auth() {
 
           {/* Mobile logo — only visible on mobile */}
           <div className="lg:hidden text-center">
-            <h1 className="text-3xl font-black text-amber-400">LumeFin</h1>
-            <p className="text-white/60 text-sm mt-1">
+            <h1 className="text-3xl font-black text-primary">LumeFin</h1>
+            <p className="text-muted-foreground text-sm mt-1">
               Clareza financeira para toda a família
             </p>
           </div>
 
           {/* Form header */}
           <div>
-            <h2 className="text-2xl font-black text-white">
+            <h2 className="text-2xl font-black text-foreground">
               {isLogin ? 'Bem-vindo de volta' : 'Criar conta'}
             </h2>
-            <p className="text-white/60 text-sm mt-1">
+            <p className="text-muted-foreground text-sm mt-1">
               {isLogin
                 ? 'Entre com suas credenciais para continuar'
                 : 'Preencha os dados para criar sua conta'
@@ -202,7 +196,7 @@ export default function Auth() {
 
           {/* Error message */}
           {authError && (
-            <div className="p-3 rounded-xl border border-red-400/30 bg-red-400/10 text-red-400 text-sm">
+            <div className="p-3 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive text-sm">
               {authError}
             </div>
           )}
@@ -218,7 +212,7 @@ export default function Auth() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white/70 text-sm font-medium">
+                    <FormLabel className="text-foreground text-sm font-medium">
                       E-mail
                     </FormLabel>
                     <FormControl>
@@ -226,7 +220,7 @@ export default function Auth() {
                         type="email"
                         placeholder="seu@email.com"
                         autoComplete="email"
-                        className="bg-white/4 border-white/10 text-white placeholder:text-white/60 h-11 rounded-xl transition-colors"
+                        className="bg-field border-input text-foreground placeholder:text-muted-foreground h-11 rounded-xl transition-colors"
                         {...field}
                       />
                     </FormControl>
@@ -241,7 +235,7 @@ export default function Auth() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white/70 text-sm font-medium">
+                    <FormLabel className="text-foreground text-sm font-medium">
                       Senha
                     </FormLabel>
                     <FormControl>
@@ -249,7 +243,7 @@ export default function Auth() {
                         type="password"
                         placeholder="••••••••"
                         autoComplete={isLogin ? 'current-password' : 'new-password'}
-                        className="bg-white/4 border-white/10 text-white placeholder:text-white/60 h-11 rounded-xl transition-colors"
+                        className="bg-field border-input text-foreground placeholder:text-muted-foreground h-11 rounded-xl transition-colors"
                         {...field}
                       />
                     </FormControl>
@@ -264,7 +258,7 @@ export default function Auth() {
                   <button
                     type="button"
                     onClick={() => navigate('/auth/forgot-password')}
-                    className="text-xs text-white/60 hover:text-amber-400 transition-colors"
+                    className="text-xs text-muted-foreground hover:text-primary transition-colors"
                   >
                     Esqueceu a senha?
                   </button>
@@ -275,7 +269,7 @@ export default function Auth() {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full h-11 rounded-xl font-bold text-black bg-amber-400 hover:bg-amber-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full h-11 rounded-xl font-bold text-[#302000] bg-amber-500 hover:bg-amber-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -287,7 +281,7 @@ export default function Auth() {
 
           {/* Toggle mode */}
           <div className="text-center">
-            <p className="text-white/60 text-sm">
+            <p className="text-muted-foreground text-sm">
               {isLogin
                 ? 'Não tem uma conta? '
                 : 'Já tem uma conta? '
@@ -295,7 +289,7 @@ export default function Auth() {
               <button
                 type="button"
                 onClick={toggleMode}
-                className="text-amber-400 hover:text-amber-300 font-semibold transition-colors underline-offset-2 hover:underline"
+                className="text-primary hover:text-amber-600 font-semibold transition-colors underline-offset-2 hover:underline"
               >
                 {isLogin ? 'Cadastre-se' : 'Entre aqui'}
               </button>
@@ -303,7 +297,7 @@ export default function Auth() {
           </div>
 
           {/* Footer */}
-          <p className="text-center text-white/60 text-xs">
+          <p className="text-center text-muted-foreground text-xs">
             Ao continuar, você concorda com os termos de uso do LumeFin.
           </p>
         </div>

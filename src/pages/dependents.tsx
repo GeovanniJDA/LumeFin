@@ -264,7 +264,7 @@ export default function Dependents() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(dep.id)} className="bg-red-600 hover:bg-red-700 text-foreground">
+                        <AlertDialogAction onClick={() => handleDelete(dep.id)} className="bg-red-600 hover:bg-red-700 text-white">
                           Remover
                         </AlertDialogAction>
                       </AlertDialogFooter>

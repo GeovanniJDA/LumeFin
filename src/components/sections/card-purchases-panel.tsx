@@ -439,7 +439,7 @@ export function CardPurchasesPanel({ cardId, referenceMonth, dependents, openOnM
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(purchase.id)} className="bg-red-600 hover:bg-red-700 text-foreground">
+                        <AlertDialogAction onClick={() => handleDelete(purchase.id)} className="bg-red-600 hover:bg-red-700 text-white">
                           Excluir
                         </AlertDialogAction>
                       </AlertDialogFooter>
