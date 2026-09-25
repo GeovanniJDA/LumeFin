@@ -6,9 +6,9 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-    --background: #fffbff;
+    --background: #e5e2e9;
     --foreground: #26232b;
-    --card: #e8e5ec;
+    --card: #fffbff;
     --card-foreground: #26232b;
     --popover: #f8f5fa;
     --popover-foreground: #26232b;
@@ -32,16 +32,16 @@
     --chart-4: oklch(0.488 0.243 264.376);
     --chart-5: oklch(0.424 0.199 265.638);
     --radius: 0.625rem;
-    --sidebar: #f2eff4;
+    --sidebar: #dedbe3;
     --sidebar-foreground: #26232b;
     --sidebar-primary: #8a4b00;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #dedbe3;
+    --sidebar-accent: #f8f5fa;
     --sidebar-accent-foreground: #26232b;
     --sidebar-border: #c8c3ce;
     --sidebar-ring: #8a4b00;
 
-    --glass-bg: #e8e5ec;
+    --glass-bg: #fffbff;
     --glass-border: #c8c3ce;
     --glass-shadow: 0 8px 24px rgba(52, 35, 50, 0.06);
     --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.65);

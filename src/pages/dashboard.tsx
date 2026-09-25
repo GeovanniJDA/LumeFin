@@ -367,7 +367,7 @@ export default function Dashboard() {
               <div key={dep.id} className="rounded-xl border border-border bg-card p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-base font-semibold text-foreground">{dep.name}</span>
-                  <Badge variant="secondary" className="h-5 border-0 bg-muted px-2 py-0 text-[10px] font-medium text-muted-foreground">
+                  <Badge variant="secondary" className="h-5 border-0 bg-muted px-2 py-0 text-xs font-medium text-muted-foreground dark:text-[10px]">
                     {RELATIONSHIP_LABELS[dep.relationship] || dep.relationship}
                   </Badge>
                 </div>
@@ -375,11 +375,11 @@ export default function Dashboard() {
                 <div className="grid grid-cols-3 gap-3 text-center mb-4">
                   <div className="rounded-lg bg-muted p-3">
                     <div className="text-lg font-semibold tabular-nums text-foreground">{dep.pendingBillsCount}</div>
-                    <p className="text-[10px] text-muted-foreground">Contas</p>
+                    <p className="text-xs text-muted-foreground dark:text-[10px]">Contas</p>
                   </div>
                   <div className="rounded-lg bg-muted p-3">
                     <div className="text-lg font-semibold tabular-nums text-foreground">{dep.pendingCardsCount}</div>
-                    <p className="text-[10px] text-muted-foreground">Cartões</p>
+                    <p className="text-xs text-muted-foreground dark:text-[10px]">Cartões</p>
                   </div>
                   <div className={`rounded-xl p-3 ${dep.balance > 0
                     ? 'bg-[rgba(16,185,129,0.1)]'
@@ -395,7 +395,7 @@ export default function Dashboard() {
                     }`}>
                       {formatCurrency(Math.abs(dep.balance))}
                     </div>
-                    <p className="text-[10px] text-muted-foreground">
+                    <p className="text-xs text-muted-foreground dark:text-[10px]">
                       {dep.balance > 0 ? 'A receber' : dep.balance < 0 ? 'A pagar' : 'Sem saldo'}
                     </p>
                   </div>
