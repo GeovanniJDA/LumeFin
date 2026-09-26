@@ -5,57 +5,11 @@ import { ptBR } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight, ArrowLeft, CreditCard, Plus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useCardPurchaseStore } from '@/store/card-purchase-store'
+import { getPurchasesForMonth, getMonthTotals } from '@/lib/card-purchase-projection'
 import { formatCurrency } from '@/lib/utils'
-import type { CreditCardWithDependents, CardPurchaseWithDependents, Dependent } from '@/types'
+import type { CreditCardWithDependents, Dependent } from '@/types'
 
 // ─── Pure helper functions ────────────────────────────────────────────────────
-
-function getPurchasesForMonth(
-  purchases: CardPurchaseWithDependents[],
-  targetMonth: string // 'YYYY-MM'
-): Array<CardPurchaseWithDependents & { installmentLabel?: string; monthlyAmount: number }> {
-  return purchases
-    .map(p => {
-      if (p.type === 'cash') {
-        if (p.reference_month === targetMonth) {
-          return { ...p, monthlyAmount: p.amount }
-        }
-        return null
-      }
-
-      if (p.type === 'recurring') {
-        // Appears from reference_month onwards
-        if (targetMonth >= p.reference_month) {
-          return { ...p, monthlyAmount: p.amount }
-        }
-        return null
-      }
-
-      if (p.type === 'installment') {
-        // Calculate which installment number this month is
-        const [baseYear, baseMonth] = p.reference_month.split('-').map(Number)
-        const [targetYear, targetMonthNum] = targetMonth.split('-').map(Number)
-        const monthDiff = (targetYear - baseYear) * 12 + (targetMonthNum - baseMonth)
-        const installmentNumber = monthDiff + 1
-
-        if (installmentNumber >= 1 && installmentNumber <= p.installments) {
-          return {
-            ...p,
-            installmentLabel: `${installmentNumber}/${p.installments}`,
-            monthlyAmount: p.amount / p.installments
-          }
-        }
-        return null
-      }
-
-      return null
-    })
-    .filter(Boolean) as Array<CardPurchaseWithDependents & { installmentLabel?: string; monthlyAmount: number }>
-}
-
-function getTotalForMonth(purchases: CardPurchaseWithDependents[], month: string): number {
-  return getPurchasesForMonth(purchases, month).reduce((sum, p) => sum + p.monthlyAmount, 0)
-}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -122,10 +76,10 @@ export default function CreditCardDetail() {
   // Mini chart data — total per month for all 12 months
   const chartData = useMemo(
     () =>
-      months.map(m => ({
-        month: m,
-        label: format(parseISO(`${m}-01`), 'MMM', { locale: ptBR }),
-        total: getTotalForMonth(cardPurchases, m)
+      getMonthTotals(cardPurchases, months).map(({ month, total }) => ({
+        month,
+        label: format(parseISO(`${month}-01`), 'MMM', { locale: ptBR }),
+        total
       })),
     [cardPurchases, months]
   )
