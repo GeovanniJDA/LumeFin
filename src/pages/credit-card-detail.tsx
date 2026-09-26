@@ -2,10 +2,10 @@ import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { format, addMonths, subMonths, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, ArrowLeft, CreditCard, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ArrowLeft, CreditCard, Plus, Check } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useCardPurchaseStore } from '@/store/card-purchase-store'
-import { getPurchasesForMonth, getMonthTotals } from '@/lib/card-purchase-projection'
+import { getPurchasesForMonth, getMonthTotals, isInvoiceMonthPaid } from '@/lib/card-purchase-projection'
 import { formatCurrency } from '@/lib/utils'
 import type { CreditCardWithDependents, Dependent } from '@/types'
 
@@ -73,6 +73,12 @@ export default function CreditCardDetail() {
     [monthPurchases]
   )
 
+  // Mês selecionado já foi quitado? (histórico de faturas pagas)
+  const selectedMonthPaid = useMemo(
+    () => (card ? isInvoiceMonthPaid(card, selectedMonth) : false),
+    [card, selectedMonth]
+  )
+
   // Mini chart data — total per month for all 12 months
   const chartData = useMemo(
     () =>
@@ -84,6 +90,12 @@ export default function CreditCardDetail() {
     [cardPurchases, months]
   )
   const maxChartValue = Math.max(...chartData.map(d => d.total), 1)
+
+  // Meses com fatura já paga (barras verdes no gráfico)
+  const paidMonths = useMemo(
+    () => new Set(months.filter(m => isInvoiceMonthPaid(card ?? {}, m))),
+    [card, months]
+  )
 
   if (cardLoading)
     return (
@@ -160,11 +172,20 @@ export default function CreditCardDetail() {
                   height: `${Math.max((d.total / maxChartValue) * 52, 4)}px`,
                   background:
                     d.month === selectedMonth
-                      ? '#F59E0B'
-                      : d.total > 0
-                        ? 'rgba(245,158,11,0.3)'
-                        : 'var(--muted)',
-                  borderBottom: d.month === selectedMonth ? '2px solid #F59E0B' : 'none'
+                      ? paidMonths.has(d.month)
+                        ? '#10B981'
+                        : '#F59E0B'
+                      : paidMonths.has(d.month) && d.total > 0
+                        ? 'rgba(16,185,129,0.35)'
+                        : d.total > 0
+                          ? 'rgba(245,158,11,0.3)'
+                          : 'var(--muted)',
+                  borderBottom:
+                    d.month === selectedMonth
+                      ? paidMonths.has(d.month)
+                        ? '2px solid #10B981'
+                        : '2px solid #F59E0B'
+                      : 'none'
                 }}
               />
               <span
@@ -194,9 +215,17 @@ export default function CreditCardDetail() {
         </button>
 
         <div className="text-center">
-          <p className="text-lg font-black text-foreground capitalize">
-            {format(parseISO(`${selectedMonth}-01`), 'MMMM yyyy', { locale: ptBR })}
-          </p>
+          <div className="flex items-center justify-center gap-2">
+            <p className="text-lg font-black text-foreground capitalize">
+              {format(parseISO(`${selectedMonth}-01`), 'MMMM yyyy', { locale: ptBR })}
+            </p>
+            {selectedMonthPaid && (
+              <span className="flex items-center gap-1 rounded-md border border-[rgba(16,185,129,0.3)] bg-[rgba(16,185,129,0.15)] px-2 py-0.5 text-xs font-semibold text-success">
+                <Check className="h-3 w-3" />
+                Pago
+              </span>
+            )}
+          </div>
           <p className="text-sm text-primary font-bold">{formatCurrency(monthTotal)}</p>
         </div>
 
@@ -248,14 +277,22 @@ export default function CreditCardDetail() {
                   {/* Type indicator */}
                   <div
                     className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-[10px] font-bold ${
-                      p.type === 'cash'
-                        ? 'bg-emerald-400/10 text-success'
-                        : p.type === 'recurring'
-                          ? 'bg-blue-400/10 text-blue-800 dark:text-blue-400'
-                          : 'bg-amber-400/10 text-primary'
+                      selectedMonthPaid && p.type !== 'cash'
+                        ? 'bg-[rgba(16,185,129,0.15)] text-success'
+                        : p.type === 'cash'
+                          ? 'bg-emerald-400/10 text-success'
+                          : p.type === 'recurring'
+                            ? 'bg-blue-400/10 text-blue-800 dark:text-blue-400'
+                            : 'bg-amber-400/10 text-primary'
                     }`}
                   >
-                    {p.type === 'cash' ? 'AV' : p.type === 'recurring' ? 'RC' : p.installmentLabel}
+                    {selectedMonthPaid && p.type !== 'cash'
+                      ? <Check className="h-3.5 w-3.5" />
+                      : p.type === 'cash'
+                        ? 'AV'
+                        : p.type === 'recurring'
+                          ? 'RC'
+                          : p.installmentLabel}
                   </div>
                   <div>
                     <p className="text-sm font-medium text-foreground">{p.description}</p>
@@ -285,8 +322,17 @@ export default function CreditCardDetail() {
         {/* Month total footer */}
         {monthPurchases.length > 0 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/50">
-            <p className="text-sm font-semibold text-muted-foreground">Total estimado</p>
-            <p className="text-base font-black text-primary">{formatCurrency(monthTotal)}</p>
+            {selectedMonthPaid ? (
+              <p className="text-sm font-semibold flex items-center gap-1.5 text-success">
+                <Check className="h-3.5 w-3.5" />
+                Total pago
+              </p>
+            ) : (
+              <p className="text-sm font-semibold text-muted-foreground">Total estimado</p>
+            )}
+            <p className={`text-base font-black ${selectedMonthPaid ? 'text-success' : 'text-primary'}`}>
+              {formatCurrency(monthTotal)}
+            </p>
           </div>
         )}
       </div>

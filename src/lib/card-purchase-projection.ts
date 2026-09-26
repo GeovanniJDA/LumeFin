@@ -68,7 +68,16 @@ export function getPurchaseOccurrenceForMonth(
   }
 
   if (purchase.type === 'recurring') {
-    return monthDiff >= 0 ? { ...purchase, monthlyAmount: purchase.amount } : null
+    // A recorrência vale desde a criação da compra — não desde o mês de
+    // referência corrente, que avança a cada fatura paga (roll-forward).
+    // Usar o menor entre o mês da compra e o mês de referência cobre também
+    // compras cujo mês de referência foi definido antes da data da compra.
+    const purchaseMonth = purchase.purchase_date?.slice(0, 7)
+    const anchor =
+      purchaseMonth && purchaseMonth < purchase.reference_month
+        ? purchaseMonth
+        : purchase.reference_month
+    return targetMonth >= anchor ? { ...purchase, monthlyAmount: purchase.amount } : null
   }
 
   if (purchase.type === 'installment') {
@@ -94,6 +103,21 @@ export function getPurchasesForMonth(
     .map(p => getPurchaseOccurrenceForMonth(p, targetMonth))
     .filter((p): p is MonthlyPurchaseProjection => p !== null)
     .sort(compareMonthlyPurchases)
+}
+
+/**
+ * Fatura do mês já foi paga?
+ *
+ * Deriva do próprio cartão: pagar a fatura avança `reference_month`
+ * (fluxo "Marcar como paga"), então todo mês anterior ao mês de referência
+ * atual já está quitado. Não depende de histórico externo.
+ */
+export function isInvoiceMonthPaid(
+  card: { reference_month?: string | null },
+  month: string
+): boolean {
+  if (!card.reference_month) return false
+  return month < card.reference_month
 }
 
 /** Total projetado de cada mês, na ordem dos meses informados (para o gráfico). */

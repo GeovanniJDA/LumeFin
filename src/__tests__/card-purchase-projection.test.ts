@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest'
 import {
   getPurchaseOccurrenceForMonth,
   getPurchasesForMonth,
-  getMonthTotals
+  getMonthTotals,
+  isInvoiceMonthPaid
 } from '@/lib/card-purchase-projection'
 import type { CardPurchaseWithDependents } from '@/types'
 
@@ -64,6 +65,37 @@ describe('getPurchaseOccurrenceForMonth', () => {
     const recurring = purchase({ type: 'recurring', installments: 1, current_installment: 1, amount: 60 })
     expect(getPurchaseOccurrenceForMonth(recurring, '2026-08')).toBeNull()
     expect(getPurchaseOccurrenceForMonth(recurring, '2027-01')!.monthlyAmount).toBe(60)
+  })
+
+  it('recorrente criada em julho permanece no histórico dos meses anteriores mesmo após o roll-forward da fatura (regressão: sumia do histórico)', () => {
+    // Criada em 15/07/2026; duas faturas pagas desde então, reference_month já avançou para 2026-09.
+    const rolled = purchase({
+      type: 'recurring',
+      installments: 1,
+      current_installment: 1,
+      amount: 50,
+      purchase_date: '2026-07-15',
+      reference_month: '2026-09'
+    })
+
+    expect(getPurchaseOccurrenceForMonth(rolled, '2026-07')!.monthlyAmount).toBe(50)
+    expect(getPurchaseOccurrenceForMonth(rolled, '2026-08')!.monthlyAmount).toBe(50)
+    expect(getPurchaseOccurrenceForMonth(rolled, '2026-09')!.monthlyAmount).toBe(50)
+    expect(getPurchaseOccurrenceForMonth(rolled, '2026-10')!.monthlyAmount).toBe(50)
+    // Antes da criação, nada.
+    expect(getPurchaseOccurrenceForMonth(rolled, '2026-06')).toBeNull()
+  })
+
+  it('recorrente com mês de referência anterior à data da compra começa no mês de referência', () => {
+    const earlyRef = purchase({
+      type: 'recurring',
+      installments: 1,
+      current_installment: 1,
+      purchase_date: '2026-10-01',
+      reference_month: '2026-09'
+    })
+    expect(getPurchaseOccurrenceForMonth(earlyRef, '2026-09')!.monthlyAmount).toBe(300)
+    expect(getPurchaseOccurrenceForMonth(earlyRef, '2026-08')).toBeNull()
   })
 
   it('cruzamento de ano com compra parcelada (ex.: 11/12 em novembro)', () => {
@@ -150,5 +182,33 @@ describe('getMonthTotals (gráfico de 12 meses)', () => {
     const totals = getMonthTotals([], months)
     expect(totals.map(t => t.month)).toEqual(months)
     expect(totals.every(t => t.total === 0)).toBe(true)
+  })
+})
+
+describe('isInvoiceMonthPaid', () => {
+  it('mês anterior ao reference_month do cartão está pago', () => {
+    const card = { reference_month: '2026-09' }
+    expect(isInvoiceMonthPaid(card, '2026-08')).toBe(true)
+    expect(isInvoiceMonthPaid(card, '2026-03')).toBe(true)
+    expect(isInvoiceMonthPaid(card, '2025-12')).toBe(true)
+  })
+
+  it('mês de referência atual e futuros não estão pagos', () => {
+    const card = { reference_month: '2026-09' }
+    expect(isInvoiceMonthPaid(card, '2026-09')).toBe(false)
+    expect(isInvoiceMonthPaid(card, '2026-10')).toBe(false)
+    expect(isInvoiceMonthPaid(card, '2027-01')).toBe(false)
+  })
+
+  it('cartão sem reference_month não marca nada como pago', () => {
+    expect(isInvoiceMonthPaid({}, '2026-09')).toBe(false)
+    expect(isInvoiceMonthPaid({ reference_month: null }, '2026-09')).toBe(false)
+  })
+
+  it('cruzamento de ano: dezembro pago quando o cartão já está em janeiro', () => {
+    const card = { reference_month: '2027-01' }
+    expect(isInvoiceMonthPaid(card, '2026-12')).toBe(true)
+    expect(isInvoiceMonthPaid(card, '2026-11')).toBe(true)
+    expect(isInvoiceMonthPaid(card, '2027-01')).toBe(false)
   })
 })
