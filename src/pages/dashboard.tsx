@@ -17,9 +17,11 @@ import {
   TrendingUp,
   TrendingDown,
   ArrowRight,
+  PiggyBank,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import { useEmergencyFund } from '../hooks/use-emergency-fund';
 
 const RELATIONSHIP_LABELS: Record<string, string> = {
   mae: 'Mãe', pai: 'Pai', avo: 'Avô', avoa: 'Avó',
@@ -50,6 +52,7 @@ export default function Dashboard() {
     fetchPurchases();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  const { summary: fundSummary, goal: fundGoal } = useEmergencyFund();
 
   const isLoading = billsLoading || cardsLoading || txLoading || depsLoading || catsLoading || purchasesLoading;
   const financialDataError = billsError || cardsError || txError;
@@ -275,6 +278,61 @@ export default function Dashboard() {
             </div>
             <div className="text-2xl font-semibold tabular-nums text-destructive dark:text-destructive">{formatCurrency(totalToPay)}</div>
             <p className="mt-1 text-xs text-muted-foreground">transações, contas e faturas pendentes</p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Emergency Fund Reserve Card ── */}
+      {!isLoading && (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => navigate('/app/emergency-fund')}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate('/app/emergency-fund')}
+          className="group relative cursor-pointer overflow-hidden rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/50 hover:bg-accent/30 sm:p-5"
+        >
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <PiggyBank className="h-4 w-4" />
+                </span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {fundGoal?.name || 'Reserva de Emergência'}
+                </span>
+                <Badge variant="outline" className="text-[10px] text-primary border-primary/30">
+                  {fundSummary.progressPercentage}% concluído
+                </Badge>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="font-quicksand text-2xl font-bold tracking-tight text-foreground">
+                  {formatCurrency(fundSummary.currentAmount)}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  de {formatCurrency(fundSummary.targetAmount || 5000)}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="w-full sm:w-48 space-y-1">
+                <div className="flex justify-between text-[11px] text-muted-foreground">
+                  <span>Progresso</span>
+                  <span className="font-semibold text-primary">{fundSummary.progressPercentage}%</span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      fundSummary.progressPercentage >= 100 ? 'bg-emerald-500' : 'bg-primary'
+                    }`}
+                    style={{ width: `${Math.min(fundSummary.progressPercentage, 100)}%` }}
+                  />
+                </div>
+              </div>
+              <div className="hidden sm:flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-colors">
+                <ArrowRight className="h-4 w-4" />
+              </div>
+            </div>
           </div>
         </div>
       )}

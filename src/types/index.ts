@@ -146,3 +146,38 @@ export interface CashFlowEntry {
   recurrence: 'weekly' | 'monthly' | null
   created_at: string
 }
+
+export type EmergencyFundContributionType = 'deposit' | 'withdrawal'
+
+export interface EmergencyFundGoal {
+  id: string
+  user_id: string
+  name: string
+  target_amount: number
+  target_date: string | null
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface EmergencyFundContribution {
+  id: string
+  goal_id: string
+  user_id: string
+  amount: number
+  type: EmergencyFundContributionType
+  contribution_date: string
+  notes: string | null
+  created_at: string
+}
+
+export interface EmergencyFundSummary {
+  currentAmount: number
+  targetAmount: number
+  progressPercentage: number
+  remainingAmount: number
+  monthTotal: number
+  depositsCount: number
+  withdrawalsCount: number
+  averageDeposit: number
+}

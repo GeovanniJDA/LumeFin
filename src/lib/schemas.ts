@@ -118,3 +118,19 @@ export const transactionPaymentSchema = z.object({
 })
 export type TransactionPaymentFormValues =
   z.infer<typeof transactionPaymentSchema>
+
+export const emergencyFundGoalSchema = z.object({
+  name: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres').default('Reserva de Emergência'),
+  target_amount: z.number().min(0.01, 'O valor-alvo deve ser maior que zero'),
+  target_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data inválido').nullable().optional(),
+  notes: z.string().nullable().optional(),
+})
+export type EmergencyFundGoalFormValues = z.infer<typeof emergencyFundGoalSchema>;
+
+export const emergencyFundContributionSchema = z.object({
+  amount: z.number().min(0.01, 'O valor deve ser maior que zero'),
+  type: z.enum(['deposit', 'withdrawal']).default('deposit'),
+  contribution_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato de data inválido'),
+  notes: z.string().nullable().optional(),
+})
+export type EmergencyFundContributionFormValues = z.infer<typeof emergencyFundContributionSchema>;

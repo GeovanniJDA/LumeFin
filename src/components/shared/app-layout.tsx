@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { supabase } from '../../lib/supabase';
-import { LayoutDashboard, Receipt, CreditCard, ArrowRightLeft, Users, LogOut, Loader2, UserCircle, ChevronsUpDown, Sun, Moon, Wallet } from 'lucide-react';
+import { LayoutDashboard, Receipt, CreditCard, ArrowRightLeft, Users, LogOut, Loader2, UserCircle, ChevronsUpDown, Sun, Moon, Wallet, PiggyBank } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +21,7 @@ import { useCategoryStoreRaw } from '../../store/category-store';
 import { useProfileStore } from '@/store/profile-store';
 import { useCardPurchaseStore } from '@/store/card-purchase-store';
 import { useCashFlowStore } from '@/store/cash-flow-store';
+import { useEmergencyFundStore } from '@/store/emergency-fund-store';
 
 const navigation = [
   { name: 'Dashboard', href: '/app', icon: LayoutDashboard },
@@ -28,6 +29,7 @@ const navigation = [
   { name: 'Cartões', href: '/app/credit-cards', icon: CreditCard },
   { name: 'Transações', href: '/app/transactions', icon: ArrowRightLeft },
   { name: 'Fluxo de caixa', href: '/app/cash-flow', icon: Wallet },
+  { name: 'Reserva', href: '/app/emergency-fund', icon: PiggyBank },
   { name: 'Dependentes', href: '/app/dependents', icon: Users },
 ];
 
@@ -63,6 +65,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         useProfileStore.getState().reset();
         useCardPurchaseStore.getState().reset();
         useCashFlowStore.getState().reset();
+        useEmergencyFundStore.getState().reset();
         toast.success('Sessão encerrada.');
         navigate('/auth');
       }
@@ -176,7 +179,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </main>
 
-      <nav aria-label="Navegação principal" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t border-border bg-background/95 px-1 pb-[env(safe-area-inset-bottom)] md:hidden">
+      <nav aria-label="Navegação principal" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-7 border-t border-border bg-background/95 px-0.5 pb-[env(safe-area-inset-bottom)] md:hidden">
         {navigation.map((item) => {
           const active = item.href === '/app'
             ? location.pathname === item.href
@@ -187,10 +190,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               to={item.href}
               end={item.href === '/app'}
               aria-current={active ? 'page' : undefined}
-              className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-md py-1 text-[11px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${active ? 'text-primary' : 'text-muted-foreground'}`}
+              className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-md py-1 text-[10px] sm:text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${active ? 'text-primary' : 'text-muted-foreground'}`}
             >
-              <item.icon className="h-5 w-5" aria-hidden="true" />
-              <span>{item.name}</span>
+              <item.icon className="h-4.5 w-4.5 sm:h-5 sm:w-5" aria-hidden="true" />
+              <span className="truncate max-w-full px-0.5">{item.name}</span>
             </NavLink>
           );
         })}
