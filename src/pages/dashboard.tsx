@@ -6,7 +6,8 @@ import { useCategories } from '../hooks/use-categories';
 import { useCardPurchaseStore } from '../store/card-purchase-store';
 import { PageHeader } from '../components/shared/page-header';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatCurrency, getTransactionRemainingCents, isDueSoon, isOverdue } from '../lib/utils';
+import { formatCurrency, getTransactionRemainingCents } from '../lib/utils';
+import { buildDueAlerts } from '../lib/due-dates';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
@@ -38,8 +39,8 @@ function splitCents(amount: number, dependentIds: string[], dependentId: string)
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { bills, loading: billsLoading, error: billsError, getOverdueBills, getDueSoonBills } = useBills(undefined, true);
-  const { creditCards, loading: cardsLoading, error: cardsError, getOverdueCards, getDueSoonCards } = useCreditCards();
+  const { bills, loading: billsLoading, error: billsError } = useBills(undefined, true);
+  const { creditCards, loading: cardsLoading, error: cardsError } = useCreditCards();
   const { transactions, loading: txLoading, error: txError, netBalanceByDependent } = useTransactions(undefined, true);
   const { dependents, loading: depsLoading } = useDependents();
   const { categories, loading: catsLoading } = useCategories();
@@ -86,45 +87,8 @@ export default function Dashboard() {
   const totalInvoiceAmount = openCardsTotal;
 
   // ── Section 2: Alerts ──
-  const currentMonth = format(new Date(), 'yyyy-MM');
-  const currentRecurringKeys = new Set(bills
-    .filter(b => b.is_recurring && b.reference_month === currentMonth && !b.id.startsWith('recurring-'))
-    .map(b => `${b.category_id}-${b.amount}`));
-  // ponytail: recurring bills are identified by category+amount; add series IDs if identical obligations must stay separate.
-  const recurringProjectionKeys = new Set<string>();
-  const recurringProjections = bills
-    .filter(b => b.is_recurring && b.reference_month < currentMonth)
-    .filter(b => {
-      const key = `${b.category_id}-${b.amount}`;
-      if (currentRecurringKeys.has(key) || recurringProjectionKeys.has(key)) return false;
-      recurringProjectionKeys.add(key);
-      return true;
-    })
-    .map(b => {
-      const [year, month] = currentMonth.split('-');
-      const day = b.due_date.split('-')[2];
-      return {
-        ...b,
-        id: `recurring-${b.id}-${currentMonth}`,
-        due_date: `${year}-${month}-${day}`,
-        reference_month: currentMonth,
-        status: 'pending' as const,
-      };
-    });
-
-  const baseOverdueBills = getOverdueBills();
-  const projectedOverdue = recurringProjections.filter(b => isOverdue(b.due_date));
-  const overdueBills = [...baseOverdueBills, ...projectedOverdue];
+  const { overdueBills, dueSoonBills, overdueCards, dueSoonCards } = buildDueAlerts(bills, creditCards);
   const overdueCount = overdueBills.length;
-  const overdueBillIds = new Set(overdueBills.map(b => b.id));
-  
-  const baseDueSoonBills = getDueSoonBills();
-  const projectedDueSoon = recurringProjections.filter(b => isDueSoon(b.due_date));
-  const dueSoonBills = [...baseDueSoonBills, ...projectedDueSoon].filter(b => !overdueBillIds.has(b.id));
-
-  const overdueCards = getOverdueCards();
-  const overdueCardIds = new Set(overdueCards.map(c => c.id));
-  const dueSoonCards = getDueSoonCards().filter(c => !overdueCardIds.has(c.id));
   const hasAlerts = overdueBills.length > 0 || dueSoonBills.length > 0 || overdueCards.length > 0 || dueSoonCards.length > 0;
 
   const getCategoryName = (categoryId: string) => {

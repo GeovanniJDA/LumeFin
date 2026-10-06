@@ -20,6 +20,7 @@ LumeFin é uma aplicação web para organizar as finanças de toda a família �
 | **Dashboard** | Visão consolidada com alertas de vencimento e resumo por dependente |
 | **Dependentes** | Cadastro de familiares com associação a contas e cartões |
 | **Contas** | Controle de contas fixas com categorias, vencimento e status de pagamento |
+| **Vencimentos** | Calendário de vencimentos com alertas de contas e faturas próximos do vencimento |
 | **Cartões de Crédito** | Gestão de faturas com compras à vista, parceladas e recorrentes |
 | **Fatura Detalhada** | Projeção de 12 meses com linha do tempo de parcelas e recorrentes |
 | **Transações** | Controle de dívidas bidirecionais com progresso de parcelas |

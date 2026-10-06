@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { supabase } from '../../lib/supabase';
-import { LayoutDashboard, Receipt, CreditCard, ArrowRightLeft, Users, LogOut, Loader2, UserCircle, ChevronsUpDown, Sun, Moon, Wallet, PiggyBank } from 'lucide-react';
+import { LayoutDashboard, Receipt, CreditCard, ArrowRightLeft, Users, LogOut, Loader2, UserCircle, ChevronsUpDown, Sun, Moon, Wallet, PiggyBank, CalendarDays, Menu } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,9 +29,16 @@ const navigation = [
   { name: 'Cartões', href: '/app/credit-cards', icon: CreditCard },
   { name: 'Transações', href: '/app/transactions', icon: ArrowRightLeft },
   { name: 'Fluxo de caixa', href: '/app/cash-flow', icon: Wallet },
+  { name: 'Vencimentos', href: '/app/due-dates', icon: CalendarDays },
   { name: 'Reserva', href: '/app/emergency-fund', icon: PiggyBank },
   { name: 'Dependentes', href: '/app/dependents', icon: Users },
 ];
+
+// ponytail: no mobile só 3 abas ficam fixas e o resto vai para um menu — upgrade
+// path: lista por prioridade quando outra aba precise aparecer na barra fixa.
+const MOBILE_FIXED = ['Dashboard', 'Contas', 'Transações'];
+const mobileFixed = navigation.filter((item) => MOBILE_FIXED.includes(item.name));
+const mobileMenu = navigation.filter((item) => !MOBILE_FIXED.includes(item.name));
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -41,6 +48,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const isDark = theme !== 'light';
+  const isMenuActive = mobileMenu.some((item) => location.pathname.startsWith(item.href));
   const contentWidth = location.pathname === '/app/transactions' ? 'max-w-[1600px]' : 'max-w-7xl';
 
   useEffect(() => {
@@ -179,8 +187,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </main>
 
-      <nav aria-label="Navegação principal" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-7 border-t border-border bg-background/95 px-0.5 pb-[env(safe-area-inset-bottom)] md:hidden">
-        {navigation.map((item) => {
+      <nav aria-label="Navegação principal" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-border bg-background/95 px-0.5 pb-[env(safe-area-inset-bottom)] md:hidden">
+        {mobileFixed.map((item) => {
           const active = item.href === '/app'
             ? location.pathname === item.href
             : location.pathname.startsWith(item.href);
@@ -197,6 +205,28 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </NavLink>
           );
         })}
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={<button type="button" />}
+            aria-label="Abrir menu de navegação"
+            className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-md py-1 text-[10px] sm:text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${isMenuActive ? 'text-primary' : 'text-muted-foreground'}`}
+          >
+            <Menu className="h-4.5 w-4.5 sm:h-5 sm:w-5" aria-hidden="true" />
+            <span className="truncate max-w-full px-0.5">Menu</span>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="top" align="end" sideOffset={8} className="w-56 rounded-xl border border-border bg-popover p-1 text-popover-foreground shadow-lg">
+            {mobileMenu.map((item) => (
+              <DropdownMenuItem
+                key={item.name}
+                onClick={() => navigate(item.href)}
+                className="cursor-pointer gap-2 rounded-lg px-3 py-2"
+              >
+                <item.icon className="h-4 w-4" aria-hidden="true" />
+                {item.name}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </nav>
     </div>
   );

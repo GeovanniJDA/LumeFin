@@ -10,6 +10,7 @@ const CreditCards = lazy(() => import('./pages/credit-cards'));
 const CreditCardDetail = lazy(() => import('./pages/credit-card-detail'));
 const Transactions = lazy(() => import('./pages/transactions'));
 const CashFlow = lazy(() => import('./pages/cash-flow'));
+const DueDates = lazy(() => import('./pages/due-dates'));
 const EmergencyFund = lazy(() => import('./pages/emergency-fund'));
 const Auth = lazy(() => import('./pages/auth'));
 const Profile = lazy(() => import('./pages/profile'));
@@ -90,6 +91,7 @@ function App() {
           <Route path="/app/credit-cards/:id" element={<AuthGuard><AppLayout><CreditCardDetail /></AppLayout></AuthGuard>} />
           <Route path="/app/transactions" element={<AuthGuard><AppLayout><Transactions /></AppLayout></AuthGuard>} />
           <Route path="/app/cash-flow" element={<AuthGuard><AppLayout><CashFlow /></AppLayout></AuthGuard>} />
+          <Route path="/app/due-dates" element={<AuthGuard><AppLayout><DueDates /></AppLayout></AuthGuard>} />
           <Route path="/app/emergency-fund" element={<AuthGuard><AppLayout><EmergencyFund /></AppLayout></AuthGuard>} />
           <Route path="/app/profile" element={<AuthGuard><AppLayout><Profile /></AppLayout></AuthGuard>} />
         </Routes>
