@@ -3,7 +3,9 @@ import {
   getPurchaseOccurrenceForMonth,
   getPurchasesForMonth,
   getMonthTotals,
-  isInvoiceMonthPaid
+  isInvoiceMonthPaid,
+  settlementKey,
+  remainingInstallmentMonths
 } from '@/lib/card-purchase-projection'
 import type { CardPurchaseWithDependents } from '@/types'
 
@@ -182,6 +184,47 @@ describe('getMonthTotals (gráfico de 12 meses)', () => {
     const totals = getMonthTotals([], months)
     expect(totals.map(t => t.month)).toEqual(months)
     expect(totals.every(t => t.total === 0)).toBe(true)
+  })
+})
+
+describe('settlementKey', () => {
+  it('identifica a ocorrência por compra + mês', () => {
+    expect(settlementKey('p-1', '2026-09')).toBe('p-1:2026-09')
+    expect(settlementKey('p-1', '2026-09')).not.toBe(settlementKey('p-2', '2026-09'))
+    expect(settlementKey('p-1', '2026-09')).not.toBe(settlementKey('p-1', '2026-10'))
+  })
+})
+
+describe('remainingInstallmentMonths (antecipar parcelas restantes)', () => {
+  it('retorna o mês atual e todos os seguintes até a última parcela', () => {
+    // 12x iniciada em 2026-09, parcela 3/12 vigente em 2026-11.
+    const rolled = purchase({ reference_month: '2026-11', current_installment: 3 })
+    expect(remainingInstallmentMonths(rolled, '2026-11')).toEqual([
+      '2026-11', '2026-12', '2027-01', '2027-02', '2027-03', '2027-04',
+      '2027-05', '2027-06', '2027-07', '2027-08'
+    ])
+  })
+
+  it('antecipar a partir de um mês já pago começa na primeira parcela pendente, não antes', () => {
+    // Visão em 2026-09 (parcela 1) antecipando: todas as 3 parcelas.
+    const fresh = purchase({ reference_month: '2026-09', current_installment: 1, installments: 3 })
+    expect(remainingInstallmentMonths(fresh, '2026-09')).toEqual(['2026-09', '2026-10', '2026-11'])
+    // Mesmo se a visão estiver antes da compra, não inventa mês anterior.
+    expect(remainingInstallmentMonths(fresh, '2026-08')).toEqual(['2026-09', '2026-10', '2026-11'])
+  })
+
+  it('cruzamento de ano e última parcela: fora do intervalo não sobra nada', () => {
+    const rolled = purchase({ reference_month: '2026-11', current_installment: 11, installments: 12 })
+    expect(remainingInstallmentMonths(rolled, '2026-12')).toEqual(['2026-12'])
+    expect(remainingInstallmentMonths(rolled, '2027-01')).toEqual([])
+    expect(remainingInstallmentMonths(rolled, '2027-06')).toEqual([])
+  })
+
+  it('compra à vista ou recorrente não tem parcelas restantes', () => {
+    const cash = purchase({ type: 'cash', installments: 1, current_installment: 1 })
+    const recurring = purchase({ type: 'recurring', installments: 1, current_installment: 1 })
+    expect(remainingInstallmentMonths(cash, '2026-09')).toEqual([])
+    expect(remainingInstallmentMonths(recurring, '2026-09')).toEqual([])
   })
 })
 

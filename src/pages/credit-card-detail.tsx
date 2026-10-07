@@ -1,15 +1,33 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { format, addMonths, subMonths, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, ArrowLeft, CreditCard, Plus, Check } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ArrowLeft, CreditCard, Plus, Check, Pencil, Undo2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useCardPurchaseStore } from '@/store/card-purchase-store'
-import { getPurchasesForMonth, getMonthTotals, isInvoiceMonthPaid } from '@/lib/card-purchase-projection'
+import { getPurchasesForMonth, getMonthTotals, isInvoiceMonthPaid, settlementKey, remainingInstallmentMonths } from '@/lib/card-purchase-projection'
 import { formatCurrency } from '@/lib/utils'
-import type { CreditCardWithDependents, Dependent } from '@/types'
+import { Button } from '@/components/ui/button'
+import { CardPurchaseDialog } from '@/components/sections/card-purchase-dialog'
+import { toast } from 'sonner'
+import type { CreditCardWithDependents, Dependent, CardPurchaseWithDependents } from '@/types'
 
-// ─── Pure helper functions ────────────────────────────────────────────────────
+// ─── Data access ────────────────────────────────────────────────────────────
+
+async function fetchCard(id: string): Promise<CreditCardWithDependents | null> {
+  const { data } = await supabase
+    .from('credit_cards')
+    .select('*, credit_card_dependents(dependents(*))')
+    .eq('id', id)
+    .single()
+  if (!data) return null
+  return {
+    ...data,
+    dependents: data.credit_card_dependents
+      ?.map((link: { dependents: Dependent | null }) => link.dependents)
+      .filter((dependent: Dependent | null): dependent is Dependent => dependent !== null) ?? []
+  }
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -17,9 +35,12 @@ export default function CreditCardDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
-  const { purchases, loading, fetchByCard } = useCardPurchaseStore()
+  const { purchases, settlements, loading, fetchByCard, settleOccurrences, unsettleOccurrence } = useCardPurchaseStore()
   const [card, setCard] = useState<CreditCardWithDependents | null>(null)
   const [cardLoading, setCardLoading] = useState(true)
+  const [editPurchase, setEditPurchase] = useState<CardPurchaseWithDependents | null>(null)
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [actionId, setActionId] = useState<string | null>(null)
 
   // Current selected month — defaults to today
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'))
@@ -36,20 +57,17 @@ export default function CreditCardDetail() {
   // Fetch card details
   useEffect(() => {
     if (!id) return
-    supabase
-      .from('credit_cards')
-      .select('*, credit_card_dependents(dependents(*))')
-      .eq('id', id)
-      .single()
-      .then(({ data }) => {
-        if (data) setCard({
-          ...data,
-          dependents: data.credit_card_dependents
-            ?.map((link: { dependents: Dependent | null }) => link.dependents)
-            .filter((dependent: Dependent | null): dependent is Dependent => dependent !== null) ?? []
-        })
-        setCardLoading(false)
-      })
+    fetchCard(id).then(c => {
+      if (c) setCard(c)
+      setCardLoading(false)
+    })
+  }, [id])
+
+  // Recarrega o cartão (após quitar/editar uma compra) para atualizar invoice_amount
+  const loadCard = useCallback(async () => {
+    if (!id) return
+    const refreshed = await fetchCard(id)
+    if (refreshed) setCard(refreshed)
   }, [id])
 
   // Fetch all purchases for this card (no month filter — filtering is client-side)
@@ -79,6 +97,29 @@ export default function CreditCardDetail() {
     [card, selectedMonth]
   )
 
+  // Ocorrências quitadas individualmente (compra × mês)
+  const settledKeys = useMemo(
+    () => new Set(settlements.map(s => settlementKey(s.card_purchase_id, s.reference_month))),
+    [settlements]
+  )
+  const isPaidOccurrence = useCallback(
+    (purchaseId: string) => selectedMonthPaid || settledKeys.has(settlementKey(purchaseId, selectedMonth)),
+    [settledKeys, selectedMonthPaid, selectedMonth]
+  )
+
+  // Totais pendente × já pago do mês
+  const { pendingTotal, paidTotal } = useMemo(
+    () => monthPurchases.reduce(
+      (acc, p) => {
+        if (isPaidOccurrence(p.id)) acc.paidTotal += p.monthlyAmount
+        else acc.pendingTotal += p.monthlyAmount
+        return acc
+      },
+      { pendingTotal: 0, paidTotal: 0 }
+    ),
+    [monthPurchases, isPaidOccurrence]
+  )
+
   // Mini chart data — total per month for all 12 months
   const chartData = useMemo(
     () =>
@@ -96,6 +137,33 @@ export default function CreditCardDetail() {
     () => new Set(months.filter(m => isInvoiceMonthPaid(card ?? {}, m))),
     [card, months]
   )
+
+  const runSettlement = async (purchaseId: string, action: () => Promise<void>, message: string) => {
+    setActionId(purchaseId)
+    try {
+      await action()
+      toast.success(message)
+      await loadCard()
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Erro inesperado.')
+    } finally {
+      setActionId(null)
+    }
+  }
+
+  const handleSettle = (purchaseId: string) =>
+    runSettlement(purchaseId, () => settleOccurrences(purchaseId, [selectedMonth]), 'Compra marcada como paga.')
+
+  const handleUnsettle = (purchaseId: string) =>
+    runSettlement(purchaseId, () => unsettleOccurrence(purchaseId, selectedMonth), 'Quitação desfeita.')
+
+  const handleAntecipate = async (purchaseId: string) => {
+    const remaining = remainingInstallmentMonths(
+      monthPurchases.find(p => p.id === purchaseId)!,
+      selectedMonth
+    )
+    runSettlement(purchaseId, () => settleOccurrences(purchaseId, remaining), 'Parcelas restantes antecipadas.')
+  }
 
   if (cardLoading)
     return (
@@ -268,74 +336,147 @@ export default function CreditCardDetail() {
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {monthPurchases.map((p, i) => (
-              <div
-                key={`${p.id}-${i}`}
-                className="flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  {/* Type indicator */}
-                  <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-[10px] font-bold ${
-                      selectedMonthPaid && p.type !== 'cash'
-                        ? 'bg-[rgba(16,185,129,0.15)] text-success'
+            {monthPurchases.map((p, i) => {
+              const paid = isPaidOccurrence(p.id)
+              return (
+                <div
+                  key={`${p.id}-${i}`}
+                  className="flex items-center justify-between gap-2 px-4 py-3 hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    {/* Type indicator */}
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-[10px] font-bold ${
+                        paid && p.type !== 'cash'
+                          ? 'bg-[rgba(16,185,129,0.15)] text-success'
+                          : p.type === 'cash'
+                            ? 'bg-emerald-400/10 text-success'
+                            : p.type === 'recurring'
+                              ? 'bg-blue-400/10 text-blue-800 dark:text-blue-400'
+                              : 'bg-amber-400/10 text-primary'
+                      }`}
+                    >
+                      {paid && p.type !== 'cash'
+                        ? <Check className="h-3.5 w-3.5" />
                         : p.type === 'cash'
-                          ? 'bg-emerald-400/10 text-success'
+                          ? 'AV'
                           : p.type === 'recurring'
-                            ? 'bg-blue-400/10 text-blue-800 dark:text-blue-400'
-                            : 'bg-amber-400/10 text-primary'
-                    }`}
-                  >
-                    {selectedMonthPaid && p.type !== 'cash'
-                      ? <Check className="h-3.5 w-3.5" />
-                      : p.type === 'cash'
-                        ? 'AV'
-                        : p.type === 'recurring'
-                          ? 'RC'
-                          : p.installmentLabel}
+                            ? 'RC'
+                            : p.installmentLabel}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-foreground truncate">{p.description}</p>
+                        {paid && (
+                          <span className="flex items-center gap-0.5 rounded border border-[rgba(16,185,129,0.3)] bg-[rgba(16,185,129,0.15)] px-1.5 py-0.5 text-[10px] font-semibold text-success whitespace-nowrap">
+                            <Check className="h-2.5 w-2.5" />
+                            Pago
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {p.type === 'cash'
+                          ? 'À Vista'
+                          : p.type === 'recurring'
+                            ? 'Recorrente'
+                            : `Parcela ${p.installmentLabel}`}
+                        {' · '}
+                        {format(parseISO(p.purchase_date), 'dd/MM', { locale: ptBR })}
+                        {p.dependents.length > 0 && ` · ${p.dependents.map(dependent => dependent.name).join(', ')}`}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{p.description}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {p.type === 'cash'
-                        ? 'À Vista'
-                        : p.type === 'recurring'
-                          ? 'Recorrente'
-                          : `Parcela ${p.installmentLabel}`}
-                      {' · '}
-                      {format(parseISO(p.purchase_date), 'dd/MM', { locale: ptBR })}
-                      {p.dependents.length > 0 && ` · ${p.dependents.map(dependent => dependent.name).join(', ')}`}
+                  <div className="text-right shrink-0">
+                    <p className={`text-sm font-bold ${paid ? 'text-success' : 'text-foreground'}`}>
+                      {formatCurrency(p.monthlyAmount)}
                     </p>
+                    {p.type === 'installment' && (
+                      <p className="text-[10px] text-muted-foreground">de {formatCurrency(p.amount)}</p>
+                    )}
+
+                    {/* Ações da compra */}
+                    <div className="flex items-center justify-end gap-1 mt-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        title="Editar compra"
+                        onClick={() => { setEditPurchase(p); setIsEditOpen(true); }}
+                      >
+                        <Pencil className="w-3 h-3 text-muted-foreground hover:text-primary" />
+                      </Button>
+                      {!selectedMonthPaid && (
+                        paid ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
+                            disabled={actionId === p.id}
+                            onClick={() => handleUnsettle(p.id)}
+                          >
+                            <Undo2 className="w-3 h-3 mr-1" /> Desfazer
+                          </Button>
+                        ) : (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-2 text-[10px] text-success hover:bg-[rgba(16,185,129,0.1)]"
+                              disabled={actionId === p.id}
+                              onClick={() => handleSettle(p.id)}
+                            >
+                              <Check className="w-3 h-3 mr-1" /> Marcar como paga
+                            </Button>
+                            {p.type === 'installment' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-[10px] text-primary hover:bg-amber-400/10"
+                                disabled={actionId === p.id}
+                                onClick={() => handleAntecipate(p.id)}
+                              >
+                                Antecipar
+                              </Button>
+                            )}
+                          </>
+                        )
+                      )}
+                    </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold text-foreground">{formatCurrency(p.monthlyAmount)}</p>
-                  {p.type === 'installment' && (
-                    <p className="text-[10px] text-muted-foreground">de {formatCurrency(p.amount)}</p>
-                  )}
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
 
         {/* Month total footer */}
         {monthPurchases.length > 0 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/50">
-            {selectedMonthPaid ? (
-              <p className="text-sm font-semibold flex items-center gap-1.5 text-success">
-                <Check className="h-3.5 w-3.5" />
-                Total pago
-              </p>
-            ) : (
-              <p className="text-sm font-semibold text-muted-foreground">Total estimado</p>
-            )}
-            <p className={`text-base font-black ${selectedMonthPaid ? 'text-success' : 'text-primary'}`}>
+            <div className="flex items-center gap-4 text-sm">
+              <span className="text-muted-foreground">
+                Pendente <strong className="text-foreground">{formatCurrency(pendingTotal)}</strong>
+              </span>
+              <span className="text-success">
+                Pago <strong>{formatCurrency(paidTotal)}</strong>
+              </span>
+            </div>
+            <p className={`text-base font-black ${pendingTotal === 0 ? 'text-success' : 'text-primary'}`}>
               {formatCurrency(monthTotal)}
             </p>
           </div>
         )}
       </div>
+
+      {/* Diálogo compartilhado de edição da compra */}
+      <CardPurchaseDialog
+        cardId={id ?? ''}
+        referenceMonth={editPurchase?.reference_month ?? selectedMonth}
+        dependents={card.dependents}
+        purchase={editPurchase}
+        open={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        onSaved={loadCard}
+      />
     </div>
   )
 }

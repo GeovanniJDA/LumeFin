@@ -26,6 +26,12 @@ function monthIndex(month: string): number {
   return year * 12 + (monthNumber - 1)
 }
 
+function monthFromIndex(index: number): string {
+  const year = Math.floor(index / 12)
+  const monthNumber = (index % 12) + 1
+  return `${year}-${String(monthNumber).padStart(2, '0')}`
+}
+
 const TYPE_ORDER: Record<PurchaseType, number> = {
   cash: 0,
   recurring: 1,
@@ -118,6 +124,40 @@ export function isInvoiceMonthPaid(
 ): boolean {
   if (!card.reference_month) return false
   return month < card.reference_month
+}
+
+/**
+ * Chave de uma ocorrência quitada: uma compra em um mês específico.
+ * Espelha a chave única (card_purchase_id, reference_month) usada no banco.
+ */
+export function settlementKey(purchaseId: string, month: string): string {
+  return `${purchaseId}:${month}`
+}
+
+/**
+ * Meses das parcelas ainda não quitadas de uma compra parcelada, a partir de
+ * `fromMonth` (inclusive) até a última parcela. Serve para "antecipar as
+ * parcelas restantes": quitar de uma vez o mês atual e os seguintes.
+ * Compras à vista/recorrentes não têm parcelas restantes.
+ */
+export function remainingInstallmentMonths(
+  purchase: CardPurchaseWithDependents,
+  fromMonth: string
+): string[] {
+  if (purchase.type !== 'installment') return []
+
+  const currentInstallment = purchase.current_installment || 1
+  const referenceIndex = monthIndex(purchase.reference_month)
+  const firstRemaining = Math.max(
+    currentInstallment + (monthIndex(fromMonth) - referenceIndex),
+    1
+  )
+
+  const months: string[] = []
+  for (let n = firstRemaining; n <= purchase.installments; n++) {
+    months.push(monthFromIndex(referenceIndex + (n - currentInstallment)))
+  }
+  return months
 }
 
 /** Total projetado de cada mês, na ordem dos meses informados (para o gráfico). */

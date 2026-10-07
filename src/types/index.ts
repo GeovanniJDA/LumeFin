@@ -90,6 +90,15 @@ export interface CardPurchaseWithDependents extends CardPurchase {
   dependents: Dependent[]
 }
 
+/** Quitação de uma ocorrência (compra em um mês) da fatura do cartão. */
+export interface CardPurchaseSettlement {
+  id: string
+  user_id: string
+  card_purchase_id: string
+  reference_month: string
+  created_at: string
+}
+
 export interface DependentTransaction {
   id: string
   user_id: string

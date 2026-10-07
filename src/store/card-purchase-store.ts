@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from 'zustand'
 import { supabase, handleSupabaseError } from '@/lib/supabase'
-import type { CardPurchase, CardPurchaseWithDependents } from '@/types'
+import type { CardPurchase, CardPurchaseWithDependents, CardPurchaseSettlement } from '@/types'
 
 type CardPurchaseInput = Omit<CardPurchase, 'id'|'user_id'|'credit_card_id'|'created_at'> & {
   dependent_ids?: string[]
@@ -14,18 +14,24 @@ const withDependents = (purchase: any): CardPurchaseWithDependents => ({
 
 interface CardPurchaseStore {
   purchases: CardPurchaseWithDependents[]
+  settlements: CardPurchaseSettlement[]
   loading: boolean
   error: string | null
   fetchAll: () => Promise<void>
   fetchByCard: (cardId: string) => Promise<void>
+  fetchSettlements: () => Promise<void>
   add: (cardId: string, data: CardPurchaseInput) => Promise<void>
   update: (id: string, data: Partial<CardPurchaseInput>) => Promise<void>
   remove: (id: string) => Promise<void>
+  /** Marca as ocorrências (compra em cada mês informado) como pagas/antecipadas. */
+  settleOccurrences: (purchaseId: string, months: string[]) => Promise<void>
+  unsettleOccurrence: (purchaseId: string, month: string) => Promise<void>
   reset: () => void
 }
 
 export const useCardPurchaseStore = create<CardPurchaseStore>((set, get) => ({
   purchases: [],
+  settlements: [],
   loading: false,
   error: null,
 
@@ -43,6 +49,15 @@ export const useCardPurchaseStore = create<CardPurchaseStore>((set, get) => ({
       return
     }
     set({ purchases: (data ?? []).map(withDependents), loading: false, error: null })
+    await get().fetchSettlements()
+  },
+
+  fetchSettlements: async () => {
+    // Silencioso de propósito: a tabela 017 pode ainda não estar aplicada no
+    // Supabase. Sem ela, o recurso de quitação simplesmente não aparece.
+    const { data, error } = await supabase.from('card_purchase_settlements').select('*')
+    if (error) return
+    set({ settlements: data ?? [] })
   },
   
   fetchByCard: async (cardId) => {
@@ -69,6 +84,39 @@ export const useCardPurchaseStore = create<CardPurchaseStore>((set, get) => ({
       loading: false,
       error: null
     }))
+    await get().fetchSettlements()
+  },
+
+  settleOccurrences: async (purchaseId, months) => {
+    const purchase = get().purchases.find(p => p.id === purchaseId)
+    if (!purchase || months.length === 0) return
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('Não autenticado')
+
+    const { error } = await supabase.from('card_purchase_settlements').upsert(
+      months.map(reference_month => ({
+        user_id: user.id,
+        card_purchase_id: purchaseId,
+        reference_month
+      })),
+      { onConflict: 'card_purchase_id,reference_month', ignoreDuplicates: true }
+    )
+    if (error) throw new Error(error.message)
+
+    await get().fetchSettlements()
+    await recalculateInvoice(purchase.credit_card_id, purchase.reference_month)
+  },
+
+  unsettleOccurrence: async (purchaseId, month) => {
+    const purchase = get().purchases.find(p => p.id === purchaseId)
+    const { error } = await supabase.from('card_purchase_settlements')
+      .delete()
+      .eq('card_purchase_id', purchaseId)
+      .eq('reference_month', month)
+    if (error) throw new Error(error.message)
+
+    await get().fetchSettlements()
+    if (purchase) await recalculateInvoice(purchase.credit_card_id, purchase.reference_month)
   },
   
   add: async (cardId, data) => {
@@ -148,7 +196,7 @@ export const useCardPurchaseStore = create<CardPurchaseStore>((set, get) => ({
     }
   },
   
-  reset: () => set({ purchases: [], loading: false, error: null })
+  reset: () => set({ purchases: [], settlements: [], loading: false, error: null })
 }))
 
 // Roll forward active purchases from one month to the next
@@ -208,22 +256,33 @@ export async function rollForwardCardPurchases(
 
 // Recalculate and update invoice_amount on the credit card
 async function recalculateInvoice(cardId: string, referenceMonth: string) {
-  const { data } = await supabase
-    .from('card_purchases')
-    .select('amount, type, installments, current_installment')
-    .eq('credit_card_id', cardId)
-    .eq('reference_month', referenceMonth)
+  const [{ data }, { data: settlements }] = await Promise.all([
+    supabase
+      .from('card_purchases')
+      .select('id, amount, type, installments, current_installment')
+      .eq('credit_card_id', cardId)
+      .eq('reference_month', referenceMonth),
+    // RLS restringe ao dono; o filtro por id de compra descarta outras faturas.
+    supabase
+      .from('card_purchase_settlements')
+      .select('card_purchase_id')
+      .eq('reference_month', referenceMonth)
+  ])
 
   if (!data) return
 
-  const total = data.reduce((sum, p) => {
-    if (p.type === 'cash' || p.type === 'recurring') {
-      return sum + p.amount
-    }
-    // installment: only current month's installment amount
-    const installmentAmount = p.amount / p.installments
-    return sum + installmentAmount
-  }, 0)
+  const settledIds = new Set((settlements ?? []).map(s => s.card_purchase_id))
+
+  const total = data
+    .filter(p => !settledIds.has(p.id))
+    .reduce((sum, p) => {
+      if (p.type === 'cash' || p.type === 'recurring') {
+        return sum + p.amount
+      }
+      // installment: only current month's installment amount
+      const installmentAmount = p.amount / p.installments
+      return sum + installmentAmount
+    }, 0)
 
   await supabase
     .from('credit_cards')
