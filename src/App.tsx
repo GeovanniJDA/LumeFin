@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
-import { useEffect, lazy, Suspense } from 'react';
-import { supabase, setupAuthListener } from './lib/supabase';
+import { useEffect, useState, lazy, Suspense } from 'react';
 
 const Landing = lazy(() => import('./pages/landing'));
 const Dashboard = lazy(() => import('./pages/dashboard'));
@@ -16,53 +15,86 @@ const Auth = lazy(() => import('./pages/auth'));
 const Profile = lazy(() => import('./pages/profile'));
 const ForgotPassword = lazy(() => import('./pages/forgot-password'));
 const ResetPassword = lazy(() => import('./pages/reset-password'));
-import { AuthGuard } from './components/shared/auth-guard';
-import { AppLayout } from './components/shared/app-layout';
-import { Toaster } from '@/components/ui/sonner';
-import { toast } from 'sonner';
-import { useProfileStore } from '@/store/profile-store';
+// Fora do caminho crítico das rotas públicas: só carregam ao entrar em /app.
+// ponytail: se outra rota privada passar a existir fora de /app, reavaliar.
+const AuthGuard = lazy(() =>
+  import('./components/shared/auth-guard').then((module) => ({ default: module.AuthGuard })),
+);
+const AppLayout = lazy(() =>
+  import('./components/shared/app-layout').then((module) => ({ default: module.AppLayout })),
+);
+const Toaster = lazy(() =>
+  import('@/components/ui/sonner').then((module) => ({ default: module.Toaster })),
+);
 import { ThemeProvider } from 'next-themes';
 
-window.addEventListener('focus', async () => {
-  const store = useProfileStore.getState()
-  if (store.avatarStoragePath && store.profile?.id) {
-    await store.refreshAvatarUrl(store.avatarStoragePath)
-  }
-})
+// Sonner guarda os toasts ativos e os reemite quando o Toaster assina, então ele
+// pode montar depois do `load` sem perder avisos disparados antes disso.
+function AfterLoad({ children }: { children: React.ReactNode }) {
+  const [ready, setReady] = useState(() => document.readyState === 'complete');
 
-function AuthListener() {
+  useEffect(() => {
+    if (ready) return;
+    const onLoad = () => setReady(true);
+    window.addEventListener('load', onLoad, { once: true });
+    return () => window.removeEventListener('load', onLoad);
+  }, [ready]);
+
+  return ready ? <>{children}</> : null;
+}
+
+// Sessão (auth, inactividade, avatar) fica fora do bundle inicial: nada disso é
+// necessário para a primeira pintura, então o Supabase e os stores entram na
+// primeira interação, ao voltar de um link de recuperação/confirmação
+// (`#access_token`) ou, no mais tardar, 5 s depois do `load`. Um visitante que só
+// lê a rota pública não baixa o stack de auth enquanto o LCP acontece.
+const SESSION_FALLBACK_MS = 5000;
+
+function hasAuthCallback() {
+  return /access_token=|error_description=|type=(recovery|signup|magiclink|invite)/.test(
+    window.location.hash,
+  );
+}
+
+function SessionTasks() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const { data: { subscription } } = setupAuthListener(navigate);
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    let cleanup: (() => void) | undefined;
+    let fallbackId: number | undefined;
+    let cancelled = false;
+    let started = false;
 
-  return null;
-}
-
-function InactivityListener() {
-  useEffect(() => {
-    const INACTIVITY_LIMIT = 30 * 60 * 1000;
-    let timer: ReturnType<typeof setTimeout>;
-
-    const resetTimer = () => {
-      clearTimeout(timer);
-      timer = setTimeout(async () => {
-        await supabase.auth.signOut();
-        toast.warning('Sessão encerrada por inactividade.');
-      }, INACTIVITY_LIMIT);
+    const start = () => {
+      if (started || cancelled) return;
+      started = true;
+      removeTriggers();
+      if (fallbackId !== undefined) window.clearTimeout(fallbackId);
+      void import('./lib/app-session').then(({ startSessionTasks }) => {
+        if (cancelled) return;
+        cleanup = startSessionTasks(navigate);
+      });
     };
 
-    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
-    events.forEach(e => window.addEventListener(e, resetTimer));
-    resetTimer();
+    const triggers: [string, EventListener][] = [
+      ['pointerdown', start],
+      ['keydown', start],
+      ['touchstart', start],
+    ];
+    const removeTriggers = () =>
+      triggers.forEach(([event, handler]) => window.removeEventListener(event, handler));
+    triggers.forEach(([event, handler]) => window.addEventListener(event, handler, { passive: true }));
+
+    if (hasAuthCallback()) start();
+    else fallbackId = window.setTimeout(start, SESSION_FALLBACK_MS);
 
     return () => {
-      clearTimeout(timer);
-      events.forEach(e => window.removeEventListener(e, resetTimer));
+      cancelled = true;
+      removeTriggers();
+      if (fallbackId !== undefined) window.clearTimeout(fallbackId);
+      cleanup?.();
     };
-  }, []);
+  }, [navigate]);
 
   return null;
 }
@@ -70,8 +102,7 @@ function InactivityListener() {
 function App() {
   return (
     <BrowserRouter>
-      <AuthListener />
-      <InactivityListener />
+      <SessionTasks />
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
       <Suspense fallback={
         <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
@@ -96,7 +127,11 @@ function App() {
           <Route path="/app/profile" element={<AuthGuard><AppLayout><Profile /></AppLayout></AuthGuard>} />
         </Routes>
       </Suspense>
-      <Toaster position="bottom-right" richColors />
+      <AfterLoad>
+        <Suspense fallback={null}>
+          <Toaster position="bottom-right" richColors />
+        </Suspense>
+      </AfterLoad>
       </ThemeProvider>
     </BrowserRouter>
   );

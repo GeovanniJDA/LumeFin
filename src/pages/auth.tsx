@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +41,22 @@ export default function Auth() {
     resolver: zodResolver(authSchema),
     defaultValues: { email: '', password: '' }
   });
+
+  // Aquece o layout autenticado fora do caminho crítico: a transição para /app
+  // não espera o download dos chunks que agora ficam fora das rotas públicas.
+  useEffect(() => {
+    const warm = () => {
+      void import('@/components/shared/auth-guard');
+      void import('@/components/shared/app-layout');
+    };
+    const idleId = window.requestIdleCallback
+      ? window.requestIdleCallback(warm, { timeout: 3000 })
+      : window.setTimeout(warm, 1500);
+    return () => {
+      if (window.cancelIdleCallback) window.cancelIdleCallback(idleId);
+      else window.clearTimeout(idleId);
+    };
+  }, []);
 
   const toggleMode = () => {
     if (isFlipping) return;
