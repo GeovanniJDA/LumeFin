@@ -1,0 +1,19 @@
+# LumeFin
+
+Aplicação web gratuita em português para famílias organizarem as próprias finanças em um único lugar: contas fixas, cartões de crédito, dívidas entre dependentes, fluxo de caixa do mês, calendário de vencimentos e meta de reserva de emergência.
+
+> LumeFin ajuda famílias a registrar contas, cartões de crédito, transações entre dependentes e despesas do dia a dia, com dashboard financeiro, alertas de vencimento e controle por pessoa da família. Open source, gratuito e sem anúncios; os dados de cada família ficam visíveis apenas para a própria conta (RLS no Supabase). Áreas autenticadas ficam em `/app/…`; use `/auth` para entrar.
+
+## Começar
+
+- [Página inicial](https://lumefin1.vercel.app/): visão do produto e criação de conta gratuita.
+- [Entrar](https://lumefin1.vercel.app/auth): acesso à conta (login/cadastro) e aplicação financeira.
+- [Recuperar senha](https://lumefin1.vercel.app/auth/forgot-password): redefinição de acesso.
+
+## Recursos
+
+- [Código-fonte](https://github.com/GeovanniJDA/LumeFin): repositório open source do projeto.
+
+## Rastreamento e uso
+
+O rastreamento das rotas públicas é permitido conforme `robots.txt`; as áreas autenticadas (`/app/…`) exigem sessão e não têm conteúdo público para indexar.

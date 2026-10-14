@@ -114,7 +114,7 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-dvh flex bg-background text-foreground">
+    <main className="min-h-dvh flex bg-background text-foreground">
       {/* Left panel — brand (hidden on mobile) */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden flex-col items-start justify-between bg-card p-12">
         {/* Amber radial glow */}
@@ -318,6 +318,6 @@ export default function Auth() {
           </p>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

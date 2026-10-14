@@ -1,0 +1,7 @@
+# LumeFin — https://lumefin1.vercel.app
+
+User-agent: *
+Allow: /
+Disallow: /app/
+
+Sitemap: https://lumefin1.vercel.app/sitemap.xml

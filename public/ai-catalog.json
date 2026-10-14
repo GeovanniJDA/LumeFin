@@ -1,0 +1,36 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "LumeFin",
+    "documentationUrl": "https://github.com/GeovanniJDA/LumeFin"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:lumefin:webapp:lumefin",
+      "displayName": "LumeFin",
+      "type": "text/html",
+      "url": "https://lumefin1.vercel.app/",
+      "description": "Aplicação web gratuita para famílias organizarem contas fixas, cartões de crédito, transações entre dependentes, fluxo de caixa, calendário de vencimentos e meta de reserva de emergência.",
+      "tags": [
+        "finanças",
+        "família",
+        "orçamento",
+        "cartões de crédito",
+        "reserva de emergência"
+      ],
+      "capabilities": [
+        "gestão de contas",
+        "controle de faturas",
+        "fluxo de caixa",
+        "alertas de vencimento",
+        "reserva de emergência"
+      ],
+      "representativeQueries": [
+        "aplicativo para organizar as contas da família",
+        "como controlar faturas de cartão e dívidas entre dependentes"
+      ],
+      "version": "1.0.0",
+      "updatedAt": "2026-10-14T12:00:00Z"
+    }
+  ]
+}

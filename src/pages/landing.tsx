@@ -206,7 +206,7 @@ export default function Landing() {
   }
 
   return (
-      <div className="min-h-screen bg-black text-white overflow-x-hidden">
+      <main className="min-h-screen bg-black text-white overflow-x-hidden">
 
       <div
         className="fixed top-0 left-0 z-[100] h-[2px] pointer-events-none"
@@ -642,6 +642,6 @@ export default function Landing() {
           </div>
         </div>
       </footer>
-    </div>
+    </main>
   )
 }

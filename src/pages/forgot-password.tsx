@@ -57,7 +57,7 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex">
+    <main className="min-h-screen bg-black flex">
       {/* Left panel — brand (hidden on mobile) */}
       <div
         className="hidden lg:flex lg:w-1/2 relative overflow-hidden flex-col items-start justify-between p-12"
@@ -237,6 +237,6 @@ export default function ForgotPassword() {
           )}
         </div>
       </div>
-    </div>
+    </main>
   )
 }

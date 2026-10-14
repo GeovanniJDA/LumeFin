@@ -114,14 +114,14 @@ export default function ResetPassword() {
   // Loading spinner while checking token
   if (checking) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <main className="min-h-screen bg-black flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-      </div>
+      </main>
     )
   }
 
   return (
-    <div className="min-h-screen bg-black flex">
+    <main className="min-h-screen bg-black flex">
       {/* Left panel — brand (hidden on mobile) */}
       <div
         className="hidden lg:flex lg:w-1/2 relative overflow-hidden flex-col items-start justify-between p-12"
@@ -358,6 +358,6 @@ export default function ResetPassword() {
           )}
         </div>
       </div>
-    </div>
+    </main>
   )
 }
