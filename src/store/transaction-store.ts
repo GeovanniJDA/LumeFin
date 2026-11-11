@@ -11,6 +11,7 @@ interface TransactionStore {
   loading: boolean;
   error: string | null;
   fetch: (range?: { from: number; to: number }) => Promise<void>;
+  fetchAll: () => Promise<TransactionWithDependent[]>;
   fetchAllPending: () => Promise<void>;
   add: (data: TransactionFormValues) => Promise<void>;
   update: (id: string, data: Partial<TransactionFormValues>) => Promise<void>;
@@ -41,6 +42,27 @@ export const useTransactionStoreRaw = create<TransactionStore>((set, get) => ({
     }
     
     set({ records: data as any as TransactionWithDependent[], totalCount: count ?? 0, loading: false, error: null });
+  },
+  fetchAll: async () => {
+    const records: TransactionWithDependent[] = [];
+    let from = 0;
+
+    while (true) {
+      const { data, error } = await supabase
+        .from('dependent_transactions')
+        .select('*, dependents(*), transaction_payments(amount)')
+        .order('transaction_date', { ascending: false })
+        .range(from, from + 999);
+
+      if (error) {
+        handleSupabaseError(error);
+        throw new Error(error.message);
+      }
+
+      records.push(...data as any as TransactionWithDependent[]);
+      if (data.length < 1000) return records;
+      from += 1000;
+    }
   },
   fetchAllPending: async () => {
     set({ loading: true, error: null });

@@ -327,7 +327,7 @@ export default function Transactions() {
         title="Transações"
         description="Acompanhe débitos e créditos com dependentes."
         action={
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger render={
               <Button
                 onClick={handleOpenAdd}
@@ -620,7 +620,7 @@ export default function Transactions() {
                 </form>
               </Form>
             </DialogContent>
-          </Dialog>
+            </Dialog>
         }
       />
 

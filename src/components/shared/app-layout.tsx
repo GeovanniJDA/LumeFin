@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { supabase } from '../../lib/supabase';
-import { LayoutDashboard, Receipt, CreditCard, ArrowRightLeft, Users, LogOut, Loader2, UserCircle, ChevronsUpDown, Sun, Moon, Wallet, PiggyBank, CalendarDays, Menu } from 'lucide-react';
+import { format } from 'date-fns';
+import { LayoutDashboard, Receipt, CreditCard, ArrowRightLeft, Users, LogOut, Loader2, UserCircle, ChevronsUpDown, Sun, Moon, Wallet, PiggyBank, CalendarDays, Menu, Download } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +44,7 @@ const mobileMenu = navigation.filter((item) => !MOBILE_FIXED.includes(item.name)
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const { profile, fetch: fetchProfile } = useProfileStore();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
@@ -81,6 +83,42 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       toast.error('Erro ao encerrar sessão.');
     } finally {
       setIsSigningOut(false);
+    }
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const [{ createTransactionWorkbook }, { fetchFinanceExportData }] = await Promise.all([
+        import('../../lib/transaction-workbook'),
+        import('../../lib/finance-export-data'),
+      ]);
+      const [transactions, exportData] = await Promise.all([
+        useTransactionStoreRaw.getState().fetchAll(),
+        fetchFinanceExportData(),
+      ]);
+      const hasFinanceData = Object.entries(exportData).some(([key, value]) =>
+        key === 'emergencyGoal' ? Boolean(value) : Array.isArray(value) && value.length > 0
+      );
+      if (transactions.length === 0 && !hasFinanceData) {
+        toast.info('Não há dados financeiros para exportar.');
+        return;
+      }
+
+      const workbook = createTransactionWorkbook(transactions, exportData);
+      const workbookBuffer = workbook.buffer.slice(workbook.byteOffset, workbook.byteOffset + workbook.byteLength) as ArrayBuffer;
+      const url = URL.createObjectURL(new Blob([workbookBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `lumefin-financas-${format(new Date(), 'yyyy-MM-dd')}.xlsx`;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Não foi possível exportar os dados financeiros.');
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -140,6 +178,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
+
+        <div className="border-t border-sidebar-border px-3 py-2">
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={isExporting}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-60"
+          >
+            {isExporting ? <Loader2 className="h-5 w-5 shrink-0 animate-spin" aria-hidden="true" /> : <Download className="h-5 w-5 shrink-0" aria-hidden="true" />}
+            <span>{isExporting ? 'Exportando...' : 'Exportar Excel'}</span>
+          </button>
+        </div>
 
         <div className="space-y-2 border-t border-sidebar-border p-3">
           {themeToggle()}
@@ -225,6 +275,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 {item.name}
               </DropdownMenuItem>
             ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleExport} disabled={isExporting} className="cursor-pointer gap-2 rounded-lg px-3 py-2">
+              {isExporting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Download className="h-4 w-4" aria-hidden="true" />}
+              {isExporting ? 'Exportando...' : 'Exportar Excel'}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </nav>
