@@ -270,6 +270,40 @@ input[type='number'] {
   font-optical-sizing: auto;
 }
 
+.landing-ambient__glow {
+  position: absolute;
+  width: min(58vw, 46rem);
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.075) 0%, rgba(245, 158, 11, 0.025) 34%, transparent 70%);
+  filter: blur(28px);
+  will-change: transform;
+}
+
+.landing-ambient__glow--first {
+  top: -18rem;
+  right: -12rem;
+  animation: landingGlowDrift 34s ease-in-out infinite alternate;
+}
+
+.landing-ambient__glow--second {
+  top: 42rem;
+  left: -24rem;
+  opacity: 0.55;
+  animation: landingGlowDrift 42s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes landingGlowDrift {
+  from { transform: translate3d(-1.5rem, -1rem, 0) scale(0.96); }
+  to { transform: translate3d(2rem, 2.5rem, 0) scale(1.04); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-ambient__glow {
+    animation: none;
+  }
+}
+
 /* ── Cinematic reveal ───────────────────────────────────────── */
 .reveal {
   opacity: 0;
