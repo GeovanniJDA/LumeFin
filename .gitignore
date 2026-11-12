@@ -42,3 +42,13 @@ android/.idea/tasks.xml
 key.properties
 
 graphify-out
+
+# Local AI tooling, skills, plugins and workspace metadata
+.agents/
+.claude/
+.codex/
+.opencode/
+.freebuff/
+AGENTS.md
+CLAUDE.md
+.graphifyignore
