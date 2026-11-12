@@ -21,8 +21,11 @@ import {
   PiggyBank,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useEmergencyFund } from '../hooks/use-emergency-fund';
+import { compareMonthlyBills } from '../lib/monthly-comparison';
+import { supabase } from '../lib/supabase';
+import type { Bill } from '../types';
 
 const RELATIONSHIP_LABELS: Record<string, string> = {
   mae: 'Mãe', pai: 'Pai', avo: 'Avô', avoa: 'Avó',
@@ -48,15 +51,32 @@ export default function Dashboard() {
   const purchasesLoading = useCardPurchaseStore(s => s.loading);
   const purchasesError = useCardPurchaseStore(s => s.error);
   const fetchPurchases = useCardPurchaseStore(s => s.fetchAll);
+  const [comparisonBills, setComparisonBills] = useState<Pick<Bill, 'reference_month' | 'category_id' | 'amount'>[]>([]);
+  const [comparisonLoading, setComparisonLoading] = useState(true);
+  const [comparisonError, setComparisonError] = useState<string | null>(null);
+  const currentMonth = format(new Date(), 'yyyy-MM');
 
   useEffect(() => {
     fetchPurchases();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  useEffect(() => {
+    let active = true;
+    const previous = format(new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1), 'yyyy-MM');
+    supabase.from('bills').select('category_id, amount, reference_month')
+      .in('reference_month', [previous, currentMonth])
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) setComparisonError(error.message);
+        else setComparisonBills(data ?? []);
+        setComparisonLoading(false);
+      });
+    return () => { active = false; };
+  }, [currentMonth]);
   const { summary: fundSummary, goal: fundGoal } = useEmergencyFund();
 
-  const isLoading = billsLoading || cardsLoading || txLoading || depsLoading || catsLoading || purchasesLoading;
-  const financialDataError = billsError || cardsError || txError;
+  const isLoading = billsLoading || cardsLoading || txLoading || depsLoading || catsLoading || purchasesLoading || comparisonLoading;
+  const financialDataError = billsError || cardsError || txError || comparisonError;
 
   // ── Section 1: Summary metrics ──
   const pendingBills = bills.filter(b => b.status === 'pending');
@@ -85,6 +105,14 @@ export default function Dashboard() {
     toReceive: transactions.filter(t => t.type === 'to_receive' && t.status === 'pending').length,
   };
   const totalInvoiceAmount = openCardsTotal;
+  const monthlyComparison = compareMonthlyBills(comparisonBills, currentMonth);
+  const monthLabel = (month: string) => format(parseISO(`${month}-01`), 'MMMM', { locale: ptBR });
+  const increasedCategoryNames = monthlyComparison.increasedCategories
+    .slice(0, 3)
+    .map(category => ({
+      ...category,
+      name: categories.find(item => item.id === category.categoryId)?.name ?? 'Categoria',
+    }));
 
   // ── Section 2: Alerts ──
   const { overdueBills, dueSoonBills, overdueCards, dueSoonCards } = buildDueAlerts(bills, creditCards);
@@ -244,6 +272,58 @@ export default function Dashboard() {
             <p className="mt-1 text-xs text-muted-foreground">transações, contas e faturas pendentes</p>
           </div>
         </div>
+      )}
+
+      {!isLoading && !financialDataError && (
+        <section aria-labelledby="monthly-comparison-title" className="rounded-xl border border-border bg-card p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 id="monthly-comparison-title" className="text-base font-semibold">Comparativo mensal</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Contas categorizadas: {monthLabel(monthlyComparison.currentMonth)} versus {monthLabel(monthlyComparison.previousMonth)}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground">Variação nas contas</p>
+              <p className={`mt-1 text-lg font-semibold tabular-nums ${monthlyComparison.variationCents > 0 ? 'text-destructive' : monthlyComparison.variationCents < 0 ? 'text-success' : ''}`}>
+                {monthlyComparison.variationCents > 0 ? '+' : ''}{formatCurrency(monthlyComparison.variationCents / 100)}
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            <div>
+              <p className="text-xs text-muted-foreground">Este mês</p>
+              <p className="mt-1 font-semibold tabular-nums">{formatCurrency(monthlyComparison.currentCents / 100)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Mês anterior</p>
+              <p className="mt-1 font-semibold tabular-nums">{formatCurrency(monthlyComparison.previousCents / 100)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Ainda comprometido</p>
+              <p className="mt-1 font-semibold tabular-nums">{formatCurrency((pendingBillsCents + openCardsCents) / 100)}</p>
+            </div>
+          </div>
+          {increasedCategoryNames.length > 0 ? (
+            <div className="mt-4 border-t border-border pt-3">
+              <p className="text-xs font-medium text-muted-foreground">Categorias que mais aumentaram</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {increasedCategoryNames.map(category => (
+                  <span key={category.categoryId} className="rounded-full bg-muted px-3 py-1 text-xs">
+                    {category.name} <span className="font-semibold text-destructive">+{formatCurrency(category.increaseCents / 100)}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="mt-4 border-t border-border pt-3 text-xs text-muted-foreground">
+              Nenhuma categoria teve aumento em relação ao mês anterior.
+            </p>
+          )}
+          <p className="mt-3 text-xs text-muted-foreground">
+            O comparativo considera contas registradas com categoria; compras de cartão ainda não têm categoria no sistema.
+          </p>
+        </section>
       )}
 
       {/* ── Emergency Fund Reserve Card ── */}

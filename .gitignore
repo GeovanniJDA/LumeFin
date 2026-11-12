@@ -40,3 +40,5 @@ android/.idea/tasks.xml
 *.keystore
 *.jks
 key.properties
+
+graphify-out

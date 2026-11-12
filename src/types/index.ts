@@ -47,6 +47,15 @@ export interface Bill {
   is_recurring: boolean
 }
 
+export interface CategoryBudget {
+  id: string;
+  user_id: string;
+  category_id: string;
+  reference_month: string;
+  limit_amount: number;
+  created_at: string;
+}
+
 export interface BillDependent {
   bill_id: string
   dependent_id: string

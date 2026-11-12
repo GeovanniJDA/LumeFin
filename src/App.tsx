@@ -11,6 +11,7 @@ const Transactions = lazy(() => import('./pages/transactions'));
 const CashFlow = lazy(() => import('./pages/cash-flow'));
 const DueDates = lazy(() => import('./pages/due-dates'));
 const EmergencyFund = lazy(() => import('./pages/emergency-fund'));
+const CategoryBudgets = lazy(() => import('./pages/category-budgets'));
 const Auth = lazy(() => import('./pages/auth'));
 const Profile = lazy(() => import('./pages/profile'));
 const ForgotPassword = lazy(() => import('./pages/forgot-password'));
@@ -124,6 +125,7 @@ function App() {
           <Route path="/app/cash-flow" element={<AuthGuard><AppLayout><CashFlow /></AppLayout></AuthGuard>} />
           <Route path="/app/due-dates" element={<AuthGuard><AppLayout><DueDates /></AppLayout></AuthGuard>} />
           <Route path="/app/emergency-fund" element={<AuthGuard><AppLayout><EmergencyFund /></AppLayout></AuthGuard>} />
+          <Route path="/app/budgets" element={<AuthGuard><AppLayout><CategoryBudgets /></AppLayout></AuthGuard>} />
           <Route path="/app/profile" element={<AuthGuard><AppLayout><Profile /></AppLayout></AuthGuard>} />
         </Routes>
       </Suspense>

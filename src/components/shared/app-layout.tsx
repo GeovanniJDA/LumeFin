@@ -3,7 +3,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { supabase } from '../../lib/supabase';
 import { format } from 'date-fns';
-import { LayoutDashboard, Receipt, CreditCard, ArrowRightLeft, Users, LogOut, Loader2, UserCircle, ChevronsUpDown, Sun, Moon, Wallet, PiggyBank, CalendarDays, Menu, Download } from 'lucide-react';
+import { LayoutDashboard, Receipt, CreditCard, ArrowRightLeft, Users, LogOut, Loader2, UserCircle, ChevronsUpDown, Sun, Moon, Wallet, PiggyBank, CalendarDays, Menu, Download, ChartPie } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +23,7 @@ import { useProfileStore } from '@/store/profile-store';
 import { useCardPurchaseStore } from '@/store/card-purchase-store';
 import { useCashFlowStore } from '@/store/cash-flow-store';
 import { useEmergencyFundStore } from '@/store/emergency-fund-store';
+import { useCategoryBudgetStore } from '@/store/category-budget-store';
 
 const navigation = [
   { name: 'Dashboard', href: '/app', icon: LayoutDashboard },
@@ -32,6 +33,7 @@ const navigation = [
   { name: 'Fluxo de caixa', href: '/app/cash-flow', icon: Wallet },
   { name: 'Vencimentos', href: '/app/due-dates', icon: CalendarDays },
   { name: 'Reserva', href: '/app/emergency-fund', icon: PiggyBank },
+  { name: 'Orçamento', href: '/app/budgets', icon: ChartPie },
   { name: 'Dependentes', href: '/app/dependents', icon: Users },
 ];
 
@@ -76,6 +78,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         useCardPurchaseStore.getState().reset();
         useCashFlowStore.getState().reset();
         useEmergencyFundStore.getState().reset();
+        useCategoryBudgetStore.getState().reset();
         toast.success('Sessão encerrada.');
         navigate('/auth');
       }
